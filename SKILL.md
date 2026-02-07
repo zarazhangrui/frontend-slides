@@ -726,6 +726,10 @@ class CustomCursor {
 }
 ```
 
+**CSS Function Negation:**
+- Never negate CSS functions directly — `-clamp()`, `-min()`, `-max()` are silently ignored by browsers with no console error
+- Always use `calc(-1 * clamp(...))` instead. See STYLE_PRESETS.md → "CSS Gotchas" for details.
+
 **Responsive & Viewport Fitting (CRITICAL):**
 
 **See the "CRITICAL: Viewport Fitting Requirements" section above for complete CSS and guidelines.**

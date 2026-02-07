@@ -157,6 +157,7 @@ Before finalizing any presentation, verify:
 - [ ] Content respects density limits (max 6 bullets, max 6 cards)
 - [ ] No fixed pixel heights on content elements
 - [ ] Images have `max-height` constraints
+- [ ] No negated CSS functions (use `calc(-1 * clamp(...))` not `-clamp(...)`)
 
 ---
 
@@ -478,6 +479,30 @@ Before finalizing any presentation, verify:
 **Layouts:** Everything centered, generic hero sections, identical card grids
 
 **Decorations:** Realistic illustrations, gratuitous glassmorphism, drop shadows without purpose
+
+---
+
+## CSS Gotchas (Common Mistakes)
+
+### Negating CSS Functions
+
+**WRONG — silently ignored by browsers:**
+```css
+right: -clamp(28px, 3.5vw, 44px);   /* ❌ Invalid! Browser ignores this */
+margin-left: -min(10vw, 100px);      /* ❌ Invalid! */
+top: -max(2rem, 4vh);                /* ❌ Invalid! */
+```
+
+**CORRECT — wrap in `calc()`:**
+```css
+right: calc(-1 * clamp(28px, 3.5vw, 44px));  /* ✅ */
+margin-left: calc(-1 * min(10vw, 100px));     /* ✅ */
+top: calc(-1 * max(2rem, 4vh));               /* ✅ */
+```
+
+CSS does not allow a leading `-` before function names like `clamp()`, `min()`, `max()`. The browser silently discards the entire declaration, causing the property to fall back to its initial/inherited value. This is especially dangerous because there is no console error — the element simply appears in the wrong position.
+
+**Rule: Always use `calc(-1 * ...)` to negate CSS function values.**
 
 ---
 

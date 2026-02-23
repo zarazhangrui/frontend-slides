@@ -37,6 +37,23 @@ Then use it by typing `/frontend-slides` in Claude Code.
 2. Place them in `~/.claude/skills/frontend-slides/`
 3. Restart Claude Code
 
+### Quick Install (Gemini CLI)
+
+[![Claude Code](https://img.shields.io/badge/Claude_Code-FF6B35?style=flat&logo=anthropic&logoColor=white)](https://anthropic.com/claude)
+
+
+```bash
+gemini skills install https://github.com/zarazhangrui/frontend-slides.git
+```
+
+### Manual Install (Gemini CLI)
+
+```bash
+mkdir -p ~/.gemini/skills/frontend-slides/references
+cp SKILL.md ~/.gemini/skills/frontend-slides/
+cp references/STYLE_PRESETS.md ~/.gemini/skills/frontend-slides/references/
+```
+
 ## Usage
 
 ### Create a New Presentation

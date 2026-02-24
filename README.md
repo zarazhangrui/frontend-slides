@@ -16,17 +16,10 @@ A Claude Code skill for creating stunning, animation-rich HTML presentations —
 
 ## Installation
 
-### For Claude Code Users
-
-Copy the skill files to your Claude Code skills directory:
+### Automatic (for any coding agent)
 
 ```bash
-# Create the skill directory
-mkdir -p ~/.claude/skills/frontend-slides
-
-# Copy the files (or download from this repo)
-cp SKILL.md ~/.claude/skills/frontend-slides/
-cp STYLE_PRESETS.md ~/.claude/skills/frontend-slides/
+npx skills add zarazhangrui/frontend-slides
 ```
 
 Then use it by typing `/frontend-slides` in Claude Code.

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Frontend Slides - Mobile Responsive Example</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #061523;
+            --bg-accent: #0a2f4a;
+            --surface: rgba(255, 255, 255, 0.08);
+            --surface-border: rgba(255, 255, 255, 0.16);
+            --text-primary: #f3fbff;
+            --text-secondary: #b7d6e8;
+            --accent: #7ee4ff;
+            --accent-strong: #22bce2;
+
+            --title-size: clamp(1.6rem, 6.6vw, 3.9rem);
+            --h2-size: clamp(1.15rem, 4vw, 2.5rem);
+            --body-size: clamp(0.84rem, 2.3vw, 1.08rem);
+            --small-size: clamp(0.72rem, 1.9vw, 0.92rem);
+
+            --slide-padding: clamp(1rem, 4.5vw, 3.2rem);
+            --content-gap: clamp(0.8rem, 2.3vw, 1.6rem);
+            --card-gap: clamp(0.5rem, 1.7vw, 1rem);
+
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text-primary);
+            background:
+                radial-gradient(1200px 700px at 18% -8%, rgba(34, 188, 226, 0.23), transparent 60%),
+                radial-gradient(900px 600px at 92% 108%, rgba(126, 228, 255, 0.15), transparent 58%),
+                linear-gradient(165deg, var(--bg), var(--bg-accent));
+            touch-action: pan-y;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100vh;
+            height: 100svh;
+            height: 100dvh;
+            scroll-snap-align: start;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            padding-top: calc(var(--slide-padding) + var(--safe-top));
+            padding-right: calc(var(--slide-padding) + var(--safe-right));
+            padding-bottom: calc(var(--slide-padding) + var(--safe-bottom));
+            padding-left: calc(var(--slide-padding) + var(--safe-left));
+        }
+
+        .slide::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(transparent 75%, rgba(0, 0, 0, 0.18)),
+                radial-gradient(circle at 10% 15%, rgba(126, 228, 255, 0.18), transparent 40%);
+            pointer-events: none;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            width: min(980px, 100%);
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: var(--content-gap);
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .eyebrow {
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: var(--small-size);
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: var(--title-size);
+            line-height: 1.07;
+            max-width: 14ch;
+        }
+
+        h2 {
+            font-size: var(--h2-size);
+            line-height: 1.15;
+            max-width: 22ch;
+        }
+
+        p,
+        li {
+            font-size: var(--body-size);
+            line-height: 1.48;
+            color: var(--text-secondary);
+        }
+
+        .lead {
+            max-width: 54ch;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--card-gap);
+        }
+
+        .feature-card {
+            padding: clamp(0.8rem, 2.4vw, 1.1rem);
+            border: 1px solid var(--surface-border);
+            background: var(--surface);
+            border-radius: 18px;
+            backdrop-filter: blur(5px);
+        }
+
+        .feature-card strong {
+            display: block;
+            font-size: clamp(0.9rem, 2.2vw, 1rem);
+            color: var(--text-primary);
+            margin-bottom: 0.35rem;
+        }
+
+        .check-list {
+            list-style: none;
+            display: grid;
+            gap: clamp(0.45rem, 1.5vh, 0.8rem);
+        }
+
+        .check-list li {
+            position: relative;
+            padding-left: 1.35rem;
+        }
+
+        .check-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .progress-track {
+            position: fixed;
+            top: calc(8px + var(--safe-top));
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 20;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+            transition: width 0.3s ease;
+        }
+
+        .controls {
+            position: fixed;
+            right: calc(10px + var(--safe-right));
+            bottom: calc(10px + var(--safe-bottom));
+            z-index: 30;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border: 1px solid var(--surface-border);
+            border-radius: 50%;
+            background: rgba(6, 21, 35, 0.84);
+            color: var(--text-primary);
+            font-size: 1.15rem;
+            cursor: pointer;
+        }
+
+        .control-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .nav-dots {
+            position: fixed;
+            left: calc(10px + var(--safe-left));
+            bottom: calc(10px + var(--safe-bottom));
+            z-index: 30;
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .dot-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid var(--surface-border);
+            background: rgba(6, 21, 35, 0.62);
+            color: var(--text-primary);
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+
+        .dot-btn.is-active {
+            background: rgba(126, 228, 255, 0.25);
+            border-color: var(--accent);
+            font-weight: 700;
+        }
+
+        .keyboard-hint {
+            position: fixed;
+            top: calc(12px + var(--safe-top));
+            right: calc(12px + var(--safe-right));
+            z-index: 20;
+            font-size: var(--small-size);
+            color: rgba(243, 251, 255, 0.72);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        .slide.is-visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal:nth-child(2) { transition-delay: 0.06s; }
+        .reveal:nth-child(3) { transition-delay: 0.12s; }
+        .reveal:nth-child(4) { transition-delay: 0.18s; }
+
+        @media (max-width: 760px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .keyboard-hint {
+                display: none;
+            }
+        }
+
+        @media (max-height: 620px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 1.25rem);
+                --content-gap: clamp(0.45rem, 1.3vw, 0.85rem);
+                --title-size: clamp(1.3rem, 5.8vw, 2.1rem);
+                --body-size: clamp(0.76rem, 1.9vw, 0.92rem);
+            }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .feature-card {
+                backdrop-filter: none;
+            }
+
+            .control-btn:active,
+            .dot-btn:active {
+                transform: scale(0.96);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            * {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
+
+            .reveal {
+                opacity: 1;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <p class="keyboard-hint">Use arrow keys, swipe, or controls</p>
+
+    <section class="slide">
+        <div class="slide-content">
+            <p class="eyebrow reveal">Mobile-First Slides</p>
+            <h1 class="reveal">Responsive presentation layout that holds up on phones.</h1>
+            <p class="lead reveal">This file demonstrates safe-area support, dynamic viewport sizing, touch targets, and content density constraints without any build tooling.</p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="slide-content">
+            <p class="eyebrow reveal">Layout Rules</p>
+            <h2 class="reveal">Every slide stays inside one viewport.</h2>
+            <ul class="check-list reveal">
+                <li>Slides lock to <code>100dvh</code> with <code>overflow: hidden</code>.</li>
+                <li>Padding includes <code>safe-area-inset</code> values.</li>
+                <li>Text and spacing rely on <code>clamp()</code> scaling.</li>
+                <li>Height breakpoints handle short landscape screens.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="slide-content">
+            <p class="eyebrow reveal">Component Strategy</p>
+            <h2 class="reveal">Feature cards collapse cleanly on narrow screens.</h2>
+            <div class="feature-grid reveal">
+                <article class="feature-card">
+                    <strong>Touch-Ready Controls</strong>
+                    <p>Buttons use 44-48px targets for comfortable thumb interaction.</p>
+                </article>
+                <article class="feature-card">
+                    <strong>Coarse Pointer Fallbacks</strong>
+                    <p>Hover-heavy effects are reduced on touch devices.</p>
+                </article>
+                <article class="feature-card">
+                    <strong>Reduced Motion</strong>
+                    <p>Animations are softened when users prefer lower motion.</p>
+                </article>
+                <article class="feature-card">
+                    <strong>Swipe Navigation</strong>
+                    <p>Vertical swipe gestures mirror wheel and keyboard controls.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="slide-content">
+            <p class="eyebrow reveal">Verification</p>
+            <h2 class="reveal">Check these screen sizes before shipping.</h2>
+            <ul class="check-list reveal">
+                <li>390 x 844 (typical portrait phone)</li>
+                <li>844 x 390 (landscape phone)</li>
+                <li>768 x 1024 (tablet portrait)</li>
+                <li>1366 x 768 (small laptop)</li>
+            </ul>
+            <p class="lead reveal">If any slide overflows at those sizes, split content into more slides instead of enabling internal scrolling.</p>
+        </div>
+    </section>
+
+    <div class="nav-dots" id="navDots" aria-label="Slide navigation"></div>
+
+    <div class="controls" aria-label="Presentation controls">
+        <button type="button" class="control-btn" id="prevBtn" aria-label="Previous slide">↑</button>
+        <button type="button" class="control-btn" id="nextBtn" aria-label="Next slide">↓</button>
+    </div>
+
+    <script>
+        class MobileResponsiveSlides {
+            constructor() {
+                this.slides = Array.from(document.querySelectorAll(".slide"));
+                this.currentIndex = 0;
+                this.touchStartY = 0;
+                this.progressFill = document.getElementById("progressFill");
+                this.navDots = document.getElementById("navDots");
+                this.prevBtn = document.getElementById("prevBtn");
+                this.nextBtn = document.getElementById("nextBtn");
+
+                this.createDots();
+                this.bindEvents();
+                this.observeSlides();
+                this.updateUI();
+            }
+
+            createDots() {
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement("button");
+                    dot.type = "button";
+                    dot.className = "dot-btn";
+                    dot.textContent = String(index + 1);
+                    dot.setAttribute("aria-label", `Go to slide ${index + 1}`);
+                    dot.addEventListener("click", () => this.goTo(index));
+                    this.navDots.appendChild(dot);
+                });
+                this.dotButtons = Array.from(this.navDots.querySelectorAll(".dot-btn"));
+            }
+
+            bindEvents() {
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "ArrowDown" || event.key === "PageDown" || event.key === " ") {
+                        event.preventDefault();
+                        this.next();
+                    } else if (event.key === "ArrowUp" || event.key === "PageUp") {
+                        event.preventDefault();
+                        this.prev();
+                    }
+                });
+
+                this.prevBtn.addEventListener("click", () => this.prev());
+                this.nextBtn.addEventListener("click", () => this.next());
+
+                window.addEventListener("touchstart", (event) => {
+                    this.touchStartY = event.changedTouches[0].clientY;
+                }, { passive: true });
+
+                window.addEventListener("touchend", (event) => {
+                    const endY = event.changedTouches[0].clientY;
+                    const delta = this.touchStartY - endY;
+                    if (Math.abs(delta) > 55) {
+                        if (delta > 0) {
+                            this.next();
+                        } else {
+                            this.prev();
+                        }
+                    }
+                }, { passive: true });
+
+                let wheelLocked = false;
+                window.addEventListener("wheel", (event) => {
+                    if (wheelLocked) {
+                        return;
+                    }
+                    if (Math.abs(event.deltaY) < 15) {
+                        return;
+                    }
+                    wheelLocked = true;
+                    if (event.deltaY > 0) {
+                        this.next();
+                    } else {
+                        this.prev();
+                    }
+                    window.setTimeout(() => {
+                        wheelLocked = false;
+                    }, 450);
+                }, { passive: true });
+            }
+
+            observeSlides() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add("is-visible");
+                            const index = this.slides.indexOf(entry.target);
+                            if (index >= 0) {
+                                this.currentIndex = index;
+                                this.updateUI();
+                            }
+                        }
+                    });
+                }, { threshold: 0.62 });
+
+                this.slides.forEach((slide) => observer.observe(slide));
+            }
+
+            next() {
+                this.goTo(this.currentIndex + 1);
+            }
+
+            prev() {
+                this.goTo(this.currentIndex - 1);
+            }
+
+            goTo(index) {
+                const nextIndex = Math.max(0, Math.min(index, this.slides.length - 1));
+                this.slides[nextIndex].scrollIntoView({ behavior: "smooth", block: "start" });
+                this.currentIndex = nextIndex;
+                this.updateUI();
+            }
+
+            updateUI() {
+                const ratio = this.slides.length <= 1
+                    ? 100
+                    : (this.currentIndex / (this.slides.length - 1)) * 100;
+                this.progressFill.style.width = `${ratio}%`;
+
+                this.dotButtons.forEach((dot, index) => {
+                    dot.classList.toggle("is-active", index === this.currentIndex);
+                });
+
+                this.prevBtn.disabled = this.currentIndex === 0;
+                this.nextBtn.disabled = this.currentIndex === this.slides.length - 1;
+            }
+        }
+
+        new MobileResponsiveSlides();
+    </script>
+</body>
+</html>

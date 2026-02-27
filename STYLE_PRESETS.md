@@ -146,6 +146,42 @@ img {
 }
 ```
 
+### Mobile-First Hardening (Recommended)
+
+For phone-first decks, apply these additions:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+```
+
+```css
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+}
+
+.slide {
+    padding-top: calc(var(--slide-padding) + var(--safe-top));
+    padding-right: calc(var(--slide-padding) + var(--safe-right));
+    padding-bottom: calc(var(--slide-padding) + var(--safe-bottom));
+    padding-left: calc(var(--slide-padding) + var(--safe-left));
+}
+
+button, .dot, .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .hover-heavy {
+        transform: none !important;
+        filter: none !important;
+    }
+}
+```
+
 ### Viewport Fitting Checklist
 
 Before finalizing any presentation, verify:

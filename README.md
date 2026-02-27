@@ -13,6 +13,7 @@ A Claude Code skill for creating stunning, animation-rich HTML presentations —
 - **PPT Conversion** — Convert existing PowerPoint files to web, preserving all images and content.
 - **Anti-AI-Slop** — Curated distinctive styles that avoid generic AI aesthetics (bye-bye, purple gradients on white).
 - **Production Quality** — Accessible, responsive, well-commented code you can customize.
+- **Mobile-First Blueprint** — Includes a runnable responsive example and a phone-oriented implementation guide.
 
 ## Installation
 
@@ -67,6 +68,20 @@ The skill will:
 2. Show you the extracted content for confirmation
 3. Let you pick a visual style
 4. Generate an HTML presentation with all your original assets
+
+### Mobile Responsive Starter
+
+If you want to start from a mobile-optimized baseline:
+
+1. Open `examples/mobile-responsive-slides.html`
+2. Review `MOBILE_RESPONSIVE_GUIDE.md`
+3. Copy the layout rules into your generated deck (safe-area insets, dynamic viewport units, touch-size controls)
+
+The example is intentionally zero-dependency and demonstrates:
+- `100vh + 100svh + 100dvh` viewport handling
+- `env(safe-area-inset-*)` padding for notched phones
+- Height-based breakpoints for short screens
+- Swipe + keyboard + button navigation with 44-48px tap targets
 
 ## Included Styles
 
@@ -141,6 +156,8 @@ This skill was born from the belief that:
 |------|---------|
 | `SKILL.md` | Main skill instructions for Claude Code |
 | `STYLE_PRESETS.md` | Reference file with 10 curated visual styles |
+| `MOBILE_RESPONSIVE_GUIDE.md` | Practical mobile-first implementation checklist |
+| `examples/mobile-responsive-slides.html` | Runnable responsive slide deck example |
 
 ## Requirements
 

@@ -4,9 +4,25 @@ An agent skill for creating stunning, zero-dependency HTML presentations — fro
 
 ## Install
 
+**macOS / Linux:**
+
 ```bash
 git clone https://github.com/arcniko/vibe-slides.git /tmp/vibe-slides && cp -r /tmp/vibe-slides/skills/* ~/.claude/skills/ && rm -rf /tmp/vibe-slides
 ```
+
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/arcniko/vibe-slides.git $env:TEMP\vibe-slides; Copy-Item -Recurse $env:TEMP\vibe-slides\skills\* $HOME\.claude\skills\; Remove-Item -Recurse -Force $env:TEMP\vibe-slides
+```
+
+**Manual (no terminal):**
+
+1. Download the [`skills/vibe-slides/`](skills/vibe-slides/) folder from this repo
+2. Copy it into one of these locations:
+   - `~/.claude/skills/vibe-slides/` — available in all projects
+   - `<project>/.claude/skills/vibe-slides/` — available in one project
+   - `<project>/.agents/vibe-slides/` — for non-Claude agents
 
 Then use `/vibe-slides` in Claude Code.
 

@@ -15,6 +15,10 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 4. **Production Quality** — Code should be well-commented, accessible, and performant.
 5. **Viewport Fitting (CRITICAL)** — Every slide MUST fit exactly within the viewport. No scrolling within slides, ever. This is non-negotiable.
 
+### Template Locations (read these directly, do not search)
+- Archon: `~/.claude/skills/vibe-slides/templates/archon/template.html`
+- Archon Grid: `~/.claude/skills/vibe-slides/templates/archon-grid/template.html`
+
 ---
 
 ## CRITICAL: Viewport Fitting Requirements
@@ -508,7 +512,7 @@ If the chosen style has a template (see preset table), **copy the template as th
 3. Replace placeholder slide content with the user's actual content
 4. Add/remove slides as needed, following the template's existing patterns
 
-Templates are located in: `~/.claude/skills/frontend-slides/templates/`
+Templates are located in: `~/.claude/skills/vibe-slides/templates/`
 
 Each template is a self-contained folder:
 ```

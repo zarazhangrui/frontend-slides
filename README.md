@@ -141,9 +141,7 @@ That's it. Two skills, zero friction. Your presentation goes from idea to sharea
 ### Install the publish skill
 
 ```bash
-mkdir -p ~/.claude/skills/myvibe-publish
-curl -sL https://raw.githubusercontent.com/ArcBlock/agent-skills/main/skills/myvibe-publish/SKILL.md \
-  -o ~/.claude/skills/myvibe-publish/SKILL.md
+npx skills add ArcBlock/myvibe-skills
 ```
 
 ### Why MyVibe + Frontend Slides

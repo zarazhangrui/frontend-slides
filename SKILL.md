@@ -14,6 +14,7 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 3. **Distinctive Design** — Avoid generic "AI slop" aesthetics. Every presentation should feel custom-crafted.
 4. **Production Quality** — Code should be well-commented, accessible, and performant.
 5. **Viewport Fitting (CRITICAL)** — Every slide MUST fit exactly within the viewport. No scrolling within slides, ever. This is non-negotiable.
+6. **Inline Editable** — Every presentation includes a built-in edit mode. Users can click any text to modify it directly in the browser, with auto-save and file export — no code editing required.
 
 ---
 
@@ -854,12 +855,19 @@ Every presentation should include:
    - Mouse wheel navigation
    - Progress bar updates
    - Navigation dots
+   - Store instance in a `presentation` variable (required for edit mode integration)
 
 2. **Intersection Observer** — For scroll-triggered animations
    - Add `.visible` class when slides enter viewport
    - Trigger CSS animations efficiently
 
-3. **Optional Enhancements** (based on style):
+3. **Inline Editing System** — Built-in text editing (see "Inline Editing Capability" section)
+   - Edit mode toggle (✏️ / 👁)
+   - `contenteditable="plaintext-only"` on text elements
+   - localStorage auto-save
+   - File export (File System Access API + Blob fallback)
+
+4. **Optional Enhancements** (based on style):
    - Custom cursor with trail
    - Particle system background (canvas)
    - Parallax effects
@@ -1031,6 +1039,379 @@ Convert the extracted content into the chosen style, preserving:
 
 ---
 
+## Inline Editing Capability
+
+**Every generated presentation MUST include built-in inline editing.** This allows users to modify text directly in the browser without touching code — critical for non-technical users who need to quickly adjust wording, fix typos, or localize content.
+
+### How It Works
+
+The presentation has two modes:
+
+| | Presentation Mode 👁 | Edit Mode ✏️ |
+|--|---------------------|-------------|
+| **Text** | Read-only, normal display | Click any text to edit directly |
+| **Navigation** | Keyboard/wheel/swipe works | Keyboard/wheel navigation disabled |
+| **Visual** | Clean, no edit hints | Top bar indicator + hover outlines on editable elements |
+| **Saving** | N/A | Auto-save to localStorage on every input |
+
+### Required Implementation
+
+#### 1. Edit Mode Toggle Button
+
+Add a floating toggle button (top-left corner) that switches between modes:
+
+```html
+<!-- Edit Mode Toggle — always present, top-left corner -->
+<button class="edit-toggle" onclick="toggleEditMode()" title="Toggle edit mode" aria-label="Toggle edit mode">✏️</button>
+
+<!-- Edit Mode Top Bar — hidden by default, shown in edit mode -->
+<div class="edit-bar" id="editBar">
+    <span>✏️ EDIT MODE</span>
+    <div>
+        <button onclick="saveToFile()">💾 Save File</button>
+        <button onclick="resetEdits()">🔄 Reset</button>
+        <button onclick="toggleEditMode()">👁 Present</button>
+    </div>
+</div>
+```
+
+#### 2. CSS for Edit Mode
+
+```css
+/* ===========================================
+   INLINE EDITING UI
+   Toggle between presentation and edit modes.
+   Edit mode allows clicking any text to modify it.
+   =========================================== */
+
+/* Toggle button — always visible, top-left */
+.edit-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.edit-toggle:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+}
+
+/* Edit mode top bar */
+.edit-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: rgba(220, 38, 38, 0.95);
+    color: white;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem 0 3.5rem;
+    z-index: 9999;
+    font-size: 0.85rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.edit-bar.active { display: flex; }
+
+.edit-bar button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+    transition: background 0.2s;
+}
+
+.edit-bar button:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Editable element indicators — only visible in edit mode */
+body.edit-mode [contenteditable] {
+    cursor: text;
+    transition: outline 0.2s ease, background 0.2s ease;
+    border-radius: 4px;
+}
+
+body.edit-mode [contenteditable]:hover {
+    outline: 2px dashed rgba(0, 120, 255, 0.4);
+    outline-offset: 4px;
+}
+
+body.edit-mode [contenteditable]:focus {
+    outline: 2px solid rgba(0, 120, 255, 0.7);
+    outline-offset: 4px;
+    background: rgba(255, 255, 200, 0.06);
+}
+
+/* Adapt indicator for light-background slides */
+.slide.light body.edit-mode [contenteditable]:hover,
+body.edit-mode .slide.light [contenteditable]:hover {
+    outline-color: rgba(0, 80, 200, 0.4);
+}
+
+body.edit-mode .slide.light [contenteditable]:focus {
+    outline-color: rgba(0, 80, 200, 0.7);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* Toast notifications */
+.edit-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    z-index: 10001;
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.edit-toast.show {
+    transform: translateX(-50%) translateY(0);
+}
+```
+
+#### 3. JavaScript for Edit Mode
+
+Add this to the `<script>` section, **after** the SlidePresentation class:
+
+```javascript
+/* ===========================================
+   INLINE EDITING SYSTEM
+   Allows users to edit text directly in the browser.
+   - Uses contenteditable="plaintext-only" to prevent HTML injection
+   - Auto-saves to localStorage on every input
+   - Supports file export via File System Access API (Chrome)
+     with Blob download fallback (Firefox/Safari)
+   =========================================== */
+
+let isEditMode = false;
+let hasUnsavedChanges = false;
+const STORAGE_KEY = 'slide-edits-' + document.title.replace(/\s+/g, '-').toLowerCase();
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    document.body.classList.toggle('edit-mode', isEditMode);
+    document.getElementById('editBar').classList.toggle('active', isEditMode);
+
+    // Get all editable text elements
+    const editables = document.querySelectorAll(
+        '.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide blockquote, .slide span.editable'
+    );
+
+    editables.forEach(el => {
+        if (isEditMode) {
+            el.setAttribute('contenteditable', 'plaintext-only');
+            // Prevent Enter key from creating new DOM nodes
+            el.addEventListener('keydown', preventEnter);
+            // Auto-save on input
+            el.addEventListener('input', onEditInput);
+        } else {
+            el.removeAttribute('contenteditable');
+            el.removeEventListener('keydown', preventEnter);
+            el.removeEventListener('input', onEditInput);
+        }
+    });
+
+    // Disable/enable slide navigation in edit mode
+    if (typeof presentation !== 'undefined' && presentation) {
+        presentation.navigationEnabled = !isEditMode;
+    }
+
+    showToast(isEditMode ? '✏️ Edit mode — click any text to edit' : '👁 Presentation mode');
+}
+
+function preventEnter(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+    }
+}
+
+function onEditInput() {
+    hasUnsavedChanges = true;
+    saveToLocalStorage();
+}
+
+// ─── localStorage Auto-Save ───
+function saveToLocalStorage() {
+    const editables = document.querySelectorAll(
+        '.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide blockquote, .slide span.editable'
+    );
+    const data = {};
+    editables.forEach((el, i) => {
+        data[i] = el.textContent;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromLocalStorage() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    try {
+        const data = JSON.parse(saved);
+        const editables = document.querySelectorAll(
+            '.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide blockquote, .slide span.editable'
+        );
+        editables.forEach((el, i) => {
+            if (data[i] !== undefined) {
+                el.textContent = data[i];
+            }
+        });
+    } catch (e) {
+        console.warn('Failed to load saved edits:', e);
+    }
+}
+
+// ─── File Export ───
+async function saveToFile() {
+    // Clone the document, remove edit UI, export clean HTML
+    const clone = document.documentElement.cloneNode(true);
+
+    // Remove edit-specific elements from clone
+    clone.querySelectorAll('.edit-toggle, .edit-bar, .edit-toast').forEach(el => el.remove());
+    // Remove edit-mode class
+    clone.querySelector('body')?.classList.remove('edit-mode');
+    // Remove contenteditable attributes
+    clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+    const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+
+    // Try File System Access API first (Chrome/Edge — allows overwriting the same file)
+    if ('showSaveFilePicker' in window) {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: document.title.replace(/\s+/g, '-') + '.html',
+                types: [{ description: 'HTML', accept: { 'text/html': ['.html'] } }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(html);
+            await writable.close();
+            hasUnsavedChanges = false;
+            showToast('💾 Saved!');
+            return;
+        } catch (e) {
+            if (e.name === 'AbortError') return; // User cancelled
+        }
+    }
+
+    // Fallback: Blob download (Firefox/Safari)
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = document.title.replace(/\s+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
+    hasUnsavedChanges = false;
+    showToast('💾 Downloaded!');
+}
+
+// ─── Reset ───
+function resetEdits() {
+    if (!confirm('Reset all text to original? This cannot be undone.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+}
+
+// ─── Toast ───
+function showToast(msg) {
+    let toast = document.querySelector('.edit-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'edit-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ─── Keyboard shortcut: Ctrl/Cmd+S to save in edit mode ───
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (isEditMode) saveToFile();
+    }
+});
+
+// ─── Warn before leaving with unsaved changes ───
+window.addEventListener('beforeunload', (e) => {
+    if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// ─── Load saved edits on page load ───
+loadFromLocalStorage();
+```
+
+#### 4. Editable Elements Selector
+
+The edit system targets these elements inside `.slide` containers:
+
+| Selector | What it covers |
+|----------|---------------|
+| `.slide h1` | Main titles |
+| `.slide h2` | Section headings |
+| `.slide h3` | Sub-headings |
+| `.slide p` | Body paragraphs |
+| `.slide li` | List items |
+| `.slide blockquote` | Pull quotes |
+| `.slide span.editable` | Custom inline text (add this class to any `<span>` that should be editable) |
+
+**Navigation controls, progress bar, slide numbers, and decorative elements are NOT editable** — they are excluded from the selector intentionally.
+
+#### 5. Key Technical Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| `contenteditable="plaintext-only"` | Prevents pasted rich text from breaking slide structure. Baseline-supported across all modern browsers since 2024. |
+| `localStorage` auto-save | Instant, automatic — user never loses work on refresh. Keyed by document title to avoid collisions. |
+| `showSaveFilePicker` + Blob fallback | Chrome/Edge can overwrite the original file; Firefox/Safari download a new copy. Both work. |
+| Edit mode disables navigation | Prevents accidental slide changes while typing or scrolling to position cursor. |
+| Enter key blocked | Prevents `contenteditable` from creating new `<div>` nodes that break layout. Shift+Enter still works for line breaks. |
+| Clone DOM before export | The saved file is a clean presentation without edit UI elements. |
+
+#### 6. Integration Checklist
+
+When generating any presentation, verify:
+
+1. ✅ Edit toggle button (`<button class="edit-toggle">`) is in the HTML body
+2. ✅ Edit bar (`<div class="edit-bar">`) is in the HTML body
+3. ✅ Edit mode CSS is included in the `<style>` block
+4. ✅ Inline editing JavaScript is included after the SlidePresentation class
+5. ✅ The `SlidePresentation` instance is stored in a `presentation` variable (so edit mode can disable navigation via `presentation.navigationEnabled`)
+6. ✅ Toast notification CSS is included
+
+---
+
 ## Phase 5: Delivery
 
 ### Final Output
@@ -1055,6 +1436,13 @@ Your presentation is ready!
 - Arrow keys (← →) or Space to navigate
 - Scroll/swipe also works
 - Click the dots on the right to jump to a slide
+
+**Inline Editing:**
+- Click the ✏️ button (top-left) to enter edit mode
+- Click any text to modify it directly
+- Changes auto-save to browser (survives refresh)
+- Click 💾 Save File to export a clean HTML file
+- Ctrl/Cmd+S also works in edit mode
 
 **To customize:**
 - Colors: Look for `:root` CSS variables at the top

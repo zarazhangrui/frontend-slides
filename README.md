@@ -108,6 +108,38 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a concise 
 
 This design follows [OpenAI's harness engineering](https://openai.com/index/harness-engineering/) principle: "give the agent a map, not a 1,000-page instruction manual."
 
+## Publish & Share
+
+Got a beautiful presentation? Publish it to a live URL without leaving Claude Code.
+
+[**MyVibe**](https://www.myvibe.so) provides a Claude Code skill ([`myvibe-publish`](https://github.com/ArcBlock/agent-skills/tree/main/skills/myvibe-publish)) that deploys your slides directly from the terminal — no browser, no drag-and-drop, no context switching.
+
+### Skill-to-Skill workflow
+
+```
+/frontend-slides  →  generate your slides
+/myvibe-publish   →  deploy to a live URL instantly
+```
+
+That's it. Two skills, zero friction. Your presentation goes from idea to shareable link in one session.
+
+### Install the publish skill
+
+```bash
+npx skills add ArcBlock/myvibe-skills
+```
+
+### Why MyVibe + Frontend Slides
+
+- **Stay in the terminal** — No need to open a browser or configure hosting. `/myvibe-publish` handles everything.
+- **Built for single-file projects** — MyVibe is optimized for exactly the self-contained HTML that this skill produces.
+- **Instant sharing** — Get a live URL in seconds. Share it in Slack, email, or social media.
+- **Free tier available** — Publish and share without paying anything.
+
+You can also upload manually at [www.myvibe.so](https://www.myvibe.so) if you prefer a visual interface.
+
+> *MyVibe is an open platform for hosting vibe-coded web projects. Built by [ArcBlock](https://www.arcblock.io).*
+
 ## Philosophy
 
 This skill was born from the belief that:

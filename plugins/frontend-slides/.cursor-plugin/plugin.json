@@ -1,0 +1,20 @@
+{
+  "name": "frontend-slides",
+  "displayName": "Frontend Slides",
+  "version": "1.0.0",
+  "description": "Zero-dependency HTML presentation generator with 12 curated visual themes, PPT conversion, and anti-AI-slop design philosophy.",
+  "author": {
+    "name": "zarazhangrui",
+    "url": "https://github.com/zarazhangrui"
+  },
+  "homepage": "https://github.com/zarazhangrui/frontend-slides",
+  "repository": "https://github.com/zarazhangrui/frontend-slides",
+  "keywords": [
+    "presentations",
+    "slides",
+    "html",
+    "design",
+    "powerpoint",
+    "animations"
+  ]
+}

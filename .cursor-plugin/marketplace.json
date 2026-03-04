@@ -1,0 +1,19 @@
+{
+  "name": "frontend-slides",
+  "owner": {
+    "name": "zarazhangrui",
+    "url": "https://github.com/zarazhangrui"
+  },
+  "metadata": {
+    "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files",
+    "version": "1.0.0",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "frontend-slides",
+      "source": "frontend-slides",
+      "description": "Zero-dependency HTML presentation generator with 12 curated visual themes, PPT conversion, and anti-AI-slop design philosophy."
+    }
+  ]
+}

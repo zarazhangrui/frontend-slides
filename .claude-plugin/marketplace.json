@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "frontend-slides",
+  "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files",
+  "owner": {
+    "name": "zarazhangrui",
+    "url": "https://github.com/zarazhangrui"
+  },
+  "plugins": [
+    {
+      "name": "frontend-slides",
+      "description": "Zero-dependency HTML presentation generator with 12 curated visual themes, PPT conversion, and anti-AI-slop design philosophy.",
+      "author": {
+        "name": "zarazhangrui"
+      },
+      "source": "./plugins/frontend-slides",
+      "category": "productivity",
+      "tags": ["presentations", "slides", "html", "design", "powerpoint"]
+    }
+  ]
+}

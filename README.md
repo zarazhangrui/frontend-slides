@@ -27,14 +27,14 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 
 ```bash
 claude plugin marketplace add zarazhangrui/frontend-slides
-claude plugin install frontend-slides@zarazhangrui-frontend-slides
+claude plugin install frontend-slides@frontend-slides
 ```
 
 Or from inside Claude Code:
 
 ```
 /plugin marketplace add zarazhangrui/frontend-slides
-/plugin install frontend-slides@zarazhangrui-frontend-slides
+/plugin install frontend-slides@frontend-slides
 ```
 
 #### Cursor

@@ -59,6 +59,15 @@ The skill will:
 4. Create the full presentation in your chosen style
 5. Open it in your browser
 
+### Visual Style Examples
+
+Frontend Slides uses a "show, don't tell" approach. Here are some of the distinctive styles you can choose from:
+
+| **Bold Signal** | **Dark Botanical** | **Notebook Tabs** |
+| :---: | :---: | :---: |
+| ![Bold Signal Example](examples/images/bold-signal.svg) | ![Dark Botanical Example](examples/images/dark-botanical.svg) | ![Notebook Tabs Example](examples/images/notebook-tabs.svg) |
+| [View Live Demo](examples/bold-signal.html) | [View Live Demo](examples/dark-botanical.html) | [View Live Demo](examples/notebook-tabs.html) |
+
 ### Convert a PowerPoint
 
 ```

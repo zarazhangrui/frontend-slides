@@ -200,8 +200,12 @@ When converting PowerPoint files:
 
 1. **Clean up** — Delete `.claude-design/slide-previews/` if it exists
 2. **Open** — Use `open [filename].html` to launch in browser
-3. **Summarize** — Tell the user:
-   - File location, style name, slide count
+3. **Export PDF (default ON)** — Run `scripts/export-pdf.sh [filename].html` to generate `[filename].pdf`
+   - If the user asks for HTML-only delivery, skip this step
+   - If PDF export fails, still deliver HTML and explain how to retry with `CHROME_BIN`
+4. **Summarize** — Tell the user:
+   - File location(s): HTML + PDF
+   - Style name, slide count
    - Navigation: Arrow keys, Space, scroll/swipe, click nav dots
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - If inline editing was enabled: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
@@ -217,3 +221,4 @@ When converting PowerPoint files:
 | [html-template.md](html-template.md) | HTML structure, JS features, code quality standards | Phase 3 (generation) |
 | [animation-patterns.md](animation-patterns.md) | CSS/JS animation snippets and effect-to-feeling guide | Phase 3 (generation) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction | Phase 4 (conversion) |
+| [scripts/export-pdf.sh](scripts/export-pdf.sh) | Export generated HTML slides to PDF via headless Chrome/Chromium | Phase 5 (delivery) |

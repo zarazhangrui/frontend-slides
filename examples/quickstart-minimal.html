@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - Minimal Presentation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .slide { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; }
+        h1 { font-size: clamp(2rem, 5vw, 4rem); margin-bottom: 1rem; }
+        p { font-size: clamp(1rem, 2vw, 1.5rem); opacity: 0.8; max-width: 60ch; text-align: center; }
+        
+        .slide-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .slide-2 { background: #1a1a2e; color: #eee; }
+        .slide-3 { background: #fafafa; color: #333; }
+        
+        .bullets { text-align: left; margin-top: 2rem; }
+        .bullets li { margin: 1rem 0; font-size: clamp(1rem, 2vw, 1.2rem); }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide slide-1">
+        <h1>Welcome to Frontend Slides</h1>
+        <p>A minimal example to get you started</p>
+    </div>
+    
+    <div class="slide slide-2">
+        <h1>Key Features</h1>
+        <ul class="bullets">
+            <li>Zero dependencies - Single HTML file</li>
+            <li>Responsive design - Works on any device</li>
+            <li>Beautiful themes - Multiple presets available</li>
+            <li>Easy to customize - CSS variables</li>
+        </ul>
+    </div>
+    
+    <div class="slide slide-3">
+        <h1>Get Started</h1>
+        <p>Copy this file and start editing. It's that simple!</p>
+    </div>
+</body>
+</html>

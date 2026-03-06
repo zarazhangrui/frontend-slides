@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Rendering Test</title>
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=satoshi@400,500,700&display=swap">
+
+    <!-- ===========================================
+       CONTENT RENDERING LIBRARIES
+       =========================================== -->
+    <!-- Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- LaTeX math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME)
+           =========================================== */
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.3);
+
+            --font-display: 'Clash Display', sans-serif;
+            --font-body: 'Satoshi', sans-serif;
+            --title-size: clamp(2rem, 6vw, 5rem);
+            --subtitle-size: clamp(0.875rem, 2vw, 1.25rem);
+            --body-size: clamp(0.75rem, 1.2vw, 1rem);
+
+            --slide-padding: clamp(1.5rem, 4vw, 4rem);
+            --content-gap: clamp(1rem, 2vw, 2rem);
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY BASE STYLES
+           =========================================== */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg-primary);
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        :root {
+            --title-size: clamp(1.5rem, 5vw, 4rem);
+            --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+            --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+            --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+            --small-size: clamp(0.65rem, 1vw, 0.875rem);
+            --slide-padding: clamp(1rem, 4vw, 4rem);
+            --content-gap: clamp(0.5rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+        }
+
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+                --h2-size: clamp(1rem, 3vw, 1.75rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.1rem, 4vw, 2rem);
+                --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            }
+            .nav-dots, .keyboard-hint, .decorative { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+
+        /* ===========================================
+           CONTENT RENDERING STYLES
+           =========================================== */
+        .markdown-content {
+            line-height: 1.6;
+            width: 100%;
+        }
+
+        .markdown-content > *:first-child { margin-top: 0; }
+        .markdown-content > *:last-child { margin-bottom: 0; }
+
+        .markdown-content h1 {
+            font-size: var(--title-size);
+            margin-bottom: 0.5em;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-weight: 600;
+        }
+
+        .markdown-content h2 {
+            font-size: var(--h2-size);
+            margin-bottom: 0.4em;
+            margin-top: 0.8em;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-weight: 500;
+        }
+
+        .markdown-content h3 {
+            font-size: var(--h3-size);
+            margin-bottom: 0.3em;
+            margin-top: 0.6em;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+        }
+
+        .markdown-content p {
+            font-size: var(--body-size);
+            margin-bottom: 0.75em;
+            color: var(--text-primary);
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin-bottom: 0.75em;
+            padding-left: 1.5em;
+        }
+
+        .markdown-content li {
+            font-size: var(--body-size);
+            margin-bottom: 0.4em;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 1em;
+            margin: 1em 0;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content code:not([class*="language-"]) {
+            background: rgba(127, 127, 127, 0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .markdown-content pre {
+            margin: 1em 0;
+            border-radius: 8px;
+            overflow-x: auto;
+            background: #1d1f21 !important;
+        }
+
+        .markdown-content pre code {
+            font-size: var(--small-size);
+            line-height: 1.5;
+            color: #c5c8c6 !important;
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+        }
+
+        /* Prism token colors - ensure visibility */
+        .markdown-content pre code .token.comment,
+        .markdown-content pre code .token.prolog,
+        .markdown-content pre code .token.doctype,
+        .markdown-content pre code .token.cdata {
+            color: #969896 !important;
+        }
+        .markdown-content pre code .token.punctuation {
+            color: #c5c8c6 !important;
+        }
+        .markdown-content pre code .token.property,
+        .markdown-content pre code .token.tag,
+        .markdown-content pre code .token.boolean,
+        .markdown-content pre code .token.number,
+        .markdown-content pre code .token.constant,
+        .markdown-content pre code .token.symbol,
+        .markdown-content pre code .token.deleted {
+            color: #f99157 !important;
+        }
+        .markdown-content pre code .token.selector,
+        .markdown-content pre code .token.attr-name,
+        .markdown-content pre code .token.string,
+        .markdown-content pre code .token.char,
+        .markdown-content pre code .token.builtin,
+        .markdown-content pre code .token.inserted {
+            color: #99cc99 !important;
+        }
+        .markdown-content pre code .token.operator,
+        .markdown-content pre code .token.entity,
+        .markdown-content pre code .token.url,
+        .markdown-content pre code .language-css .token.string,
+        .markdown-content pre code .style .token.string {
+            color: #71b7be !important;
+        }
+        .markdown-content pre code .token.atrule,
+        .markdown-content pre code .token.attr-value,
+        .markdown-content pre code .token.keyword {
+            color: #cc99cc !important;
+        }
+        .markdown-content pre code .token.function,
+        .markdown-content pre code .token.class-name {
+            color: #6699cc !important;
+        }
+        .markdown-content pre code .token.regex,
+        .markdown-content pre code .token.important,
+        .markdown-content pre code .token.variable {
+            color: #f99157 !important;
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .markdown-content th, .markdown-content td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.6em 0.8em;
+            text-align: left;
+            color: var(--text-primary);
+        }
+
+        .markdown-content th {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .markdown-content tr:nth-child(even) td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .markdown-content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
+        .katex-display {
+            margin: 1em 0;
+            overflow-x: auto;
+        }
+
+        .katex {
+            font-size: 1.1em;
+        }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .reveal:nth-child(4) { transition-delay: 0.4s; }
+
+        /* ===========================================
+           PROGRESS BAR & NAV
+           =========================================== */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--accent);
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .nav-dots button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--text-secondary);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dots button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ===========================================
+           SLIDE-SPECIFIC STYLES
+           =========================================== */
+        .title-slide {
+            text-align: center;
+        }
+
+        .title-slide h1 {
+            font-size: clamp(2rem, 8vw, 6rem);
+            background: linear-gradient(135deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-slide p {
+            color: var(--text-secondary);
+            font-size: var(--subtitle-size);
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar"></div>
+    <nav class="nav-dots"></nav>
+
+    <!-- Slide 1: Title -->
+    <section class="slide title-slide">
+        <div class="slide-content">
+            <h1 class="reveal">Content Rendering</h1>
+            <p class="reveal">Markdown - LaTeX - Code Blocks</p>
+        </div>
+    </section>
+
+    <!-- Slide 2: Markdown Overview -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="markdown-content">
+# Markdown Support
+
+Full markdown syntax is supported and rendered as styled HTML.
+
+## Text Formatting
+
+This is **bold text** and this is *italic text*.
+You can also use ~~strikethrough~~ and `inline code`.
+
+## Lists
+
+- Unordered list item one
+- Unordered list item two
+- Nested item
+  - Sub-item A
+  - Sub-item B
+
+> "The best way to predict the future is to create it."
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 3: Code Blocks -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="markdown-content">
+# Syntax Highlighting
+
+Code blocks with automatic syntax highlighting for 15+ languages.
+
+## JavaScript
+
+```javascript
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Example usage
+const result = fibonacci(10);
+console.log(`Fibonacci(10) = ${result}`);
+```
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 4: More Code -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="markdown-content">
+## Python
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+# Create instance
+rect = Rectangle(10, 5)
+print(f"Area: {rect.area()}")
+```
+
+## CSS
+
+```css
+.container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 2rem;
+}
+```
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 5: LaTeX Math -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="markdown-content">
+# LaTeX Math Rendering
+
+Beautiful math equations rendered with KaTeX.
+
+## Inline Math
+
+The famous equation $E = mc^2$ shows the relationship between mass and energy.
+The quadratic formula $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ solves any quadratic equation.
+
+## Block Equations
+
+The Gaussian integral:
+
+$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
+
+Matrix notation:
+
+$$\mathbf{A} = \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{pmatrix}$$
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 6: Tables -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="markdown-content">
+# Tables
+
+Markdown tables are fully supported.
+
+| Language | Use Case | Syntax |
+|----------|----------|--------|
+| JavaScript | Web development | `const x = 1;` |
+| Python | Data science | `x = 1` |
+| Go | Backend services | `x := 1` |
+| Rust | Systems programming | `let x = 1;` |
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 7: Complete Example -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="markdown-content">
+# Complete Example
+
+Combining all features in one slide.
+
+## The Derivative
+
+In calculus, the derivative measures the rate of change of a function.
+For $f(x) = x^2$, the derivative is:
+
+$$f'(x) = \lim_{h \to 0} \frac{(x+h)^2 - x^2}{h} = 2x$$
+
+## Python Code
+
+```python
+def derivative(f, x, h=0.0001):
+    """Calculate derivative using finite difference"""
+    return (f(x + h) - f(x)) / h
+
+# Test with f(x) = x^2 at x = 3
+result = derivative(lambda x: x**2, 3)
+print(f"f'(3) = {result:.2f}")  # Output: ~6.00
+```
+
+The result is approximately $6$, which is the correct derivative of $x^2$ at $x = 3$.
+            </div>
+        </div>
+    </section>
+
+    <script>
+        /* ===========================================
+           CONTENT PARSER
+           Parses markdown, LaTeX, and code blocks
+           =========================================== */
+        function parseSlideContent() {
+            document.querySelectorAll('.markdown-content').forEach(element => {
+                // Get raw content (preserve whitespace)
+                const rawContent = element.textContent;
+
+                // 1. Protect LaTeX block delimiters $$...$$ first
+                // Use unique placeholders without underscores (to avoid markdown parsing issues)
+                const latexBlocks = [];
+                let content = rawContent
+                    .replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
+                        latexBlocks.push({ type: 'block', content: latex.trim() });
+                        return `LATEXBLOCK${latexBlocks.length - 1}LATEXBLOCK`;
+                    });
+
+                // 2. Then protect inline $...$ (but not $$)
+                content = content.replace(/\$([^\$\n]+?)\$/g, (match, latex) => {
+                    latexBlocks.push({ type: 'inline', content: latex.trim() });
+                    return `LATEXINLINE${latexBlocks.length - 1}LATEXINLINE`;
+                });
+
+                // 3. Parse markdown
+                content = marked.parse(content);
+
+                // 4. Restore LaTeX blocks
+                latexBlocks.forEach((item, index) => {
+                    const placeholder = item.type === 'block'
+                        ? `LATEXBLOCK${index}LATEXBLOCK`
+                        : `LATEXINLINE${index}LATEXINLINE`;
+                    const container = document.createElement('span');
+                    try {
+                        katex.render(item.content, container, {
+                            displayMode: item.type === 'block',
+                            throwOnError: false
+                        });
+                        content = content.replace(placeholder, container.innerHTML);
+                    } catch (e) {
+                        content = content.replace(placeholder, `<span class="latex-error">${item.content}</span>`);
+                    }
+                });
+
+                // 5. Set parsed HTML
+                element.innerHTML = content;
+
+                // 6. Trigger syntax highlighting for code blocks
+                element.querySelectorAll('pre code').forEach(block => {
+                    Prism.highlightElement(block);
+                });
+            });
+        }
+
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.init();
+            }
+
+            init() {
+                // Parse content first
+                parseSlideContent();
+
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+            }
+
+            setupIntersectionObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const slideIndex = Array.from(this.slides).indexOf(entry.target);
+                            this.currentSlide = slideIndex;
+                            entry.target.classList.add('visible');
+                            this.updateProgressBar();
+                            this.updateNavDots();
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' ||
+                        e.key === ' ' || e.key === 'PageDown') {
+                        e.preventDefault();
+                        this.nextSlide();
+                    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' ||
+                               e.key === 'PageUp') {
+                        e.preventDefault();
+                        this.prevSlide();
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        this.goToSlide(0);
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        this.goToSlide(this.slides.length - 1);
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let touchStartY = 0;
+                let touchEndY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartY = e.changedTouches[0].screenY;
+                });
+
+                document.addEventListener('touchend', (e) => {
+                    touchEndY = e.changedTouches[0].screenY;
+                    this.handleSwipe();
+                });
+            }
+
+            handleSwipe() {
+                const diff = touchStartY - touchEndY;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        this.nextSlide();
+                    } else {
+                        this.prevSlide();
+                    }
+                }
+            }
+
+            nextSlide() {
+                if (this.currentSlide < this.slides.length - 1) {
+                    this.goToSlide(this.currentSlide + 1);
+                }
+            }
+
+            prevSlide() {
+                if (this.currentSlide > 0) {
+                    this.goToSlide(this.currentSlide - 1);
+                }
+            }
+
+            goToSlide(index) {
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+            }
+
+            setupProgressBar() {
+                this.updateProgressBar();
+            }
+
+            updateProgressBar() {
+                const progress = ((this.currentSlide + 1) / this.slides.length) * 100;
+                document.querySelector('.progress-bar').style.width = progress + '%';
+            }
+
+            setupNavDots() {
+                const nav = document.querySelector('.nav-dots');
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('button');
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    nav.appendChild(dot);
+                });
+                this.updateNavDots();
+            }
+
+            updateNavDots() {
+                const dots = document.querySelectorAll('.nav-dots button');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+        }
+
+        new SlidePresentation();
+    </script>
+</body>
+</html>

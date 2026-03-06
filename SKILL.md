@@ -217,3 +217,67 @@ When converting PowerPoint files:
 | [html-template.md](html-template.md) | HTML structure, JS features, code quality standards | Phase 3 (generation) |
 | [animation-patterns.md](animation-patterns.md) | CSS/JS animation snippets and effect-to-feeling guide | Phase 3 (generation) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction | Phase 4 (conversion) |
+
+## Rich Content Rendering (Markdown, LaTeX, Code)
+
+For technical presentations, educational content, or documentation-style slides, you can include rich content with markdown, LaTeX math equations, and syntax-highlighted code blocks.
+
+### How It Works
+
+When a slide contains a `.markdown-content` element, the presentation automatically:
+1. Parses markdown syntax into HTML
+2. Renders LaTeX math equations (inline `$...$` and block `$$...$$`)
+3. Applies syntax highlighting to code blocks
+
+### Enabling Rich Content
+
+Include these CDN libraries in the HTML `<head>`:
+- **Marked.js** - Markdown parsing
+- **KaTeX** - LaTeX math rendering
+- **Prism.js** - Syntax highlighting for 15+ languages
+
+See [html-template.md](html-template.md) for the complete implementation guide.
+
+### Syntax Examples
+
+**Markdown:**
+```markdown
+# Heading 1
+## Heading 2
+
+**Bold** and *italic* text
+
+- Bullet list
+- With items
+
+> Blockquote
+
+| Table | Header |
+|-------|--------|
+| Cell  | Cell   |
+```
+
+**LaTeX Math:**
+- Inline: `$E = mc^2$`
+- Block: `$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$`
+
+**Code Blocks:**
+<pre>
+```javascript
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+```
+</pre>
+
+Supported languages: JavaScript, TypeScript, Python, Go, Rust, SQL, JSON, YAML, Bash, and more.
+
+### Content Density for Rich Content Slides
+
+| Content Type | Maximum Per Slide |
+|--------------|------------------|
+| Markdown with code | 1 heading + 1 code block OR 1 heading + 5 bullet points |
+| LaTeX math | 1 heading + 2 equations maximum |
+| Combined | 1 heading + 1 code block + 1 inline equation |
+
+**Tip:** Split complex content into multiple slides. Never exceed viewport limits.

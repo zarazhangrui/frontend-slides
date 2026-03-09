@@ -151,3 +151,8 @@ img, .image-container {
         scroll-behavior: auto;
     }
 }
+
+/* ===========================================
+   CONTENT RENDERING BASE STYLES
+   Markdown, LaTeX, and code block base styles
+   =========================================== */

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 3rem 1rem;
+        }
+
+        .container { width: 100%; max-width: 480px; }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        #todo-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+            margin-bottom: 1.5rem;
+        }
+
+        #todo-input:focus { border-color: #4a90d9; }
+
+        ul { list-style: none; }
+
+        li {
+            display: flex;
+            align-items: center;
+            min-height: 44px;
+            border-bottom: 1px solid #eee;
+            animation: fadeIn 0.25s ease;
+        }
+
+        li.completed label {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        li label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.75rem 0;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            word-break: break-word;
+        }
+
+        li input[type="checkbox"] {
+            width: 1.15rem;
+            height: 1.15rem;
+            cursor: pointer;
+            accent-color: #4a90d9;
+            flex-shrink: 0;
+        }
+
+        input:focus-visible {
+            outline: 2px solid #4a90d9;
+            outline-offset: 2px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            li { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Todo</h1>
+        <input id="todo-input" type="text" placeholder="What needs doing?" autofocus />
+        <ul id="todo-list" aria-label="Todo list"></ul>
+        <div id="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    </div>
+
+    <script>
+        const input = document.getElementById('todo-input');
+        const list  = document.getElementById('todo-list');
+        const status = document.getElementById('status');
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const text = input.value.trim();
+            if (!text) return;
+
+            addTodo(text);
+            input.value = '';
+        });
+
+        /* Event delegation — one listener handles all checkboxes */
+        list.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const li = e.target.closest('li');
+                li.classList.toggle('completed', e.target.checked);
+                status.textContent = e.target.checked ? 'Completed' : 'Uncompleted';
+            }
+        });
+
+        function addTodo(text) {
+            const li = document.createElement('li');
+            const label = document.createElement('label');
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+
+            label.append(cb, ' ', text);
+            li.appendChild(label);
+            list.appendChild(li);
+
+            status.textContent = '"' + text + '" added';
+        }
+    </script>
+</body>
+</html>

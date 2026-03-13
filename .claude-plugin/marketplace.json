@@ -1,0 +1,19 @@
+{
+  "name": "frontend-slides-marketplace",
+  "owner": {
+    "name": "Zara Zhang Rui",
+    "email": "zarazhangrui@gmail.com"
+  },
+  "metadata": {
+    "description": "Curated plugins for frontend slides",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "frontend-slides",
+      "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files",
+      "version": "1.0.0",
+      "source": "./plugins/frontend-slides"
+    }
+  ]
+}

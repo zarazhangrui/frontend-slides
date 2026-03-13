@@ -21,26 +21,23 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 
 ## Installation
 
-### For Claude Code Users
+### Method 1: Plugin Install (Recommended)
 
-Copy the skill files to your Claude Code skills directory:
-
-```bash
-# Create the skill directory
-mkdir -p ~/.claude/skills/frontend-slides/scripts
-
-# Copy all files (or clone this repo directly)
-cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.claude/skills/frontend-slides/
-cp scripts/extract-pptx.py ~/.claude/skills/frontend-slides/scripts/
-```
-
-Or clone directly:
+Install directly from within Claude Code:
 
 ```bash
-git clone https://github.com/zarazhangrui/frontend-slides.git ~/.claude/skills/frontend-slides
+/plugin marketplace add zarazhangrui/frontend-slides
 ```
 
-Then use it by typing `/frontend-slides` in Claude Code.
+### Method 2: Manual Installation
+
+Clone the repository to your Claude Code plugins directory:
+
+```bash
+git clone https://github.com/zarazhangrui/frontend-slides.git ~/.claude/plugins/frontend-slides
+```
+
+After installation, use the skill by typing `/frontend-slides` in Claude Code.
 
 ## Usage
 

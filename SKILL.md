@@ -208,6 +208,74 @@ When converting PowerPoint files:
 
 ---
 
+## Phase 6: Hosting (Optional)
+
+After delivery, **ask the user explicitly:** *"Would you like to host and share this presentation?"*
+
+If yes, the presentation should be placed in `~/frontend-slides/<name>/` (with all assets). Then run the hosting scripts.
+
+### Output Directory
+
+When hosting is desired, output the presentation to `~/frontend-slides/<name>/` instead of the current directory:
+
+```
+~/frontend-slides/
+  my-deck/
+    index.html
+    assets/        (if any images)
+  another-deck/
+    index.html
+```
+
+### Start Hosting
+
+```bash
+bash scripts/start-hosting.sh
+```
+
+The script runs three phases automatically:
+
+**Phase 1 (Auto) — Local Network:**
+- Detects best server: `docker` (nginx:alpine) > `python3` > `npx serve`
+- Picks first free port in 9100-9199
+- Serves `~/frontend-slides/` with directory listing disabled
+- Prints localhost + LAN IP for phone/laptop access
+
+**Phase 2 (Auto) — Tailscale:**
+- Detects if Tailscale CLI is installed and connected
+- If yes: registers `tailscale serve /slides → localhost:<port>`
+- Prints `https://<tailscale-domain>/slides/<name>/`
+
+**Phase 3 (Ask) — Public via Cloudflare Tunnel:**
+- Detects if `cloudflared` is installed
+- Asks user for confirmation before exposing publicly
+- Creates a temporary anonymous public URL (`*.trycloudflare.com`)
+- Directory listing is disabled — visitors need the exact slide URL
+
+### Stop Hosting
+
+```bash
+bash scripts/stop-hosting.sh
+```
+
+Tears down all three phases in reverse: kills Cloudflare tunnel, unregisters Tailscale Serve, stops the local server.
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SLIDES_DIR` | `~/frontend-slides` | Root directory for all slide decks |
+
+### Prerequisites
+
+| Phase | Required | Install |
+|-------|----------|---------|
+| Phase 1 | Docker OR Python 3 OR Node.js | Any one of these |
+| Phase 2 | Tailscale | [tailscale.com/download](https://tailscale.com/download) |
+| Phase 3 | cloudflared | `brew install cloudflared` |
+
+---
+
 ## Supporting Files
 
 | File | Purpose | When to Read |
@@ -217,3 +285,5 @@ When converting PowerPoint files:
 | [html-template.md](html-template.md) | HTML structure, JS features, code quality standards | Phase 3 (generation) |
 | [animation-patterns.md](animation-patterns.md) | CSS/JS animation snippets and effect-to-feeling guide | Phase 3 (generation) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction | Phase 4 (conversion) |
+| [scripts/start-hosting.sh](scripts/start-hosting.sh) | Three-phase hosting launcher | Phase 6 (hosting) |
+| [scripts/stop-hosting.sh](scripts/stop-hosting.sh) | Hosting teardown | Phase 6 (hosting) |

@@ -105,6 +105,8 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a concise 
 | `html-template.md` | HTML structure and JS features | Phase 3 (generation) |
 | `animation-patterns.md` | CSS/JS animation reference | Phase 3 (generation) |
 | `scripts/extract-pptx.py` | PPT content extraction | Phase 4 (conversion) |
+| `scripts/start-hosting.sh` | Three-phase hosting | Phase 6 (hosting) |
+| `scripts/stop-hosting.sh` | Hosting teardown | Phase 6 (hosting) |
 
 This design follows [OpenAI's harness engineering](https://openai.com/index/harness-engineering/) principle: "give the agent a map, not a 1,000-page instruction manual."
 
@@ -120,10 +122,57 @@ This skill was born from the belief that:
 
 4. **Comments are kindness.** Code should explain itself to future-you (or anyone else who opens it).
 
+## Hosting Your Slides
+
+After generating a presentation, you can host and share it with a single command:
+
+```bash
+bash scripts/start-hosting.sh
+```
+
+The script progressively enables three levels of access:
+
+| Phase | Access Level | Requirement | Behavior |
+|-------|-------------|-------------|----------|
+| **Phase 1** | 🏠 Local Network | Docker, Python 3, or Node.js | **Auto** — starts server, prints localhost + LAN IP |
+| **Phase 2** | 🔒 Tailscale | [Tailscale](https://tailscale.com/download) | **Auto** — detects & registers if available |
+| **Phase 3** | 🌍 Public | [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) | **Asks first** — creates temporary anonymous URL |
+
+```
+╔══════════════════════════════════════╗
+║     Frontend Slides Hosting          ║
+╚══════════════════════════════════════╝
+
+Phase 1: Local Network
+──────────────────────
+✓ Docker (nginx:alpine) on port 9100
+
+  http://localhost:9100/my-deck/
+  http://192.168.1.42:9100/my-deck/  (LAN / phone)
+
+Phase 2: Tailscale
+──────────────────
+✓ Tailscale Serve registered
+
+  https://my-machine.tailnet.ts.net/slides/my-deck/
+
+Phase 3: Public Access
+──────────────────────
+Expose slides publicly via Cloudflare Tunnel? [y/N] y
+✓ Cloudflare Tunnel active
+
+  https://odd-rabbit-abc123.trycloudflare.com/my-deck/
+```
+
+To stop everything: `bash scripts/stop-hosting.sh`
+
+All slides live in `~/frontend-slides/<name>/`. Add a new deck folder and it's instantly available — no restart needed.
+
 ## Requirements
 
 - [Claude Code](https://claude.ai/claude-code) CLI
 - For PPT conversion: Python with `python-pptx` library
+- For hosting: Docker (preferred), Python 3, or Node.js
 
 ## Credits
 

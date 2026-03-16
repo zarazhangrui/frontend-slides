@@ -252,6 +252,10 @@ document.addEventListener('keydown', (e) => {
 });
 ```
 
+## Content Rendering (Optional)
+
+For presentations that need math equations or syntax-highlighted code blocks, see [content-rendering.md](content-rendering.md).
+
 ## Image Pipeline (Skip If No Images)
 
 If user chose "No images" in Phase 1, skip this entirely. If images were provided, process them before generating HTML.

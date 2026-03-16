@@ -217,3 +217,7 @@ When converting PowerPoint files:
 | [html-template.md](html-template.md) | HTML structure, JS features, code quality standards | Phase 3 (generation) |
 | [animation-patterns.md](animation-patterns.md) | CSS/JS animation snippets and effect-to-feeling guide | Phase 3 (generation) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction | Phase 4 (conversion) |
+
+## Content Rendering (Math & Code)
+
+For presentations that need math equations or syntax-highlighted code blocks, see [content-rendering.md](content-rendering.md).

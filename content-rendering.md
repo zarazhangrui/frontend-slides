@@ -101,13 +101,29 @@ Add these to your HTML head (using local files):
 
 The `syntax-highlight/` folder includes:
 - `prism-core.js` - Core library
-- `prism-javascript.js` - JavaScript/TypeScript
+- `prism-clike.js` - C-like base grammar (required by C and C++)
+- `prism-javascript.js` - JavaScript
+- `prism-typescript.js` - TypeScript
 - `prism-python.js` - Python
 - `prism-css.js` - CSS
 - `prism-bash.js` - Bash/Shell
-- `prism-typescript.js` - TypeScript
 - `prism-go.js` - Go
 - `prism-sql.js` - SQL
+- `prism-c.js` - C (requires `prism-clike.js`)
+- `prism-cpp.js` - C++ (requires `prism-clike.js` and `prism-c.js`)
+- `prism-rust.js` - Rust
+- `prism-pseudocode.js` - Pseudocode (`language-pseudocode`, `language-pseudo`, `language-pso`)
+
+**Load order matters for C/C++** — include dependencies before the language file:
+
+```html
+<script src="syntax-highlight/prism-core.js"></script>
+<script src="syntax-highlight/prism-clike.js"></script>  <!-- required by C/C++ -->
+<script src="syntax-highlight/prism-c.js"></script>
+<script src="syntax-highlight/prism-cpp.js"></script>    <!-- requires C -->
+<script src="syntax-highlight/prism-rust.js"></script>
+<script src="syntax-highlight/prism-pseudocode.js"></script>
+```
 
 ### CSS Styles for Code Blocks
 

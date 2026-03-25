@@ -2181,6 +2181,29 @@ function drawS7Tree() {
      ============================================================ -->
 
 <style id="__simple-review-styles">
+/* ========================================
+   Push 模式 - 覆盖 .slide 宽度
+   只在侧边栏打开时生效，关闭后自动回归
+   ======================================== */
+
+/* 桌面：侧边栏 400px */
+html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100vw - 400px) !important}
+
+/* 平板：侧边栏 350px */
+@media(max-width:1200px){
+  html.__sr-pushed .slide{width:calc(100vw - 350px) !important;min-width:calc(100vw - 350px) !important}
+}
+
+/* 小屏幕：侧边栏 80vw */
+@media(max-width:768px){
+  html.__sr-pushed .slide{width:20vw !important;min-width:20vw !important}
+}
+
+/* 移动端：不推挤，侧边栏覆盖 */
+@media(max-width:480px){
+  html.__sr-pushed .slide{width:100vw !important;min-width:100vw !important}
+}
+
 /* Review 按钮 */
 #__srb{position:fixed;top:16px;left:16px;z-index:9000;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:8px;padding:8px 12px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;font-family:ui-sans-serif,sans-serif;transition:all .2s;user-select:none}
 #__srb:hover{color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.3)}
@@ -2356,6 +2379,7 @@ function drawS7Tree() {
   function togglePanel(){
     state.panelOpen=!state.panelOpen;
     panel.classList.toggle('open',state.panelOpen);
+    document.documentElement.classList.toggle('__sr-pushed',state.panelOpen);
     if(state.panelOpen){
       textarea.focus();
       showSlideIndicator();
@@ -2500,16 +2524,33 @@ function drawS7Tree() {
   clearBtn.addEventListener('click',function(){textarea.value='';});
   exportBtn.addEventListener('click',exportComments);
 
-  // 键盘快捷键
+  // 阻止 textarea 中的按键事件冒泡（防止空格等键触发演示文稿翻页）
+  textarea.addEventListener('keydown',function(e){
+    e.stopPropagation();
+    // Ctrl+Enter 保存评论
+    if(e.ctrlKey&&e.key==='Enter'){
+      e.preventDefault();
+      saveComment();
+    }
+  });
+  textarea.addEventListener('keyup',function(e){
+    e.stopPropagation();
+  });
+  textarea.addEventListener('keypress',function(e){
+    e.stopPropagation();
+  });
+
+  // 键盘快捷键（在捕获阶段监听，优先于浏览器处理）
   document.addEventListener('keydown',function(e){
     if(e.ctrlKey&&e.key==='r'){
       e.preventDefault();
       togglePanel();
+      return false;
     }
     if(e.key==='Escape'&&state.panelOpen){
       togglePanel();
     }
-  });
+  },true); // true = 捕获阶段
 
   // 初始化
   setupSlideDetection();

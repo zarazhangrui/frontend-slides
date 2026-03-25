@@ -2275,6 +2275,25 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
 #__srs{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(67,97,238,.9);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999;font-family:ui-monospace,monospace;box-shadow:0 4px 12px rgba(0,0,0,.3)}
 #__srs.show{opacity:1}
 
+/* 选区框 */
+#__srsel{position:fixed;border:2px dashed #4361ee;background:rgba(67,97,238,.15);pointer-events:none;z-index:9400;display:none}
+#__srsel.active{display:block}
+
+/* 元素高亮（悬停时） */
+.__sr-highlight{outline:2px solid #4361ee !important;outline-offset:2px;cursor:pointer !important}
+
+/* 评论区域高亮框容器 */
+#__srhlt{position:fixed;top:0;left:0;pointer-events:none;z-index:9300}
+.__srhlt-box{position:fixed;border:3px solid #f59e0b;background:rgba(245,158,11,.15);pointer-events:none;border-radius:4px}
+.__srhlt-box::before{content:attr(data-id);position:absolute;top:-20px;left:0;background:#f59e0b;color:#000;font-size:10px;font-weight:bold;padding:2px 6px;border-radius:3px;font-family:ui-monospace,monospace}
+.__srhlt-box.flash{animation:__sr-pulse 1s ease-in-out 3}
+@keyframes __sr-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.02)}}
+
+/* 可点击的评论 */
+.__srcom.clickable{cursor:pointer}
+.__srcom.clickable:hover{border-color:#f59e0b}
+.__srcom.selected{border-color:#f59e0b;background:rgba(245,158,11,.1)}
+
 /* 小屏幕上的按钮适配 */
 @media(max-width:480px){
   #__srb{font-size:11px;padding:6px 10px}
@@ -2312,6 +2331,8 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
 </div>
 
 <div id="__srs"></div>
+<div id="__srsel"></div>
+<div id="__srhlt"></div>
 
 <script>
 (function(){
@@ -2334,6 +2355,16 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
   var countLabel=document.getElementById('__srfc');
   var exportBtn=document.getElementById('__srexp');
   var slideIndicator=document.getElementById('__srs');
+  var selectionBox=document.getElementById('__srsel');
+  var highlightBox=document.getElementById('__srhlt');
+
+  // 选区/元素选择状态
+  var selState={
+    dragging:false,
+    startX:0,
+    startY:0,
+    lastHighlight:null
+  };
 
   // 使用 IntersectionObserver 检测当前幻灯片
   function setupSlideDetection(){
@@ -2383,7 +2414,64 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
     if(state.panelOpen){
       textarea.focus();
       showSlideIndicator();
+    }else{
+      hideAllHighlights();
+      clearSelectedComment();
     }
+  }
+
+  // 解析单行位置信息
+  function parseSingleLocation(line){
+    if(!line.startsWith('📍'))return null;
+
+    // 解析区域: 📍 [Slide N, 区域: (x1,y1)-(x2,y2)]
+    var areaMatch=line.match(/区域:\s*\((-?\d+),(-?\d+)\)-\((-?\d+),(-?\d+)\)/);
+    if(areaMatch){
+      return{
+        type:'area',
+        x1:parseInt(areaMatch[1]),
+        y1:parseInt(areaMatch[2]),
+        x2:parseInt(areaMatch[3]),
+        y2:parseInt(areaMatch[4])
+      };
+    }
+
+    // 解析元素位置: 📍 [Slide N, <tag.class> "text" @ (x,y,w,h)]
+    var elemMatch=line.match(/@\s*\((-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+)\)/);
+    if(elemMatch){
+      return{
+        type:'element',
+        x:parseInt(elemMatch[1]),
+        y:parseInt(elemMatch[2]),
+        w:parseInt(elemMatch[3]),
+        h:parseInt(elemMatch[4])
+      };
+    }
+    // 兼容旧格式: @ (x,y)
+    var elemMatchOld=line.match(/@\s*\((-?\d+),\s*(-?\d+)\)/);
+    if(elemMatchOld){
+      return{
+        type:'element',
+        x:parseInt(elemMatchOld[1]),
+        y:parseInt(elemMatchOld[2]),
+        w:150,
+        h:40
+      };
+    }
+
+    return null;
+  }
+
+  // 解析所有位置信息（返回数组）
+  function parseLocations(text){
+    var locations=[];
+    var lines=text.split('\n');
+    for(var i=0;i<lines.length;i++){
+      if(!lines[i].startsWith('📍'))break;
+      var loc=parseSingleLocation(lines[i]);
+      if(loc)locations.push(loc);
+    }
+    return locations.length>0?locations:null;
   }
 
   // 保存评论
@@ -2394,11 +2482,15 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
     var slideIdx=state.currentSlide;
     if(!state.comments[slideIdx])state.comments[slideIdx]=[];
 
+    // 解析位置信息（支持多个）
+    var location=parseLocations(text);
+
     var comment={
       id:state.nextId++,
       text:text,
       timestamp:new Date().toISOString(),
-      slide:slideIdx+1
+      slide:slideIdx+1,
+      location:location
     };
 
     state.comments[slideIdx].push(comment);
@@ -2421,10 +2513,129 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
     updateFooter();
   }
 
+  // 显示所有高亮框
+  function showAllHighlights(slideIdx){
+    // 清除旧的高亮框
+    highlightBox.innerHTML='';
+
+    var comments=state.comments[slideIdx]||[];
+    var slides=document.querySelectorAll('.slide');
+    var slideEl=slides[slideIdx];
+    if(!slideEl)return;
+
+    var slideRect=slideEl.getBoundingClientRect();
+
+    comments.forEach(function(c){
+      if(!c.location)return;
+
+      // location 现在是数组
+      var locations=Array.isArray(c.location)?c.location:[c.location];
+
+      locations.forEach(function(loc,idx){
+        var x,y,w,h;
+
+        if(loc.type==='area'){
+          x=slideRect.left+loc.x1;
+          y=slideRect.top+loc.y1;
+          w=loc.x2-loc.x1;
+          h=loc.y2-loc.y1;
+        }else if(loc.type==='element'){
+          x=slideRect.left+loc.x;
+          y=slideRect.top+loc.y;
+          w=loc.w;
+          h=loc.h;
+        }else{
+          return;
+        }
+
+        var box=document.createElement('div');
+        box.className='__srhlt-box';
+        box.setAttribute('data-id','#'+c.id+(locations.length>1?'.'+String.fromCharCode(97+idx):''));
+        box.style.left=x+'px';
+        box.style.top=y+'px';
+        box.style.width=w+'px';
+        box.style.height=h+'px';
+        highlightBox.appendChild(box);
+      });
+    });
+  }
+
+  // 闪烁特定评论的高亮框
+  function flashHighlight(commentId){
+    var boxes=highlightBox.querySelectorAll('.__srhlt-box');
+    boxes.forEach(function(box){
+      if(box.getAttribute('data-id')==='#'+commentId){
+        box.classList.remove('flash');
+        void box.offsetWidth; // 强制重绘
+        box.classList.add('flash');
+      }
+    });
+  }
+
+  // 隐藏所有高亮框
+  function hideAllHighlights(){
+    highlightBox.innerHTML='';
+  }
+
+  // 当前选中的评论
+  var selectedCommentEl=null;
+
+  // 清除选中状态
+  function clearSelectedComment(){
+    if(selectedCommentEl){
+      selectedCommentEl.classList.remove('selected');
+      selectedCommentEl=null;
+    }
+    hideAllHighlights();
+  }
+
+  // 显示单个评论的高亮
+  function showCommentHighlight(comment,slideIdx){
+    hideAllHighlights();
+    if(!comment.location)return;
+
+    var slides=document.querySelectorAll('.slide');
+    var slideEl=slides[slideIdx];
+    if(!slideEl)return;
+
+    var slideRect=slideEl.getBoundingClientRect();
+    var locations=Array.isArray(comment.location)?comment.location:[comment.location];
+
+    locations.forEach(function(loc,idx){
+      var x,y,w,h;
+
+      if(loc.type==='area'){
+        x=slideRect.left+loc.x1;
+        y=slideRect.top+loc.y1;
+        w=loc.x2-loc.x1;
+        h=loc.y2-loc.y1;
+      }else if(loc.type==='element'){
+        x=slideRect.left+loc.x;
+        y=slideRect.top+loc.y;
+        w=loc.w;
+        h=loc.h;
+      }else{
+        return;
+      }
+
+      var box=document.createElement('div');
+      box.className='__srhlt-box';
+      box.setAttribute('data-id','#'+comment.id+(locations.length>1?'.'+String.fromCharCode(97+idx):''));
+      box.style.left=x+'px';
+      box.style.top=y+'px';
+      box.style.width=w+'px';
+      box.style.height=h+'px';
+      highlightBox.appendChild(box);
+    });
+  }
+
   // 渲染当前页评论
   function renderComments(){
     var slideIdx=state.currentSlide;
     var comments=state.comments[slideIdx]||[];
+
+    // 切换页面时清除高亮
+    clearSelectedComment();
 
     if(comments.length===0){
       list.innerHTML='';
@@ -2435,14 +2646,36 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
     list.innerHTML='';
     comments.forEach(function(c){
       var div=document.createElement('div');
-      div.className='__srcom';
-      div.innerHTML='<div class="__srm"><span class="__srn">#'+c.id+'</span><span class="__srs">'+formatTime(c.timestamp)+'</span><button class="__srd" data-slide="'+slideIdx+'" data-id="'+c.id+'" title="删除此评论">✕</button></div><div class="__srtxt">'+esc(c.text)+'</div>';
+      var hasLocation=c.location!==null&&c.location!==undefined;
+      div.className='__srcom'+(hasLocation?' clickable':'');
+      div.innerHTML='<div class="__srm"><span class="__srn">#'+c.id+'</span><span class="__srs">'+formatTime(c.timestamp)+(hasLocation?' 📍':'')+'</span><button class="__srd" data-slide="'+slideIdx+'" data-id="'+c.id+'" title="删除此评论">✕</button></div><div class="__srtxt">'+esc(c.text)+'</div>';
+
+      // 如果有位置信息，点击时显示高亮并选中评论
+      if(hasLocation){
+        div.addEventListener('click',function(e){
+          if(e.target.classList.contains('__srd'))return;
+          e.stopPropagation();
+          console.log('Clicked comment',c.id,'on slide',slideIdx);
+
+          // 清除之前的选中
+          clearSelectedComment();
+
+          // 选中当前评论
+          div.classList.add('selected');
+          selectedCommentEl=div;
+
+          // 显示该评论的高亮
+          showCommentHighlight(c,slideIdx);
+        });
+      }
+
       list.appendChild(div);
     });
 
     // 绑定删除按钮
     list.querySelectorAll('.__srd').forEach(function(btn){
-      btn.addEventListener('click',function(){
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
         var slide=parseInt(btn.dataset.slide);
         var id=parseInt(btn.dataset.id);
         if(confirm('确定要删除这条评论吗？')){
@@ -2551,6 +2784,201 @@ html.__sr-pushed .slide{width:calc(100vw - 400px) !important;min-width:calc(100v
       togglePanel();
     }
   },true); // true = 捕获阶段
+
+  // ========================================
+  // 选区和元素选择功能
+  // ========================================
+
+  // 插入位置信息到文本框开头（支持多个位置）
+  function insertLocationInfo(info){
+    var current=textarea.value;
+    // 如果已有位置信息，追加到位置信息区域
+    if(current.startsWith('📍')){
+      var lines=current.split('\n');
+      // 找到第一个非位置信息行
+      var insertIdx=0;
+      for(var i=0;i<lines.length;i++){
+        if(lines[i].startsWith('📍')){
+          insertIdx=i+1;
+        }else{
+          break;
+        }
+      }
+      lines.splice(insertIdx,0,info);
+      textarea.value=lines.join('\n');
+    }else{
+      textarea.value=info+'\n'+current;
+    }
+    textarea.focus();
+  }
+
+  // 获取元素描述
+  function getElementDesc(el){
+    var tag=el.tagName.toLowerCase();
+    var cls=el.className?'.'+el.className.split(' ').filter(function(c){return c&&!c.startsWith('__sr');}).join('.'):'';
+    var text=el.textContent||'';
+    // 移除换行符和多余空白，防止破坏位置信息解析
+    text=text.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().substring(0,30);
+    if(text.length>=30)text+='...';
+    return '<'+tag+cls+'>'+(text?' "'+text+'"':'');
+  }
+
+  // 获取元素相对于当前幻灯片的位置
+  function getElementPosition(el){
+    var slides=document.querySelectorAll('.slide');
+    var currentSlideEl=slides[state.currentSlide];
+    if(!currentSlideEl)return null;
+
+    var slideRect=currentSlideEl.getBoundingClientRect();
+    var elRect=el.getBoundingClientRect();
+
+    return{
+      x:Math.round(elRect.left-slideRect.left),
+      y:Math.round(elRect.top-slideRect.top),
+      w:Math.round(elRect.width),
+      h:Math.round(elRect.height)
+    };
+  }
+
+  // 检查元素是否在幻灯片内且不是我们的UI
+  function isValidTarget(el){
+    if(!el)return false;
+    // 排除我们的UI元素
+    if(el.id&&el.id.startsWith('__sr'))return false;
+    if(el.className&&typeof el.className==='string'&&el.className.includes('__sr'))return false;
+    // 检查是否在幻灯片内
+    return el.closest('.slide')!==null;
+  }
+
+  // 鼠标按下 - 开始选区
+  document.addEventListener('mousedown',function(e){
+    if(!state.panelOpen)return;
+    if(!isValidTarget(e.target))return;
+    // 忽略右键
+    if(e.button!==0)return;
+
+    selState.dragging=true;
+    selState.startX=e.clientX;
+    selState.startY=e.clientY;
+    selectionBox.style.left=e.clientX+'px';
+    selectionBox.style.top=e.clientY+'px';
+    selectionBox.style.width='0';
+    selectionBox.style.height='0';
+  });
+
+  // 鼠标移动 - 更新选区或高亮元素
+  document.addEventListener('mousemove',function(e){
+    if(!state.panelOpen)return;
+
+    // 如果在拖拽，更新选区框
+    if(selState.dragging){
+      var x=Math.min(e.clientX,selState.startX);
+      var y=Math.min(e.clientY,selState.startY);
+      var w=Math.abs(e.clientX-selState.startX);
+      var h=Math.abs(e.clientY-selState.startY);
+
+      // 只要有移动(>3px)，就清除 hover 高亮（视觉反馈：进入拖拽模式）
+      if((w>3||h>3)&&selState.lastHighlight){
+        selState.lastHighlight.classList.remove('__sr-highlight');
+        selState.lastHighlight=null;
+      }
+
+      // 只有拖动超过5px才显示选区框
+      if(w>5||h>5){
+        selectionBox.classList.add('active');
+        selectionBox.style.left=x+'px';
+        selectionBox.style.top=y+'px';
+        selectionBox.style.width=w+'px';
+        selectionBox.style.height=h+'px';
+      }
+      return;
+    }
+
+    // 否则，高亮悬停的元素
+    var el=document.elementFromPoint(e.clientX,e.clientY);
+    if(isValidTarget(el)){
+      if(selState.lastHighlight&&selState.lastHighlight!==el){
+        selState.lastHighlight.classList.remove('__sr-highlight');
+      }
+      el.classList.add('__sr-highlight');
+      selState.lastHighlight=el;
+    }else if(selState.lastHighlight){
+      selState.lastHighlight.classList.remove('__sr-highlight');
+      selState.lastHighlight=null;
+    }
+  });
+
+  // 鼠标松开 - 完成选区
+  document.addEventListener('mouseup',function(e){
+    if(!state.panelOpen)return;
+
+    // 清除高亮
+    if(selState.lastHighlight){
+      selState.lastHighlight.classList.remove('__sr-highlight');
+      selState.lastHighlight=null;
+    }
+
+    if(selState.dragging){
+      selState.dragging=false;
+      var w=Math.abs(e.clientX-selState.startX);
+      var h=Math.abs(e.clientY-selState.startY);
+
+      // 如果是拖拽选区（超过10px），创建区域选择
+      if(w>10||h>10){
+        // 计算相对于当前幻灯片的位置
+        var slides=document.querySelectorAll('.slide');
+        var currentSlideEl=slides[state.currentSlide];
+        if(currentSlideEl){
+          var slideRect=currentSlideEl.getBoundingClientRect();
+          var x1=Math.round(Math.min(selState.startX,e.clientX)-slideRect.left);
+          var y1=Math.round(Math.min(selState.startY,e.clientY)-slideRect.top);
+          var x2=Math.round(Math.max(selState.startX,e.clientX)-slideRect.left);
+          var y2=Math.round(Math.max(selState.startY,e.clientY)-slideRect.top);
+
+          var info='📍 [Slide '+(state.currentSlide+1)+', 区域: ('+x1+','+y1+')-('+x2+','+y2+')]';
+          insertLocationInfo(info);
+        }
+      }
+      selectionBox.classList.remove('active');
+    }
+  });
+
+  // 点击元素 - 选择元素
+  document.addEventListener('click',function(e){
+    if(!state.panelOpen)return;
+
+    // 如果点击的是侧边栏内的评论，不处理（已在评论点击事件中处理）
+    if(e.target.closest('.__srcom')){
+      return;
+    }
+
+    // 点击其他地方，清除评论选中和高亮
+    clearSelectedComment();
+
+    if(!isValidTarget(e.target))return;
+
+    var el=e.target;
+
+    // 跳过太大的 container（宽或高超过 slide 的 60%）
+    var slides=document.querySelectorAll('.slide');
+    var slideEl=slides[state.currentSlide];
+    if(slideEl){
+      var slideRect=slideEl.getBoundingClientRect();
+      var elRect=el.getBoundingClientRect();
+      if(elRect.width>slideRect.width*0.6||elRect.height>slideRect.height*0.6){
+        return; // 太大，跳过
+      }
+    }
+
+    var pos=getElementPosition(el);
+    var desc=getElementDesc(el);
+    var info='📍 [Slide '+(state.currentSlide+1)+', '+desc;
+    if(pos){
+      info+=' @ ('+pos.x+','+pos.y+','+pos.w+','+pos.h+')';
+    }
+    info+=']';
+    insertLocationInfo(info);
+  });
 
   // 初始化
   setupSlideDetection();

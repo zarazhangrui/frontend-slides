@@ -99,7 +99,7 @@ Do you have content ready? Options: All content ready / Rough notes / Topic only
 **Question 4 — Inline Editing** (header: "Editing"):
 Do you need to edit or review the presentation in-browser?
 - "Edit mode" — Click any text to edit in-browser, Ctrl+S to save
-- "Review mode (Recommended)" — Ctrl+E to enter review overlay: click or drag to annotate elements, export suggestions.md for AI revision
+- "Review mode (Recommended)" — Press R to open review panel, add per-slide comments, export as markdown
 - "Both" — Includes both edit mode and review mode
 - "Neither" — Clean output, smaller file
 
@@ -194,19 +194,29 @@ based on the user's Phase 1 Question 4 answer.
 
 ### If "Review mode" or "Both" selected:
 
-Append the full contents of [review-mode.snippet.html](review-mode.snippet.html)
-immediately before the closing `</body>` tag.
+**Read [review-mode-template.md](review-mode-template.md)** and generate review mode code
+that matches the presentation's visual style (colors, fonts, spacing, animations).
 
-The snippet provides:
-- `Ctrl+E` — toggle Review Mode overlay (also shown in bottom status bar)
-- **Click** any element → blue border highlight, CSS selector captured
-- **Drag** to select a region → orange dashed box, pixel coordinates captured
-- Right sidebar → write suggestion text → Save (pins numbered badge on element)
-- **Export .md** → downloads `suggestions.md` with all suggestions formatted for AI revision
+**Must preserve (from template):**
+- Keyboard shortcuts: `R` toggle, `Escape` close, `Ctrl+Enter` save
+- Data structure: `{slideIndex: [{id, text, timestamp}]}`
+- IntersectionObserver for slide detection
+- Markdown export format
 
-The snippet is fully self-contained (no external dependencies).
-All CSS uses `id` and class prefixes starting with `__r` to avoid collisions
-with the presentation's own styles.
+**Adapt to presentation style:**
+- Use the presentation's CSS variables (`--bg-primary`, `--accent`, `--font-body`, etc.)
+- Match panel position/layout to the overall aesthetic
+- Use consistent border-radius, shadows, animations
+
+**Core features:**
+- `R` key or button — toggle review panel
+- **Click element** — insert location info `📍 [Slide N, <tag> "text" @ (x,y,w,h)]`
+- **Drag area** — insert region info `📍 [Slide N, 区域: (x1,y1)-(x2,y2)]`
+- Per-slide comment input with `Ctrl+Enter` to save
+- Comment list showing current slide's feedback
+- Export button — downloads markdown with all comments
+
+All CSS uses `id` and class prefixes starting with `review-` to avoid collisions.
 
 ### If "Edit mode" or "Both" selected:
 
@@ -215,12 +225,16 @@ Ctrl+S saves to localStorage).
 
 ### Verification checklist before delivery:
 
-- [ ] `Ctrl+E` toggles the review overlay without breaking slide navigation
-- [ ] Clicking a slide element shows a blue highlight and captures its selector
-- [ ] Dragging shows an orange dashed box and captures coordinates
-- [ ] Save appends a numbered pin on the element and adds to the sidebar list
-- [ ] Export .md downloads a properly formatted markdown file
-- [ ] Review UI does not interfere with existing slide animations or fonts
+- [ ] `R` toggles the review panel without breaking slide navigation
+- [ ] Click element inserts `📍 [Slide N, <tag>...]` into textarea
+- [ ] Drag area inserts `📍 [Slide N, 区域:...]` into textarea
+- [ ] Large containers (>60% of slide) are skipped on click
+- [ ] Comments save to the correct slide index
+- [ ] Click comment shows highlight at saved location
+- [ ] Highlights clear when clicking outside or switching slides
+- [ ] `Ctrl+Enter` saves from textarea
+- [ ] Export downloads properly formatted markdown
+- [ ] Review UI matches the presentation's visual style
 
 ---
 
@@ -244,7 +258,7 @@ When converting PowerPoint files:
    - Navigation: Arrow keys, Space, scroll/swipe, click nav dots
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - If edit mode was enabled: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
-   - If review mode was enabled: Press Ctrl+E to enter Review Mode. Click any element or drag a region to select it, write your feedback in the sidebar, and click Save. When done, click Export .md to download suggestions.md — share this file with Claude to apply all changes at once.
+   - If review mode was enabled:Hover top-left corner next edit button or press R to open the review panel. Click any element or drag to select an area — location info is added to your comment. Write feedback and press Ctrl+Enter to save. Export as markdown to share with Claude for revisions.
 
 ---
 
@@ -256,5 +270,5 @@ When converting PowerPoint files:
 | [viewport-base.css](viewport-base.css) | Mandatory responsive CSS — copy into every presentation | Phase 3 (generation) |
 | [html-template.md](html-template.md) | HTML structure, JS features, code quality standards | Phase 3 (generation) |
 | [animation-patterns.md](animation-patterns.md) | CSS/JS animation snippets and effect-to-feeling guide | Phase 3 (generation) |
-| [review-mode.snippet.html](review-mode.snippet.html) | Review Mode overlay code — inject before `</body>` if user selected Review mode | Phase 3.5 (interactive modes) |
+| [review-mode-template.md](review-mode-template.md) | Review Mode template — generate styled code based on this blueprint | Phase 3.5 (interactive modes) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction | Phase 4 (conversion) |

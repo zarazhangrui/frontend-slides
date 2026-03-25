@@ -1,307 +1,342 @@
 <!-- ============================================================
-     REVIEW MODE SNIPPET v1.0
-     Inject this entire block before </body> in any HTML slide.
-
-     Usage:
-       - Press Ctrl+E  (or click ✦ Review badge, top-left)
-       - Click any element  → blue border, CSS selector captured
-       - Drag to select region  → orange dashed box, coordinates captured
-       - Write suggestion in sidebar → Save
-       - Export .md → downloads suggestions.md
+     SIMPLE REVIEW MODE - 右侧边栏版本
+     按 Ctrl+R 打开/关闭评论侧边栏，adaptive 响应式设计
      ============================================================ -->
 
-<style id="__review-styles">
-#__rb{position:fixed;top:16px;left:16px;z-index:9000;background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:8px;padding:6px 10px;font-size:11px;color:rgba(255,255,255,.4);cursor:pointer;font-family:ui-monospace,monospace;letter-spacing:.04em;transition:all .2s;user-select:none}
-#__rb:hover{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.25)}
-#__rb.on{background:rgba(99,102,241,.9);border-color:#6366f1;color:#fff}
-#__rl{display:none;position:fixed;inset:0;z-index:8000;overflow:hidden}
-#__rl.on{display:block}
-#__rc{position:absolute;inset:0;cursor:crosshair;user-select:none;-webkit-user-select:none}
-#__pins{display:none;position:absolute;top:0;left:0;width:100%;min-height:100vh;pointer-events:none;z-index:7999}
-#__pins.on{display:block}
-#__hb,#__db{position:absolute;pointer-events:none;border-radius:3px;display:none}
-#__hb{border:2px solid rgba(99,102,241,.7);background:rgba(99,102,241,.07)}
-#__db{border:2px dashed #f59e0b;background:rgba(245,158,11,.07)}
-.__rpin{position:absolute;pointer-events:none;border-radius:3px}
-.__rpin-dom{border:2px solid #6366f1;background:rgba(99,102,241,.1)}
-.__rpin-drag{border:2px dashed #f59e0b;background:rgba(245,158,11,.08)}
-.__rpnum{position:absolute;top:-9px;left:-9px;width:18px;height:18px;background:#6366f1;color:#fff;border-radius:50%;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace}
-.__rpin-drag .__rpnum{background:#f59e0b;color:#000}
-#__rp{position:fixed;top:0;right:-380px;width:360px;height:100vh;background:#111118;border-left:1px solid rgba(255,255,255,.08);z-index:9500;display:flex;flex-direction:column;transition:right .3s cubic-bezier(.4,0,.2,1);font-family:ui-sans-serif,system-ui,sans-serif}
-#__rp.open{right:0}
-.__rph{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;flex-shrink:0}
-.__rpt{font-size:13px;font-weight:600;color:#e8e8e8;flex:1}
-.__rpcl{width:24px;height:24px;background:rgba(255,255,255,.06);border:none;border-radius:5px;color:#888;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.__rpcl:hover{background:rgba(255,255,255,.12);color:#ccc}
-.__rpf{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
-.__rptg{font-size:11px;color:#6366f1;margin-bottom:8px;font-family:ui-monospace,monospace;padding:4px 8px;background:rgba(99,102,241,.1);border-radius:4px;display:none;align-items:center;gap:6px}
-.__rptg.vis{display:flex}
-.__rptgd{width:6px;height:6px;background:#6366f1;border-radius:50%;flex-shrink:0}
-.__rpf textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e8e8e8;font-size:13px;font-family:inherit;padding:10px 12px;resize:none;outline:none;line-height:1.6;transition:border-color .15s;min-height:80px}
-.__rpf textarea:focus{border-color:rgba(99,102,241,.5)}
-.__rpf textarea::placeholder{color:#555}
-.__rpfa{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
-.__rpbtn{font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.1);cursor:pointer;background:transparent;color:#888;font-family:inherit;transition:all .15s}
-.__rpbtn:hover{color:#ccc;border-color:rgba(255,255,255,.2)}
-.__rpbtn.save{background:#6366f1;border-color:#6366f1;color:#fff;font-weight:500}
-.__rpbtn.save:hover{background:#5558e0}
-.__rpbtn.save:disabled{opacity:.4;cursor:not-allowed}
-.__rpl{flex:1;overflow-y:auto;padding:8px 0}
-.__rpl::-webkit-scrollbar{width:4px}
-.__rpl::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
-.__rpem{padding:2rem 16px;text-align:center;color:#444;font-size:12px;line-height:1.8}
-.__rpi{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);position:relative;transition:background .15s}
-.__rpi:hover{background:rgba(255,255,255,.02)}
-.__rpim{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.__rpin2{width:18px;height:18px;background:#6366f1;border-radius:50%;font-size:9px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;flex-shrink:0}
-.__rpin2.drag{background:#f59e0b;color:#000}
-.__rpis{font-size:10px;color:#555;font-family:ui-monospace,monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.__rpid{width:18px;height:18px;background:transparent;border:none;border-radius:4px;color:#444;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .15s;opacity:0}
-.__rpi:hover .__rpid{opacity:1}
-.__rpid:hover{background:rgba(239,68,68,.15);color:#ef4444}
-.__rpit{font-size:12px;color:#bbb;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-.__rpft{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center;flex-shrink:0}
-.__rpfc{font-size:11px;color:#555;flex:1}
-.__rpex{font-size:12px;padding:7px 14px;border-radius:6px;border:1px solid rgba(99,102,241,.4);cursor:pointer;background:rgba(99,102,241,.1);color:#a5b4fc;font-family:inherit;transition:all .15s;font-weight:500}
-.__rpex:hover{background:rgba(99,102,241,.2);border-color:#6366f1;color:#c7d2fe}
-.__rpex:disabled{opacity:.3;cursor:not-allowed}
-#__rbar{position:fixed;bottom:0;left:0;right:0;height:32px;background:rgba(99,102,241,.9);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;gap:20px;z-index:8500;font-size:11px;color:rgba(255,255,255,.9);font-family:ui-monospace,monospace;letter-spacing:.04em}
-#__rbar.on{display:flex}
-.__rbsep{opacity:.3}
-.__rbd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4)}
-.__rbd.on{background:#fff}
-#__rtoast{position:fixed;bottom:52px;left:50%;transform:translateX(-50%) translateY(8px);background:#1e1e2e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 16px;font-size:12px;color:#a5b4fc;z-index:99999;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;font-family:ui-sans-serif,system-ui,sans-serif}
-#__rtoast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+<style id="__simple-review-styles">
+/* Review 按钮 */
+#__srb{position:fixed;top:16px;left:16px;z-index:9000;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:8px;padding:8px 12px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;font-family:ui-sans-serif,sans-serif;transition:all .2s;user-select:none}
+#__srb:hover{color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.3)}
+
+/* 侧边栏面板 - 默认桌面布局 */
+#__srp{position:fixed;top:0;right:0;bottom:0;width:400px;background:#1a1a1a;border-left:2px solid #4361ee;transform:translateX(100%);transition:transform .3s ease;z-index:9500;display:flex;flex-direction:column}
+#__srp.open{transform:translateX(0)}
+
+/* 平板适配 */
+@media(max-width:1200px){
+  #__srp{width:350px}
+}
+
+/* 小屏幕适配 - 侧边栏占据更多空间 */
+@media(max-width:768px){
+  #__srp{width:80vw;max-width:400px}
+}
+
+/* 超小屏幕适配 - 全屏显示 */
+@media(max-width:480px){
+  #__srp{width:100vw;max-width:100vw;border-left:none;border-top:2px solid #4361ee}
+}
+
+/* 面板头部 */
+.__srh{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.__srt{font-size:14px;font-weight:600;color:#e8e8e8}
+.__src{font-size:11px;color:#888;margin-left:8px}
+.__srx{background:transparent;border:none;color:#888;cursor:pointer;font-size:18px;padding:4px 8px;transition:color .2s;line-height:1}
+.__srx:hover{color:#fff}
+
+/* 输入区 */
+.__sri{padding:16px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.__sri textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#e8e8e8;font-size:13px;font-family:ui-sans-serif,sans-serif;padding:12px;resize:vertical;outline:none;min-height:100px;max-height:300px}
+.__sri textarea:focus{border-color:#4361ee;background:rgba(255,255,255,.08)}
+.__sri textarea::placeholder{color:#666}
+.__sra{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.__srb2{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}
+.__srb2.clear{background:transparent;color:#888;border:1px solid rgba(255,255,255,.1)}
+.__srb2.clear:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.__srb2.save{background:#4361ee;color:#fff;font-weight:500}
+.__srb2.save:hover{background:#3651de}
+.__srb2:disabled{opacity:.4;cursor:not-allowed}
+
+/* 评论列表 */
+.__srl{flex:1;overflow-y:auto;padding:12px 16px}
+.__srl::-webkit-scrollbar{width:8px}
+.__srl::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
+.__srl::-webkit-scrollbar-thumb{background:#333;border-radius:4px}
+.__srl::-webkit-scrollbar-thumb:hover{background:#444}
+.__sre{padding:3rem 1rem;text-align:center;color:#555;font-size:13px;line-height:1.6}
+.__srcom{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-bottom:12px;position:relative}
+.__srcom:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+.__srm{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.__srn{background:#4361ee;color:#fff;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:600;font-family:ui-monospace,monospace}
+.__srs{color:#888;font-size:11px}
+.__srd{background:transparent;border:none;color:#666;cursor:pointer;font-size:14px;padding:4px;position:absolute;top:8px;right:8px;opacity:0;transition:all .2s;line-height:1}
+.__srcom:hover .__srd{opacity:1}
+.__srd:hover{color:#ef4444}
+.__srtxt{color:#ccc;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+
+/* 底部操作栏 */
+.__srf{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.__srfc{font-size:12px;color:#888;text-align:center}
+.__srexp{background:rgba(67,97,238,.15);border:1px solid #4361ee;color:#a5b4fc;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;width:100%;text-align:center}
+.__srexp:hover{background:rgba(67,97,238,.25);color:#c7d2fe}
+.__srexp:disabled{opacity:.3;cursor:not-allowed}
+
+/* 当前页指示器 */
+#__srs{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(67,97,238,.9);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999;font-family:ui-monospace,monospace;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+#__srs.show{opacity:1}
+
+/* 小屏幕上的按钮适配 */
+@media(max-width:480px){
+  #__srb{font-size:11px;padding:6px 10px}
+  .__srb2{font-size:11px;padding:6px 12px}
+}
 </style>
 
-<div id="__rb" title="Ctrl+E — Toggle Review Mode">✦ Review</div>
-<div id="__rl">
-  <div id="__rc"></div>
-  <div id="__hb"></div>
-  <div id="__db"></div>
-</div>
-<div id="__pins"></div>
-<div id="__rp">
-  <div class="__rph">
-    <span class="__rpt">✦ Suggestions</span>
-    <button class="__rpcl" id="__rpcl">✕</button>
+<div id="__srb" title="Ctrl+R — 打开评论侧边栏">✎ Review (Ctrl+R)</div>
+
+<div id="__srp">
+  <div class="__srh">
+    <div>
+      <span class="__srt">当前页评论</span>
+      <span class="__src" id="__src">Slide #1</span>
+    </div>
+    <button class="__srx" id="__srx" title="关闭侧边栏 (Esc)">✕</button>
   </div>
-  <div class="__rpf">
-    <div class="__rptg" id="__rptg"><span class="__rptgd" id="__rptgd"></span><span id="__rptgt">—</span></div>
-    <textarea id="__rpta" placeholder="Describe the change you want…&#10;e.g. Make this heading larger, change color to #fff"></textarea>
-    <div class="__rpfa">
-      <button class="__rpbtn" id="__rpclr">Clear</button>
-      <button class="__rpbtn save" id="__rpsv" disabled>Save</button>
+
+  <div class="__sri">
+    <textarea id="__srta" placeholder="在此输入对当前页的修改建议...&#10;&#10;例如：&#10;• 标题字体太小，建议改为 48px&#10;• 第二段内容需要补充数据来源&#10;• 配色建议调整为更柔和的蓝色"></textarea>
+    <div class="__sra">
+      <button class="__srb2 clear" id="__srcl">清除</button>
+      <button class="__srb2 save" id="__srsv">保存到当前页</button>
     </div>
   </div>
-  <div class="__rpl" id="__rpl"><div class="__rpem" id="__rpem">Click any element<br>or drag to select a region<br>then write your suggestion</div></div>
-  <div class="__rpft">
-    <span class="__rpfc" id="__rpfc">0 suggestions</span>
-    <button class="__rpex" id="__rpex" disabled>Export .md</button>
+
+  <div class="__srl" id="__srl">
+    <div class="__sre" id="__sre">当前页还没有评论<br><br>💡 输入修改建议后点击"保存"<br>评论会自动关联到当前幻灯片</div>
+  </div>
+
+  <div class="__srf">
+    <button class="__srexp" id="__srexp" disabled>📥 导出全部评论 (Markdown)</button>
+    <span class="__srfc" id="__srfc">总共 0 条评论</span>
   </div>
 </div>
-<div id="__rbar">
-  <span style="display:flex;align-items:center;gap:5px"><span class="__rbd on" id="__rbd1"></span> Click to pick element</span>
-  <span class="__rbsep">|</span>
-  <span style="display:flex;align-items:center;gap:5px"><span class="__rbd" id="__rbd2"></span> Drag to select region</span>
-  <span class="__rbsep">|</span>
-  <span>Ctrl+E to exit</span>
-</div>
-<div id="__rtoast"></div>
+
+<div id="__srs"></div>
 
 <script>
 (function(){
-  var S={active:false,suggestions:[],nextId:1,pending:null,dragging:false,dragStart:null,justDragged:false};
-  var $=function(id){return document.getElementById(id)};
-  var badge=$('__rb'),layer=$('__rl'),cursor=$('__rc'),hb=$('__hb'),db=$('__db'),pins=$('__pins');
-  var panel=$('__rp'),closebtn=$('__rpcl'),tgtEl=$('__rptg'),tgtDot=$('__rptgd'),tgtTxt=$('__rptgt');
-  var ta=$('__rpta'),clrBtn=$('__rpclr'),svBtn=$('__rpsv');
-  var list=$('__rpl'),empty=$('__rpem'),cnt=$('__rpfc'),expBtn=$('__rpex');
-  var bar=$('__rbar'),dot1=$('__rbd1'),dot2=$('__rbd2'),toast=$('__rtoast');
+  var state={
+    comments:{}, // {slideIndex: [{id, text, timestamp}]}
+    currentSlide:0,
+    nextId:1,
+    panelOpen:false
+  };
 
-  function toggle(){
-    S.active=!S.active;
-    badge.classList.toggle('on',S.active);
-    layer.classList.toggle('on',S.active);
-    pins.classList.toggle('on',S.active);
-    bar.classList.toggle('on',S.active);
-    if(S.active){panel.classList.add('open');showToast('Review Mode — click or drag to select');}
-    else{panel.classList.remove('open');hb.style.display='none';clearPending();}
-  }
+  var badge=document.getElementById('__srb');
+  var panel=document.getElementById('__srp');
+  var closebtn=document.getElementById('__srx');
+  var slideLabel=document.getElementById('__src');
+  var textarea=document.getElementById('__srta');
+  var clearBtn=document.getElementById('__srcl');
+  var saveBtn=document.getElementById('__srsv');
+  var list=document.getElementById('__srl');
+  var empty=document.getElementById('__sre');
+  var countLabel=document.getElementById('__srfc');
+  var exportBtn=document.getElementById('__srexp');
+  var slideIndicator=document.getElementById('__srs');
 
-  document.addEventListener('keydown',function(e){
-    if(e.ctrlKey&&e.key==='e'){e.preventDefault();toggle();}
-    if(e.key==='Escape'&&S.active)toggle();
-  });
-  badge.addEventListener('click',toggle);
-  closebtn.addEventListener('click',function(){panel.classList.remove('open');});
-
-  function elAt(x,y){
-    layer.style.display='none';
-    var el=document.elementFromPoint(x,y);
-    layer.style.display='block';
-    return el;
-  }
-
-  function rStyle(r){return 'display:block;left:'+r.left+'px;top:'+r.top+'px;width:'+r.width+'px;height:'+r.height+'px';}
-
-  function getSel(el){
-    if(!el||el===document.body)return 'body';
-    if(el.id)return '#'+el.id;
-    var s=el.tagName.toLowerCase();
-    var cls=[].slice.call(el.classList).filter(function(c){return c.indexOf('__r')<0;}).slice(0,2).join('.');
-    if(cls)s+='.'+cls;
-    var p=el.parentElement;
-    if(p){
-      var sibs=[].slice.call(p.children).filter(function(c){return c.tagName===el.tagName;});
-      if(sibs.length>1)s+=':nth-child('+([].slice.call(p.children).indexOf(el)+1)+')';
+  // 使用 IntersectionObserver 检测当前幻灯片
+  function setupSlideDetection(){
+    var slides=document.querySelectorAll('.slide');
+    if(slides.length===0){
+      console.warn('Review mode: 未找到 .slide 元素');
+      return;
     }
-    return s;
-  }
 
-  cursor.addEventListener('mousemove',function(e){
-    if(S.dragging)return;
-    var el=elAt(e.clientX,e.clientY);
-    if(!el||el===document.body||el===document.documentElement){hb.style.display='none';return;}
-    var r=el.getBoundingClientRect();
-    hb.style.cssText=rStyle({left:r.left,top:r.top,width:r.width,height:r.height});
-    dot1.className='__rbd on';dot2.className='__rbd';
-  });
-  cursor.addEventListener('mouseleave',function(){hb.style.display='none';});
-
-  cursor.addEventListener('click',function(e){
-    if(S.dragging||S.justDragged){S.justDragged=false;return;}
-    var el=elAt(e.clientX,e.clientY);
-    if(!el||el===document.body)return;
-    var r=el.getBoundingClientRect();
-    var sx=window.scrollX||window.pageXOffset,sy=window.scrollY||window.pageYOffset;
-    setPending({type:'dom',selector:getSel(el),rect:{left:r.left+sx,top:r.top+sy,width:r.width,height:r.height},el:el});
-  });
-
-  cursor.addEventListener('mousedown',function(e){
-    if(e.button!==0)return;
-    e.preventDefault();
-    S.dragging=false;S.dragStart={x:e.clientX,y:e.clientY};
-  });
-  cursor.addEventListener('mousemove',function(e){
-    if(!S.dragStart)return;
-    var dx=e.clientX-S.dragStart.x,dy=e.clientY-S.dragStart.y;
-    if(!S.dragging&&(Math.abs(dx)>6||Math.abs(dy)>6)){
-      S.dragging=true;db.style.display='block';hb.style.display='none';
-      dot2.className='__rbd on';dot1.className='__rbd';
-    }
-    if(S.dragging){
-      var l=Math.min(S.dragStart.x,e.clientX),t=Math.min(S.dragStart.y,e.clientY);
-      db.style.cssText='display:block;left:'+l+'px;top:'+t+'px;width:'+Math.abs(dx)+'px;height:'+Math.abs(dy)+'px';
-    }
-  });
-  cursor.addEventListener('mouseup',function(e){
-    if(!S.dragStart)return;
-    if(S.dragging){
-      var sx=window.scrollX||window.pageXOffset,sy=window.scrollY||window.pageYOffset;
-      var l=Math.min(S.dragStart.x,e.clientX)+sx,t=Math.min(S.dragStart.y,e.clientY)+sy;
-      var w=Math.abs(e.clientX-S.dragStart.x),h=Math.abs(e.clientY-S.dragStart.y);
-      db.style.display='none';
-      if(w>10&&h>10)setPending({type:'drag',selector:'region('+Math.round(l)+','+Math.round(t)+','+Math.round(w)+','+Math.round(h)+')',rect:{left:l,top:t,width:w,height:h}});
-      S.justDragged=true;
-    }
-    S.dragging=false;S.dragStart=null;dot2.className='__rbd';dot1.className='__rbd on';
-  });
-
-  function setPending(p){
-    S.pending=p;
-    tgtTxt.textContent=p.selector;
-    tgtEl.classList.add('vis');
-    tgtDot.style.background=p.type==='drag'?'#f59e0b':'#6366f1';
-    ta.focus();updateSave();
-  }
-  function clearPending(){S.pending=null;tgtEl.classList.remove('vis');ta.value='';updateSave();}
-  function updateSave(){svBtn.disabled=!S.pending||ta.value.trim()==='';}
-  ta.addEventListener('input',updateSave);
-  clrBtn.addEventListener('click',clearPending);
-
-  svBtn.addEventListener('click',function(){
-    var text=ta.value.trim();
-    if(!text||!S.pending)return;
-    var s={id:S.nextId++,type:S.pending.type,selector:S.pending.selector,rect:S.pending.rect,text:text,ts:new Date().toISOString(),el:S.pending.el||null};
-    S.suggestions.push(s);
-    addPin(s);renderList();updateFooter();
-    clearPending();showToast('Suggestion #'+s.id+' saved');
-  });
-
-  function addPin(s){
-    var pin=document.createElement('div');
-    pin.className='__rpin __rpin-'+s.type;
-    pin.style.cssText=rStyle(s.rect);
-    pin.dataset.id=s.id;
-    if(s.el)pin.dataset.selector=s.selector;
-    var num=document.createElement('div');
-    num.className='__rpnum';num.textContent=s.id;
-    pin.appendChild(num);pins.appendChild(pin);
-  }
-  function removePin(id){var p=pins.querySelector('[data-id="'+id+'"]');if(p)p.remove();}
-
-  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-  function renderList(){
-    if(!S.suggestions.length){list.innerHTML='';list.appendChild(empty);return;}
-    list.innerHTML='';
-    S.suggestions.forEach(function(s){
-      var d=document.createElement('div');d.className='__rpi';
-      d.innerHTML='<div class="__rpim"><div class="__rpin2'+(s.type==='drag'?' drag':'')+'">'+s.id+'</div><span class="__rpis">'+esc(s.selector)+'</span><button class="__rpid" data-id="'+s.id+'" title="Delete">✕</button></div><div class="__rpit">'+esc(s.text)+'</div>';
-      list.appendChild(d);
+    var observer=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        // 当幻灯片至少有 50% 可见时，认为它是当前幻灯片
+        if(entry.isIntersecting && entry.intersectionRatio>=0.5){
+          var slideIdx=Array.from(slides).indexOf(entry.target);
+          if(slideIdx!==-1 && slideIdx!==state.currentSlide){
+            state.currentSlide=slideIdx;
+            slideLabel.textContent='Slide #'+(slideIdx+1);
+            renderComments();
+            if(state.panelOpen){
+              showSlideIndicator();
+            }
+          }
+        }
+      });
+    },{
+      threshold:[0,0.5,1], // 在 0%, 50%, 100% 可见时触发
+      rootMargin:'0px'
     });
-    list.querySelectorAll('.__rpid').forEach(function(btn){
+
+    slides.forEach(function(slide){
+      observer.observe(slide);
+    });
+  }
+
+  // 显示页码指示器
+  function showSlideIndicator(){
+    slideIndicator.textContent='📍 Slide '+(state.currentSlide+1);
+    slideIndicator.classList.add('show');
+    setTimeout(function(){slideIndicator.classList.remove('show');},1800);
+  }
+
+  // 切换面板
+  function togglePanel(){
+    state.panelOpen=!state.panelOpen;
+    panel.classList.toggle('open',state.panelOpen);
+    if(state.panelOpen){
+      textarea.focus();
+      showSlideIndicator();
+    }
+  }
+
+  // 保存评论
+  function saveComment(){
+    var text=textarea.value.trim();
+    if(!text)return;
+
+    var slideIdx=state.currentSlide;
+    if(!state.comments[slideIdx])state.comments[slideIdx]=[];
+
+    var comment={
+      id:state.nextId++,
+      text:text,
+      timestamp:new Date().toISOString(),
+      slide:slideIdx+1
+    };
+
+    state.comments[slideIdx].push(comment);
+    textarea.value='';
+    renderComments();
+    updateFooter();
+
+    // 显示成功提示
+    slideIndicator.textContent='✓ 已保存到 Slide '+(slideIdx+1);
+    slideIndicator.classList.add('show');
+    setTimeout(function(){slideIndicator.classList.remove('show');},1800);
+  }
+
+  // 删除评论
+  function deleteComment(slideIdx,commentId){
+    if(!state.comments[slideIdx])return;
+    state.comments[slideIdx]=state.comments[slideIdx].filter(function(c){return c.id!==commentId;});
+    if(state.comments[slideIdx].length===0)delete state.comments[slideIdx];
+    renderComments();
+    updateFooter();
+  }
+
+  // 渲染当前页评论
+  function renderComments(){
+    var slideIdx=state.currentSlide;
+    var comments=state.comments[slideIdx]||[];
+
+    if(comments.length===0){
+      list.innerHTML='';
+      list.appendChild(empty);
+      return;
+    }
+
+    list.innerHTML='';
+    comments.forEach(function(c){
+      var div=document.createElement('div');
+      div.className='__srcom';
+      div.innerHTML='<div class="__srm"><span class="__srn">#'+c.id+'</span><span class="__srs">'+formatTime(c.timestamp)+'</span><button class="__srd" data-slide="'+slideIdx+'" data-id="'+c.id+'" title="删除此评论">✕</button></div><div class="__srtxt">'+esc(c.text)+'</div>';
+      list.appendChild(div);
+    });
+
+    // 绑定删除按钮
+    list.querySelectorAll('.__srd').forEach(function(btn){
       btn.addEventListener('click',function(){
+        var slide=parseInt(btn.dataset.slide);
         var id=parseInt(btn.dataset.id);
-        S.suggestions=S.suggestions.filter(function(s){return s.id!==id;});
-        removePin(id);renderList();updateFooter();
+        if(confirm('确定要删除这条评论吗？')){
+          deleteComment(slide,id);
+        }
       });
     });
   }
 
+  // 更新底部统计
   function updateFooter(){
-    var n=S.suggestions.length;
-    cnt.textContent=n+' suggestion'+(n!==1?'s':'');
-    expBtn.disabled=n===0;
+    var total=0;
+    Object.keys(state.comments).forEach(function(k){
+      total+=state.comments[k].length;
+    });
+    countLabel.textContent='总共 '+total+' 条评论';
+    exportBtn.disabled=total===0;
   }
 
-  function updatePins(){
-    var sx=window.scrollX||window.pageXOffset,sy=window.scrollY||window.pageYOffset;
-    S.suggestions.forEach(function(s){
-      if(s.type==='dom'&&s.el&&document.body.contains(s.el)){
-        var r=s.el.getBoundingClientRect();
-        s.rect={left:r.left+sx,top:r.top+sy,width:r.width,height:r.height};
-        var pin=pins.querySelector('[data-id="'+s.id+'"]');
-        if(pin)pin.style.cssText=rStyle(s.rect);
+  // 导出所有评论为 markdown
+  function exportComments(){
+    var lines=['# 演示文稿评论报告','',
+      '> **导出时间**: '+new Date().toLocaleString('zh-CN'),
+      '> **文件**: '+document.title,
+      '> **总评论数**: '+Object.keys(state.comments).reduce(function(sum,k){return sum+state.comments[k].length;},0)+' 条',
+      '','---',''];
+
+    var slideNumbers=Object.keys(state.comments).map(Number).sort(function(a,b){return a-b;});
+
+    slideNumbers.forEach(function(slideIdx){
+      var comments=state.comments[slideIdx];
+      var slideTitle='Slide #'+(slideIdx+1);
+
+      // 尝试获取幻灯片标题
+      var slides=document.querySelectorAll('.slide');
+      if(slides[slideIdx]){
+        var h2=slides[slideIdx].querySelector('h2');
+        if(h2)slideTitle+=' - '+h2.textContent.trim();
       }
-    });
-  }
-  window.addEventListener('scroll',updatePins,{passive:true});
-  window.addEventListener('resize',updatePins,{passive:true});
 
-  expBtn.addEventListener('click',function(){
-    var lines=['# Design Review Suggestions','',
-      '> Generated: '+new Date().toLocaleString(),
-      '> File: '+document.title,'','---',''];
-    S.suggestions.forEach(function(s){
-      lines.push('## Suggestion #'+s.id+' — '+(s.type==='drag'?'📐 Region':'🎯 Element'),'');
-      lines.push('**Target:** `'+s.selector+'`');
-      if(s.type==='drag'){var r=s.rect;lines.push('**Region:** x='+Math.round(r.left)+', y='+Math.round(r.top)+', '+Math.round(r.width)+'×'+Math.round(r.height)+'px');}
-      lines.push('**Saved:** '+s.ts,'',s.text,'','---','');
+      lines.push('## '+slideTitle,'');
+      lines.push('**评论数**: '+comments.length+' 条','');
+
+      comments.forEach(function(c,idx){
+        lines.push('### '+(idx+1)+'. 评论 #'+c.id,'');
+        lines.push('**时间**: '+new Date(c.timestamp).toLocaleString('zh-CN'),'');
+        lines.push('**内容**:','');
+        lines.push(c.text,'');
+        if(idx<comments.length-1)lines.push('---','');
+      });
+
+      lines.push('','---','');
     });
-    var blob=new Blob([lines.join('\n')],{type:'text/markdown'});
+
+    var blob=new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'});
     var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');a.href=url;a.download='suggestions.md';a.click();
-    URL.revokeObjectURL(url);showToast('suggestions.md downloaded');
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='presentation-comments-'+new Date().toISOString().slice(0,10)+'.md';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    slideIndicator.textContent='✓ 评论已导出';
+    slideIndicator.classList.add('show');
+    setTimeout(function(){slideIndicator.classList.remove('show');},1800);
+  }
+
+  // 工具函数
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function formatTime(iso){
+    var d=new Date(iso);
+    return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  }
+
+  // 事件绑定
+  badge.addEventListener('click',togglePanel);
+  closebtn.addEventListener('click',togglePanel);
+  saveBtn.addEventListener('click',saveComment);
+  clearBtn.addEventListener('click',function(){textarea.value='';});
+  exportBtn.addEventListener('click',exportComments);
+
+  // 键盘快捷键
+  document.addEventListener('keydown',function(e){
+    if(e.ctrlKey&&e.key==='r'){
+      e.preventDefault();
+      togglePanel();
+    }
+    if(e.key==='Escape'&&state.panelOpen){
+      togglePanel();
+    }
   });
 
-  var toastTimer;
-  function showToast(msg){
-    toast.textContent=msg;toast.classList.add('show');
-    clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('show');},2200);
-  }
-
-  renderList();updateFooter();
+  // 初始化
+  setupSlideDetection();
+  renderComments();
+  updateFooter();
 })();
 </script>

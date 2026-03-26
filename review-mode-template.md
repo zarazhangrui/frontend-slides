@@ -110,6 +110,8 @@ When user selects element or area, insert at textarea start:
 - Coordinates relative to slide element
 - Element text preview: max 30 chars, newlines removed
 - Skip elements larger than 60% of slide (containers)
+- Ensures slides resize proportionally (not covered) when the review panel opens
+
 
 **Parsing & Highlight:**
 ```javascript
@@ -188,6 +190,35 @@ function insertLocationInfo(info) {
   }
 }
 
+## Content Shift (Required)
+
+```css
+/* Panel width variable */
+:root {
+  --review-panel-width: min(400px, 90vw);
+}
+
+/* Shift body content when panel is open */
+body.review-open {
+  margin-right: var(--review-panel-width);
+  transition: margin-right 0.4s var(--ease-out-expo);
+}
+
+/* Panel uses same width */
+.review-panel {
+  width: var(--review-panel-width);
+}
+```
+
+**JS (in togglePanel):**
+```javascript
+function togglePanel(){
+  state.open = !state.open;
+  document.body.classList.toggle('review-open', state.open);
+  // → Update panel visibility
+}
+```
+
 // === MOUSE EVENTS (when panel open) ===
 // mousedown: Start drag, record position
 // mousemove: If dragging >5px show selection box; else highlight hovered element
@@ -205,6 +236,7 @@ function insertLocationInfo(info) {
 - Highlight colors (element hover, selection box, saved location)
 - Whether clicking comment shows its highlight on slide
 
+
 ## Must Preserve
 
 - Keyboard shortcuts (R, Escape, Ctrl+Enter)
@@ -214,3 +246,4 @@ function insertLocationInfo(info) {
 - Location info format (📍 prefix, coordinates)
 - Skip large containers (>60% of slide)
 - Clear highlights when: switching slides, closing panel, clicking outside comments
+- Content shift when: panel opens (body.review-open margin-right)

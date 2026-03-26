@@ -110,9 +110,9 @@ When user selects element or area, insert at textarea start:
 - Coordinates relative to slide element
 - Element text preview: max 30 chars, newlines removed
 - Skip elements larger than 60% of slide (containers)
-- Ensures slides resize proportionally (not covered) when the review panel opens
 - One comment may contain multiple 📍 locations
 - Click comment → show highlights for ALL locations (not just first)
+- These 📍 locations should be draggable, removable text fields
 
 **Parsing & Highlight:**
 
@@ -195,7 +195,7 @@ function insertLocationInfo(info) {
 
 ## Content Shift (Required)
 
-Slides must scale proportionally when panel opens (not just margin shift).
+Slides must shrink horizontally when panel opens (width only, height stays 100vh).
 
 **CSS:**
 ```css
@@ -212,18 +212,33 @@ Slides must scale proportionally when panel opens (not just margin shift).
 **JS (in togglePanel):**
 ```javascript
 var panelWidth = Math.min(400, window.innerWidth * 0.9);
-var scale = state.open ? (window.innerWidth - panelWidth) / window.innerWidth : 1;
+var scaleX = state.open ? (window.innerWidth - panelWidth) / window.innerWidth : 1;
 
 document.querySelectorAll('.slide').forEach(function(slide){
   slide.classList.toggle('review-open', state.open);
-  slide.style.transform = state.open ? 'scale(' + scale + ')' : '';
+  slide.style.transform = state.open ? 'scaleX(' + scaleX + ')' : '';
 });
 ```
 
 **Rules:**
-- Use `transform: scale()`, not `margin-right`
+- Use `transform: scaleX()` for width-only scaling (not `scale()` which affects both dimensions)
 - Scale factor = `(viewport - panel) / viewport`
 - Recalculate on window resize if panel open
+
+**Coordinate Conversion (Required):**
+
+When panel is open, `getBoundingClientRect()` returns scaled coordinates. Store original (unscaled) coordinates so highlights work correctly regardless of panel state:
+
+```javascript
+// When saving coordinates (panel open, scaleX active):
+var x = Math.round((elRect.left - slideRect.left) / scaleX);
+var w = Math.round(elRect.width / scaleX);
+// y, h unchanged (scaleX doesn't affect height)
+
+// When showing highlights:
+var displayX = slideRect.left + (state.open ? loc.x * scaleX : loc.x);
+var displayW = state.open ? loc.w * scaleX : loc.w;
+```
 
 ## Skill Decides
 
@@ -245,4 +260,4 @@ document.querySelectorAll('.slide').forEach(function(slide){
 - Location info format (📍 prefix, coordinates)
 - Skip large containers (>60% of slide)
 - Clear highlights when: switching slides, closing panel, clicking outside comments
-- Proportional content scaling when panel opens (transform: scale, not just margin-right)
+- Horizontal content scaling when panel opens (transform: scaleX, not scale or margin-right)

@@ -14,6 +14,9 @@ Opt-in review system. Generate adapted to presentation style.
 | Select area | Drag on slide | Insert region coordinates into textarea |
 | Select comment | Click saved comment | Mark comment as selected + show highlight at saved location |
 | Deselect | Click outside comments | Remove selected state + clear all highlights |
+| Delete comment | Click delete comment | Delete selected comment + clear all highlights |
+| Edit comment | Double Click comment | Edit selected comment again |
+
 
 ## Data Structure (Required)
 
@@ -253,6 +256,7 @@ var displayW = state.open ? loc.w * scaleX : loc.w;
 
 ## Must Preserve
 
+- Review Mode button visibility control same as Edit Mode (see html-template.md section **Inline Editing Implementation**)
 - Keyboard shortcuts (R, Escape, Ctrl+Enter)
 - Data structure shape (for export compatibility)
 - IntersectionObserver for slide detection

@@ -7,15 +7,15 @@ Opt-in review system. Generate adapted to presentation style.
 | Action | Trigger | Behavior |
 |--------|---------|----------|
 | Toggle panel | `R` key or click button | Open/close review panel |
-| Close | `Escape` | Close if open |
-| Save | `Ctrl+Enter` in textarea | Save comment to current slide |
+| Close | `Escape` | Close if open (or cancel edit if editing) |
+| Save | `Ctrl+Enter` in textarea | Save/update comment to current slide |
 | Export | Click export button | Download markdown file |
 | Select element | Click on slide element | Insert location info into textarea |
 | Select area | Drag on slide | Insert region coordinates into textarea |
 | Select comment | Click saved comment | Mark comment as selected + show highlight at saved location |
 | Deselect | Click outside comments | Remove selected state + clear all highlights |
-| Delete comment | Click delete comment | Delete selected comment + clear all highlights |
-| Edit comment | Double Click comment | Edit selected comment again |
+| Edit comment | Click Edit button | Load comment text into textarea for editing |
+| Delete comment | Click Delete button | Delete comment + clear highlights |
 
 
 ## Data Structure (Required)
@@ -33,7 +33,7 @@ var comments = {
 ```javascript
 (function(){
   // === STATE ===
-  var state = { comments: {}, currentSlide: 0, nextId: 1, open: false };
+  var state = { comments: {}, currentSlide: 0, nextId: 1, open: false, editingCommentId: null };
 
   // === SLIDE DETECTION (required) ===
   document.querySelectorAll('.slide').forEach(function(slide, i){
@@ -49,7 +49,13 @@ var comments = {
   document.addEventListener('keydown', function(e){
     if(e.target.matches('input,textarea,[contenteditable]')){
       e.stopPropagation();  // Block space/arrows from triggering slide navigation
-      if(e.key === 'Escape') togglePanel();
+      if(e.key === 'Escape'){
+        if(state.editingCommentId !== null){
+          cancelEdit();  // Cancel edit mode
+        } else {
+          togglePanel();  // Close panel
+        }
+      }
       if(e.ctrlKey && e.key === 'Enter') saveComment();
       return;
     }
@@ -68,12 +74,38 @@ var comments = {
 
     var idx = state.currentSlide;
     if(!state.comments[idx]) state.comments[idx] = [];
-    state.comments[idx].push({
-      id: state.nextId++,
-      text: text.trim(),
-      timestamp: new Date().toISOString()
-    });
+
+    if(state.editingCommentId !== null){
+      // Update existing comment
+      var comment = state.comments[idx].find(c => c.id === state.editingCommentId);
+      if(comment){
+        comment.text = text.trim();
+        comment.timestamp = new Date().toISOString();
+      }
+      state.editingCommentId = null;
+      // → Reset UI (button text back to "Save Comment")
+    } else {
+      // Create new comment
+      state.comments[idx].push({
+        id: state.nextId++,
+        text: text.trim(),
+        timestamp: new Date().toISOString()
+      });
+    }
     // → Clear textarea, update list
+  }
+
+  function editComment(commentId, comment){
+    state.editingCommentId = commentId;
+    // → Load comment.text into textarea
+    // → Update button text to "Update Comment"
+    // → Focus textarea
+  }
+
+  function cancelEdit(){
+    state.editingCommentId = null;
+    // → Clear textarea
+    // → Reset button text to "Save Comment"
   }
 
   function onSlideChange(idx){
@@ -109,13 +141,13 @@ When user selects element or area, insert at textarea start:
 ```
 
 **Rules:**
-- Multiple selections append (each on new line starting with 📍)
+- Insert at current cursor position (not at beginning)
+- Multiple selections insert at cursor (each on new line starting with 📍)
 - Coordinates relative to slide element
 - Element text preview: max 30 chars, newlines removed
 - Skip elements larger than 60% of slide (containers)
 - One comment may contain multiple 📍 locations
 - Click comment → show highlights for ALL locations (not just first)
-- These 📍 locations should be draggable, removable text fields
 
 **Parsing & Highlight:**
 
@@ -153,7 +185,11 @@ function clearSelection() {
   <textarea></textarea>
   <button class="save">Save</button>
   <div class="comment-list">
-    <!-- Each comment: clickable, add .selected class when active -->
+    <!-- Each comment: clickable, add .selected class when active
+         Must include Edit and Delete buttons:
+         <button class="edit">Edit</button>
+         <button class="delete">Delete</button>
+    -->
   </div>
   <button class="export">Export</button>
 </aside>
@@ -182,17 +218,18 @@ function getElementDesc(el) {
 }
 
 function insertLocationInfo(info) {
-  var val = textarea.value;
-  if (val.startsWith('📍')) {
-    // Append after existing location lines
-    var lines = val.split('\n');
-    var i = 0;
-    while (i < lines.length && lines[i].startsWith('📍')) i++;
-    lines.splice(i, 0, info);
-    textarea.value = lines.join('\n');
-  } else {
-    textarea.value = info + '\n' + val;
-  }
+  var cursorPos = textarea.selectionStart;
+  var textBefore = textarea.value.substring(0, cursorPos);
+  var textAfter = textarea.value.substring(cursorPos);
+
+  // Insert at cursor position with newline if needed
+  var separator = textBefore && !textBefore.endsWith('\n') ? '\n' : '';
+  textarea.value = textBefore + separator + info + '\n' + textAfter;
+
+  // Move cursor after inserted text
+  var newPos = cursorPos + separator.length + info.length + 1;
+  textarea.setSelectionRange(newPos, newPos);
+  textarea.focus();
 }
 ```
 
@@ -258,6 +295,7 @@ var displayW = state.open ? loc.w * scaleX : loc.w;
 
 - Review Mode button visibility control same as Edit Mode (see html-template.md section **Inline Editing Implementation**)
 - Keyboard shortcuts (R, Escape, Ctrl+Enter)
+- Edit functionality: Click Edit button → load comment into textarea → update on save
 - Data structure shape (for export compatibility)
 - IntersectionObserver for slide detection
 - Markdown export format

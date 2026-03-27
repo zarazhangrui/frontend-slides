@@ -47,6 +47,15 @@ var comments = {
 
   // === KEYBOARD (required) ===
   document.addEventListener('keydown', function(e){
+    // R key toggles panel globally (even in textarea)
+    if(e.key === 'r' || e.key === 'R'){
+      if(!e.ctrlKey && !e.metaKey && !e.altKey){  // Only if no modifiers
+        e.preventDefault();  // Prevent 'r' from being typed
+        togglePanel();
+        return;
+      }
+    }
+
     if(e.target.matches('input,textarea,[contenteditable]')){
       e.stopPropagation();  // Block space/arrows from triggering slide navigation
       if(e.key === 'Escape'){
@@ -59,7 +68,6 @@ var comments = {
       if(e.ctrlKey && e.key === 'Enter') saveComment();
       return;
     }
-    if(e.key === 'r' || e.key === 'R') togglePanel();
   });
 
   // === ACTIONS (required logic, adapt UI calls) ===

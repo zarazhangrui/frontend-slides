@@ -1,0 +1,17 @@
+{
+  "name": "frontend-slides-marketplace",
+  "owner": {
+    "name": "Zarazhangrui",
+    "email": "contact@example.com"
+  },
+  "metadata": {
+    "description": "A marketplace for animation-rich HTML presentation plugins.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "frontend-slides",
+      "source": "./"
+    }
+  ]
+}

@@ -151,3 +151,51 @@ img, .image-container {
         scroll-behavior: auto;
     }
 }
+
+/* ===========================================
+   PRINT / PDF EXPORT
+   Graceful degradation for browser print.
+   NOTE: For proper PDF export, use scripts/export-pdf.js
+   which handles DOM rewrite + font patching. This CSS
+   alone does NOT produce correct page breaks with
+   scroll-snap layouts — it's a fallback only.
+   =========================================== */
+@media print {
+    html {
+        scroll-snap-type: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    .slide {
+        page-break-after: always;
+        break-after: page;
+        overflow: hidden !important;
+    }
+    .slide:last-child {
+        page-break-after: avoid;
+    }
+
+    /* Strip transparent gradient overlays — they create
+       expensive PDF transparency groups */
+    .slide::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    /* Show all animated elements in their final state */
+    .reveal, .reveal-scale, .title-reveal, .reveal-fade {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .accent-line {
+        transform: scaleX(1) !important;
+        transition: none !important;
+    }
+
+    /* Hide UI chrome */
+    .nav-dots, .progress-bar, .edit-hotzone,
+    .edit-toggle, .save-indicator, .keyboard-hint {
+        display: none !important;
+    }
+}

@@ -132,9 +132,12 @@ Reference architecture for generating slide presentations. Every presentation fo
             }
 
             setupNavDots() {
-                // Generate and manage navigation dots
-            }
-        }
+      // IMPORTANT: Always clear before building — if outerHTML was
+      // captured while dots were rendered, re-opening the file would
+      // append a duplicate set on top of the existing ones.
+      this.navDotsContainer.innerHTML = '';
+      // Generate and manage navigation dots
+  }
 
         new SlidePresentation();
     </script>
@@ -176,6 +179,67 @@ Every presentation must include:
 **If the user chose "No" for inline editing in Phase 1, do NOT generate any edit-related HTML, CSS, or JS.**
 
 **Do NOT use CSS `~` sibling selector for hover-based show/hide.** The CSS-only approach (`edit-hotzone:hover ~ .edit-toggle`) fails because `pointer-events: none` on the toggle button breaks the hover chain: user hovers hotzone -> button becomes visible -> mouse moves toward button -> leaves hotzone -> button disappears before click.
+
+
+  **CRITICAL: `exportFile()` must strip edit state before capturing outerHTML.**
+
+  When the user presses Ctrl+S in edit mode, `document.documentElement.outerHTML` captures the live DOM —
+  including `body.edit-active`, `contenteditable="true"` on every text element, and `.active`/`.show` classes on
+  the toggle button and banner. Anyone opening the saved file sees dashed outlines, a checkmark button, and an
+  edit banner, as if permanently stuck in edit mode.
+
+  Always implement `exportFile()` like this:
+
+  ```javascript
+  exportFile() {
+      // Temporarily strip edit state so the saved file opens cleanly
+      const editableEls = Array.from(document.querySelectorAll('[contenteditable]'));
+      editableEls.forEach(el => el.removeAttribute('contenteditable'));
+      document.body.classList.remove('edit-active');
+
+      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+      // Restore edit state so the user can keep editing
+      document.body.classList.add('edit-active');
+      editableEls.forEach(el => el.setAttribute('contenteditable', 'true'));
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'presentation.html';
+      a.click();
+      URL.revokeObjectURL(a.href);
+  }
+
+**CRITICAL: `exportFile()` must strip edit state before capturing outerHTML.**
+
+  When the user presses Ctrl+S in edit mode, `document.documentElement.outerHTML` captures the live DOM —
+  including `body.edit-active`, `contenteditable="true"` on every text element, and `.active`/`.show` classes on
+  the toggle button and banner. Anyone opening the saved file sees dashed outlines, a checkmark button, and an
+  edit banner, as if permanently stuck in edit mode.
+
+  Always implement `exportFile()` like this:
+
+  ```javascript
+  exportFile() {
+      // Temporarily strip edit state so the saved file opens cleanly
+      const editableEls = Array.from(document.querySelectorAll('[contenteditable]'));
+      editableEls.forEach(el => el.removeAttribute('contenteditable'));
+      document.body.classList.remove('edit-active');
+
+      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+      // Restore edit state so the user can keep editing
+      document.body.classList.add('edit-active');
+      editableEls.forEach(el => el.setAttribute('contenteditable', 'true'));
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'presentation.html';
+      a.click();
+      URL.revokeObjectURL(a.href);
+  }
 
 **Required approach: JS-based hover with 400ms delay timeout.**
 

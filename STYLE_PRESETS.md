@@ -315,6 +315,197 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 
 ---
 
+## Japanese Presets (日本語最適化プリセット)
+
+日本語スライドを作る場合、下記の 6 プリセットから選ぶ。どれも `slide-maker` スキルで検証済みの「日本のプレゼン現場で使える」構成。**必ず [JAPANESE.md](JAPANESE.md) を先に読んでから適用すること。**
+
+各プリセットは欧文フォント + 日本語フォントのペアで構成される。`font-family` スタックは欧文→和文の順で記述する。
+
+### JP-1. Dark Luxury 深紺 × ゴールド
+
+**Vibe:** 高級感、重厚、IR資料、ラグジュアリーブランド、ファッション
+
+**Typography:**
+- Display: `Shippori Mincho` (700/900) — 和モダン明朝
+- Body: `Noto Sans JP` (400/500)
+- Latin: `Cormorant` (400/600)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #070710;
+    --bg-secondary: #1a1a2e;
+    --text-primary: #ffffff;
+    --text-secondary: #e8e0d0;
+    --text-muted: #9a9590;
+    --accent-gold: #c9a961;
+    --accent-teal: #2a9d8f;
+}
+```
+
+**Signature:** 多層メッシュグラデーション背景、ノイズテクスチャ、ゴールド装飾ライン、Glassmorphism カード、縦書きタイトル可
+
+---
+
+### JP-2. Dark Tech 深青 × シアン × マゼンタ
+
+**Vibe:** SaaS、DX、スタートアップ、テクノロジー、データドリブン
+
+**Typography:**
+- Display: `Zen Kaku Gothic New` (900)
+- Body: `Zen Kaku Gothic New` (400/500)
+- Latin: `Space Grotesk` (500/700)
+- Mono: `JetBrains Mono` (400)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #05080f;
+    --bg-secondary: #0d1b2a;
+    --text-primary: #ffffff;
+    --text-secondary: #c5d1e0;
+    --text-muted: #7a8999;
+    --accent-cyan: #00d4ff;
+    --accent-magenta: #ff2d9a;
+}
+```
+
+**Signature:** グリッドパターン背景、ネオングロー、モノスペース数値、シアン/マゼンタのコントラスト、グラデーションライン
+
+---
+
+### JP-3. Light Clean オフホワイト × ネイビー
+
+**Vibe:** コンサル、マッキンゼー風、公的機関、B2B 提案
+
+**Typography:**
+- Display: `Noto Sans JP` (700/900)
+- Body: `Noto Sans JP` (400/500)
+- Latin: `Inter` (400/600/700)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #fafaf7;
+    --bg-secondary: #ffffff;
+    --text-primary: #0a1628;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --accent-navy: #1e3a8a;
+    --accent-red: #dc2626;
+    --border-subtle: rgba(10, 22, 40, 0.08);
+}
+```
+
+**Signature:** クリーンなカード、1px の薄いボーダー、8pt グリッド厳守、余白 40% 以上、アクセントレッド（警告・強調のみ）
+
+---
+
+### JP-4. Light Warm ベージュ × テラコッタ
+
+**Vibe:** ヘルスケア、教育、NPO、食品、生活提案
+
+**Typography:**
+- Display: `Zen Maru Gothic` (700/900) — 温かい丸ゴシック
+- Body: `Noto Sans JP` (400/500)
+- Latin: `Work Sans` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #faf7f0;
+    --bg-secondary: #f5f1e8;
+    --text-primary: #2d2420;
+    --text-secondary: #5c4d42;
+    --text-muted: #8a7968;
+    --accent-terracotta: #c65d3a;
+    --accent-olive: #7a8b3f;
+}
+```
+
+**Signature:** 和紙風テクスチャ、角丸大きめ（16-24px）、手書き風ストローク、柔らかい影、ウォームトーン写真
+
+---
+
+### JP-5. Corporate Royal ライトグレー × ロイヤルブルー
+
+**Vibe:** 企業報告書、IR、B2B 事業計画、年次報告
+
+**Typography:**
+- Display: `Noto Sans JP` (700)
+- Body: `Noto Sans JP` (400)
+- Latin: `Inter` (400/500/700)
+- Numeric: `Inter` tabular-nums
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #f0f2f5;
+    --bg-secondary: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a5568;
+    --text-muted: #8a95a5;
+    --accent-royal: #1e40af;
+    --accent-gray: #64748b;
+    --grid-line: rgba(26, 26, 46, 0.06);
+}
+```
+
+**Signature:** 精密なデータビジュアライゼーション、タブラー数字、控えめなシャドウ、縦書きセクション番号、垂直グリッド、凡例揃え
+
+---
+
+### JP-6. Dark Creative ダークパープル × ピンク
+
+**Vibe:** メディア、エンタメ、クリエイティブエージェンシー、カルチャーイベント
+
+**Typography:**
+- Display: `Murecho` (900) or `Zen Kaku Gothic New` (900)
+- Body: `Noto Sans JP` (500)
+- Latin: `Syne` (700/800)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #0f0a1a;
+    --bg-secondary: #1a1030;
+    --text-primary: #ffffff;
+    --text-secondary: #e0d0f0;
+    --text-muted: #9a85b8;
+    --accent-pink: #ff3d8a;
+    --accent-orange: #ff9040;
+    --accent-violet: #8b5cf6;
+}
+```
+
+**Signature:** ビビッドなグラデーション、大胆なタイポグラフィ（全角 60px 超も可）、非対称レイアウト、ブラーリーク、ピンク/オレンジのダブルアクセント
+
+---
+
+## Japanese Font Pairing Reference
+
+| Preset | Display (見出し) | Body (本文) | Latin | Google Fonts URL |
+|--------|------|------|-------|------------------|
+| JP-1 Dark Luxury | Shippori Mincho 900 | Noto Sans JP 400 | Cormorant | `family=Shippori+Mincho:wght@400;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Cormorant:wght@400;600` |
+| JP-2 Dark Tech | Zen Kaku Gothic New 900 | Zen Kaku Gothic New 500 | Space Grotesk + JetBrains Mono | `family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400` |
+| JP-3 Light Clean | Noto Sans JP 900 | Noto Sans JP 400 | Inter | `family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@400;500;700` |
+| JP-4 Light Warm | Zen Maru Gothic 700 | Noto Sans JP 400 | Work Sans | `family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500&family=Work+Sans:wght@400;500` |
+| JP-5 Corporate | Noto Sans JP 700 | Noto Sans JP 400 | Inter | `family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;700` |
+| JP-6 Dark Creative | Murecho 900 | Noto Sans JP 500 | Syne | `family=Murecho:wght@400;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Syne:wght@700;800` |
+
+**自動選択ロジック（ユーザーが選ばなかったとき）:**
+
+| コンテンツの性質 | 推奨プリセット |
+|---------------|-------------|
+| 技術・DX・リサーチレポート | JP-2 Dark Tech |
+| IR・高級ブランド・投資家向け | JP-1 Dark Luxury |
+| コンサル・提案書・官公庁 | JP-3 Light Clean |
+| ヘルスケア・教育・NPO | JP-4 Light Warm |
+| 企業年次報告・財務 | JP-5 Corporate Royal |
+| クリエイティブ・メディア | JP-6 Dark Creative |
+
+---
+
 ## DO NOT USE (Generic AI Patterns)
 
 **Fonts:** Inter, Roboto, Arial, system fonts as display

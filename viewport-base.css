@@ -55,6 +55,71 @@ html {
     --element-gap: clamp(0.25rem, 1vw, 1rem);
 }
 
+/* ===========================================
+   JAPANESE / CJK OVERRIDES
+   Applied when <html lang="ja"> or [lang="ja"] is set.
+   See JAPANESE.md for rationale.
+   =========================================== */
+:root:lang(ja),
+html[lang="ja"],
+[lang="ja"] {
+    /* Japanese characters are visually denser than Latin.
+       Bump sizes and line-height across the board. */
+    --title-size: clamp(1.75rem, 4.5vw, 3.5rem);
+    --h2-size: clamp(1.4rem, 3.2vw, 2.5rem);
+    --h3-size: clamp(1.1rem, 2vw, 1.5rem);
+    --body-size: clamp(1rem, 1.5vw, 1.25rem);     /* 16-20px min */
+    --small-size: clamp(0.875rem, 1vw, 1rem);    /* 14-16px min */
+    --content-gap: clamp(0.75rem, 2vw, 2rem);
+}
+
+html[lang="ja"] body,
+[lang="ja"] {
+    /* Proportional kana metrics ("palt") — tightens Japanese spacing naturally */
+    font-feature-settings: "palt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+[lang="ja"] h1,
+[lang="ja"] h2,
+[lang="ja"] h3,
+[lang="ja"] p,
+[lang="ja"] li,
+[lang="ja"] blockquote {
+    /* Phrase-based line breaking — Safari 17+, Chrome 119+.
+       Gracefully degrades to normal on unsupported browsers. */
+    word-break: auto-phrase;
+    line-break: strict;
+    overflow-wrap: anywhere;
+    hanging-punctuation: allow-end;
+}
+
+[lang="ja"] h1,
+[lang="ja"] h2 {
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+}
+
+[lang="ja"] h3,
+[lang="ja"] h4 {
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+}
+
+[lang="ja"] p,
+[lang="ja"] li {
+    line-height: 1.8;   /* Japanese body needs wider leading than English */
+    letter-spacing: 0.02em;
+}
+
+[lang="ja"] .section-label,
+[lang="ja"] .kicker,
+[lang="ja"] .eyebrow {
+    letter-spacing: 0.15em;
+}
+
 /* 5. Cards/containers use viewport-relative max sizes */
 .card, .container, .content-box {
     max-width: min(90vw, 1000px);

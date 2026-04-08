@@ -313,8 +313,9 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 
 | File                                               | Purpose                                                              | When to Read              |
 | -------------------------------------------------- | -------------------------------------------------------------------- | ------------------------- |
-| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 12 curated visual presets with colors, fonts, and signature elements | Phase 2 (style selection) |
-| [viewport-base.css](viewport-base.css)             | Mandatory responsive CSS — copy into every presentation              | Phase 3 (generation)      |
+| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 18 curated visual presets (12 default + 6 Japanese-optimized)        | Phase 2 (style selection) |
+| [JAPANESE.md](JAPANESE.md)                         | Japanese / CJK typography guide — read when the content is in Japanese (font stack, line-break rules, density limits, checklist) | Phase 1 (if JA content)   |
+| [viewport-base.css](viewport-base.css)             | Mandatory responsive CSS (includes `[lang="ja"]` overrides) — copy into every presentation | Phase 3 (generation)      |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |

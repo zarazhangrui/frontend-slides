@@ -1,0 +1,31 @@
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2d2d2d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bgGrad)" />
+  
+  <!-- Slide Number -->
+  <text x="40" y="50" fill="white" font-family="Arial Black, sans-serif" font-size="16" opacity="0.5">01</text>
+  
+  <!-- Card -->
+  <rect x="40" y="100" width="450" height="280" fill="#FF5722" rx="0" ry="0">
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="15" stdDeviation="20" flood-opacity="0.5"/>
+    </filter>
+  </rect>
+  
+  <!-- Card Text -->
+  <text x="80" y="220" fill="#1a1a1a" font-family="Arial Black, sans-serif" font-size="64" font-weight="900">BOLD</text>
+  <text x="80" y="280" fill="#1a1a1a" font-family="Arial Black, sans-serif" font-size="64" font-weight="900">SIGNAL</text>
+  <text x="80" y="320" fill="#1a1a1a" font-family="Arial, sans-serif" font-size="18" font-weight="500" opacity="0.8">A high-impact theme for confident presentations.</text>
+  
+  <!-- Navigation Dots -->
+  <circle cx="760" cy="200" r="4" fill="white" opacity="0.8" />
+  <circle cx="760" cy="225" r="4" fill="white" opacity="0.3" />
+  <circle cx="760" cy="250" r="4" fill="white" opacity="0.3" />
+</svg>

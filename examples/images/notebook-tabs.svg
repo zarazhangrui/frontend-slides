@@ -1,0 +1,31 @@
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="450" fill="#2d2d2d" />
+  
+  <!-- Page -->
+  <rect x="40" y="20" width="720" height="410" fill="#f8f6f1" rx="4" ry="4">
+    <filter id="shadow-page">
+      <feDropShadow dx="0" dy="20" stdDeviation="40" flood-opacity="0.3"/>
+    </filter>
+  </rect>
+  
+  <!-- Binder Holes -->
+  <circle cx="60" cy="80" r="10" fill="#000" opacity="0.1" />
+  <circle cx="60" cy="160" r="10" fill="#000" opacity="0.1" />
+  <circle cx="60" cy="240" r="10" fill="#000" opacity="0.1" />
+  <circle cx="60" cy="320" r="10" fill="#000" opacity="0.1" />
+  <circle cx="60" cy="400" r="10" fill="#000" opacity="0.1" />
+  
+  <!-- Tabs -->
+  <rect x="760" y="100" width="40" height="80" fill="#98d4bb" rx="4" ry="4" />
+  <rect x="760" y="185" width="30" height="80" fill="#c7b8ea" rx="4" ry="4" opacity="0.8" />
+  <rect x="760" y="270" width="30" height="80" fill="#f4b8c5" rx="4" ry="4" opacity="0.8" />
+  
+  <!-- Tab Text (Vertical) -->
+  <text x="785" y="140" fill="rgba(0,0,0,0.5)" font-family="Arial, sans-serif" font-size="8" font-weight="700" transform="rotate(90, 785, 140)" text-anchor="middle">INTRO</text>
+  
+  <!-- Text Content -->
+  <text x="120" y="200" fill="#1a1a1a" font-family="Georgia, serif" font-size="56" font-style="italic">Notebook</text>
+  <text x="120" y="260" fill="#1a1a1a" font-family="Georgia, serif" font-size="56" font-style="italic">Tabs</text>
+  <text x="120" y="300" fill="#1a1a1a" font-family="Arial, sans-serif" font-size="16" opacity="0.7">An editorial, tactile style inspired by physical planners.</text>
+</svg>

@@ -1,5 +1,7 @@
 # Frontend Slides
 
+[繁體中文版 (Traditional Chinese)](README.zh-TW.md)
+
 A Claude Code skill for creating stunning, animation-rich HTML presentations — from scratch or by converting PowerPoint files.
 
 ## What This Does

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Slides - Theme Gallery</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #eee; }
+        .header { padding: 2rem; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { opacity: 0.9; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .theme-card { background: #16213e; border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; }
+        .theme-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .theme-preview { height: 200px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .theme-info { padding: 1rem; }
+        .theme-name { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .theme-desc { font-size: 0.9rem; opacity: 0.7; }
+        
+        /* Theme Previews */
+        .minimal-light { background: #fafafa; color: #333; }
+        .minimal-dark { background: #1a1a1a; color: #f0f0f0; }
+        .gradient-dusk { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .neon-cyber { background: #0f0f23; color: #00ff88; border: 2px solid #00ff88; }
+        .soft-pastel { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333; }
+        .brutalist { background: #fff; color: #000; border: 4px solid #000; font-family: monospace; }
+        .ocean-deep { background: linear-gradient(180deg, #0077be 0%, #004e8c 100%); color: white; }
+        .sunset-warm { background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); color: #333; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎨 Theme Gallery</h1>
+        <p>Preview all available presentation themes</p>
+    </header>
+    
+    <main class="gallery">
+        <div class="theme-card">
+            <div class="theme-preview minimal-light">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Minimal Light</div>
+                <div class="theme-desc">Clean, professional, perfect for business</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview minimal-dark">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Minimal Dark</div>
+                <div class="theme-desc">Sleek dark mode for tech talks</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview gradient-dusk">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Gradient Dusk</div>
+                <div class="theme-desc">Purple gradient, modern and bold</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview neon-cyber">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Neon Cyber</div>
+                <div class="theme-desc">Futuristic neon glow effect</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview soft-pastel">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Soft Pastel</div>
+                <div class="theme-desc">Gentle, approachable, friendly</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview brutalist">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Brutalist</div>
+                <div class="theme-desc">Raw, bold, unconventional</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview ocean-deep">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Ocean Deep</div>
+                <div class="theme-desc">Calm blue, trustworthy</div>
+            </div>
+        </div>
+        
+        <div class="theme-card">
+            <div class="theme-preview sunset-warm">Aa</div>
+            <div class="theme-info">
+                <div class="theme-name">Sunset Warm</div>
+                <div class="theme-desc">Warm, inviting, creative</div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

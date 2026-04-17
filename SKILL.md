@@ -190,6 +190,121 @@ If images were provided, the slide outline already incorporates them from Step 1
 - Use fonts from Fontshare or Google Fonts — never system fonts
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
+- Include **Speaker Modes** (Teleprompter + God Mode) — see below
+
+### Speaker Modes
+
+Every presentation must include two built-in speaker assistance features. These help the presenter during live delivery — the audience only sees the slides; the presenter can toggle these overlays via keyboard.
+
+#### Teleprompter — `P` key
+
+A bottom panel that shows **per-slide speaker notes** synced to the current slide. Think of it as a confidence monitor.
+
+**Behavior:**
+- `P` toggles the panel (slides up from bottom, max 35vh height)
+- Auto-updates when slides change (via keyboard, scroll, or nav dots)
+- `+` / `-` keys adjust font size (also A+/A- buttons in panel header)
+- Semi-transparent dark backdrop (`rgba(0,0,0,0.88)`) with `backdrop-filter: blur`
+- Panel shows: slide number indicator + speaker note text
+- Scrolls to top when switching slides
+
+**Speaker notes source:** When generating, write concise speaker notes for each slide based on the user's source content. Notes should be what the presenter would **say out loud** — not a copy of the slide bullets, but the natural spoken version with transitions and context. Store notes as a JS object mapping slide index → string.
+
+```javascript
+class Teleprompter {
+    constructor(presentation) {
+        this.notes = {
+            0: 'Opening remarks...',
+            1: 'Explain agenda...',
+            // one entry per slide
+        };
+    }
+    toggle() { /* show/hide panel, update content */ }
+    update(slideIndex) { /* called on slide change */ }
+    changeFontSize(delta) { /* +/- scaling */ }
+}
+```
+
+**CSS key points:**
+- `.teleprompter` — fixed bottom, `transform: translateY(100%)` hidden, `.active` slides up
+- `.teleprompter-text` — `line-height: 1.8` for readability, `clamp()` font sizing
+- Font size controls: two small buttons + keyboard shortcuts
+
+#### God Mode — `G` key
+
+A full-screen overlay showing the **complete manuscript** with all section text and images. For when the teleprompter's per-slide notes aren't enough and the presenter needs to see the full script.
+
+**Behavior:**
+- `G` toggles the overlay (fade in/out, covers entire viewport)
+- `Escape` also closes it
+- **Synced with current slide:** opening God Mode or changing slides auto-scrolls to the corresponding section, highlighted with a left border
+- Content is scrollable, the presenter can freely browse the full manuscript
+- Includes all images from the source content (screenshots, diagrams, etc.)
+
+**Section syncing implementation:**
+1. Wrap each logical section in `<div class="god-section" id="god-s-xxx">` with a unique ID
+2. Maintain a `slideToSection` mapping object: `{ 0: 'god-s-opening', 1: 'god-s-opening', 2: 'god-s-part1', ... }`
+3. On slide change or toggle-open: find the target section element, add `.active` class (remove from others), smooth-scroll it into view within the overlay's scroll container
+
+```javascript
+class GodMode {
+    constructor(presentation) {
+        this.slideToSection = {
+            0: 'god-s-opening',
+            // map every slide index to a section ID
+        };
+    }
+    toggle() { /* show/hide, scroll to current */ }
+    update(slideIndex) { /* highlight + scroll to section */ }
+    scrollToSlide(slideIndex) {
+        const target = document.getElementById(this.slideToSection[slideIndex]);
+        target.classList.add('active');
+        this.bodyEl.scrollTo({ top: offset, behavior: 'smooth' });
+    }
+}
+```
+
+**CSS key points:**
+- `.god-mode` — fixed inset 0, `z-index: 20000` (above teleprompter), `backdrop-filter: blur(16px)`
+- `.god-section` — left border transparent by default, `.active` gets accent-colored left border + subtle background tint
+- `.god-mode-content img` — full width, no max-height constraint (unlike slides), so screenshots are readable
+- `.god-img-row` — grid layout for side-by-side image comparisons
+
+#### Integration with SlidePresentation
+
+Both modes must be notified on every slide change. Patch the main controller:
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+    const pres = new SlidePresentation();
+    const godMode = new GodMode(pres);
+    const prompter = new Teleprompter(pres);
+
+    // Patch goToSlide for keyboard/dot navigation
+    const origGoTo = pres.goToSlide.bind(pres);
+    pres.goToSlide = function(index) {
+        origGoTo(index);
+        prompter.update(pres.currentSlide);
+        godMode.update(pres.currentSlide);
+    };
+
+    // Patch IntersectionObserver for scroll-based navigation
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                const idx = Array.from(pres.slides).indexOf(entry.target);
+                pres.currentSlide = idx;
+                pres.updateProgressBar();
+                pres.updateNavDots();
+                prompter.update(idx);
+                godMode.update(idx);
+            }
+        });
+    }, { threshold: 0.5 });
+    pres.slides.forEach(slide => observer.observe(slide));
+});
+```
 
 ---
 
@@ -211,6 +326,7 @@ When converting PowerPoint files:
 3. **Summarize** — Tell the user:
    - File location, style name, slide count
    - Navigation: Arrow keys, Space, scroll/swipe, click nav dots
+   - Speaker modes: `P` for teleprompter (per-slide notes), `G` for God Mode (full manuscript)
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - If inline editing was enabled: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
 

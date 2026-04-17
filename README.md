@@ -15,6 +15,7 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 - **Zero Dependencies** — Single HTML files with inline CSS/JS. No npm, no build tools, no frameworks.
 - **Visual Style Discovery** — Can't articulate design preferences? No problem. Pick from generated visual previews.
 - **PPT Conversion** — Convert existing PowerPoint files to web, preserving all images and content.
+- **Speaker Modes** — Built-in Teleprompter (`P` key, per-slide notes) and God Mode (`G` key, full manuscript with slide-synced scrolling) for live delivery.
 - **Anti-AI-Slop** — Curated distinctive styles that avoid generic AI aesthetics (bye-bye, purple gradients on white).
 - **Production Quality** — Accessible, responsive, well-commented code you can customize.
 
@@ -68,7 +69,7 @@ The skill will:
 2. Ask about the feeling you want (impressed? excited? calm?)
 3. Generate 3 visual style previews for you to compare
 4. Create the full presentation in your chosen style
-5. Open it in your browser
+5. Open it in your browser — press `P` for teleprompter, `G` for full manuscript
 
 ### Convert a PowerPoint
 
@@ -110,7 +111,7 @@ The skill will:
 
 ## Architecture
 
-This skill uses **progressive disclosure** — the main `SKILL.md` is a concise map (~180 lines), with supporting files loaded on-demand only when needed:
+This skill uses **progressive disclosure** — the main `SKILL.md` is a compact workflow map, with supporting files loaded on-demand only when needed:
 
 | File                      | Purpose                        | Loaded When               |
 | ------------------------- | ------------------------------ | ------------------------- |

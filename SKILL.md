@@ -306,6 +306,11 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
   bash scripts/export-pdf.sh <path-to-html> [output.pdf] --compact
   ```
   This renders at 1280×720 instead of 1920×1080, typically cutting file size by 50-70% with minimal visual difference.
+- **Need sharper output?** If the user wants higher resolution for retina displays or printing, re-run the export with the `--hidpi` flag:
+  ```bash
+  bash scripts/export-pdf.sh <path-to-html> [output.pdf] --hidpi
+  ```
+  This uses 2x pixel density while keeping CSS layout identical — text and spacing are preserved exactly. File size roughly doubles. Can be combined with `--compact`.
 
 ---
 

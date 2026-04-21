@@ -33,6 +33,8 @@ Then use `/vibe-slides` in Claude Code.
 - **PowerPoint conversion** — Extracts text, images, and notes from .pptx files.
 - **Production quality** — Accessible, responsive, well-commented code.
 - **Viewport-perfect** — Every slide fits exactly within the viewport. No scrolling.
+- **Inline editing** — Optional in-browser text editing with localStorage autosave and file export.
+- **Share & export** — One-command deploy to a live URL (Vercel) or export to PDF (Playwright).
 
 ## Available styles
 
@@ -47,7 +49,7 @@ Two ready-to-use templates with assets (logos, patterns, SVGs):
 
 ## Credits
 
-Based on [frontend-slides](https://github.com/zarazhangrui/frontend-slides) by [@zarazhangrui](https://github.com/zarazhangrui). Extended with templates, additional style presets, and enhanced viewport fitting.
+Based on [frontend-slides](https://github.com/zarazhangrui/frontend-slides) by [@zarazhangrui](https://github.com/zarazhangrui). Extended with Archon templates and brand assets.
 
 ## License
 

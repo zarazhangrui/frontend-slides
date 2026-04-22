@@ -42,7 +42,7 @@ These invariants apply to EVERY slide in EVERY presentation:
 - ALL font sizes and spacing must use `clamp(min, preferred, max)` — never fixed px/rem
 - Content containers need `max-height` constraints
 - Images: `max-height: min(50vh, 400px)`
-- Breakpoints required for heights: 700px, 600px, 500px
+- Breakpoints required for heights: 700px, 600px, 500px; and for width: `min-width: 1600px` (projector / 4K)
 - Include `prefers-reduced-motion` support
 - Never negate CSS functions directly (`-clamp()`, `-min()`, `-max()` are silently ignored) — use `calc(-1 * clamp(...))` instead
 
@@ -61,6 +61,18 @@ These invariants apply to EVERY slide in EVERY presentation:
 
 **Content exceeds limits? Split into multiple slides. Never cram, never scroll.**
 
+### Designing for Projection
+
+Presentations often get projected at 1920×1080+ over HDMI or wireless cast pipelines that differ from laptop IPS displays in three ways: lower dynamic range (deep blacks lift to gray), chroma subsampling (colored edges smear), and integer scaling (fine patterns produce moiré). Designs that look crisp on a MacBook can turn fuzzy or halo on stage.
+
+`viewport-base.css` includes a `@media (min-width: 1600px)` breakpoint that lifts type-size caps for projector viewports without affecting laptop rendering. When authoring presets or enhancing existing slides, also avoid:
+
+- **Gradient-filled text + wide `drop-shadow` blur** (> 10px) on accent words — chroma subsampling turns the glow into smear. Use a tighter blur radius or a solid accent color.
+- **Tight background grid periods** (≤ 64px) — projector scaling creates moiré. Use ≥ 96px periods or fade the grid with a radial mask.
+- **Heavy negative letter-spacing** (< −0.01em) on display type — strokes fuse at distance. Keep heading tracking at or above −0.005em.
+- **Low-alpha dim text** (< 0.7 on dark backgrounds) — washes out on projectors with raised black levels. Keep secondary text at alpha ≥ 0.75.
+- **`backdrop-filter: blur()` on information-bearing panels** — unsupported on some cast pipelines. Always back it with a visible `background-color` fallback.
+
 ---
 
 ## Phase 0: Detect Mode
@@ -78,7 +90,7 @@ When enhancing existing presentations, viewport fitting is the biggest risk:
 1. **Before adding content:** Count existing elements, check against density limits
 2. **Adding images:** Must have `max-height: min(50vh, 400px)`. If slide already has max content, split into two slides
 3. **Adding text:** Max 4-6 bullets per slide. Exceeds limits? Split into continuation slides
-4. **After ANY modification, verify:** `.slide` has `overflow: hidden`, new elements use `clamp()`, images have viewport-relative max-height, content fits at 1280x720
+4. **After ANY modification, verify:** `.slide` has `overflow: hidden`, new elements use `clamp()`, images have viewport-relative max-height, content fits at 1280x720 and remains legible when projected at 1920x1080
 5. **Proactively reorganize:** If modifications will cause overflow, automatically split content and inform the user. Don't wait to be asked
 
 **When adding images to existing slides:** Move image to new slide or reduce other content first. Never add images without checking if existing content already fills the viewport.

@@ -137,6 +137,22 @@ img, .image-container {
     }
 }
 
+/* Wide viewports — projector / 4K / external displays (>= 1600px width)
+   The default clamp() caps are tuned for laptops (<=1536px), where the
+   `vw` preferred component already sits under the max. On 1920px+ displays
+   the `vw` component exceeds the max and gets clamped back down, making
+   type look small from the room. This breakpoint lifts the caps so type
+   scales up on projection without affecting laptop rendering. */
+@media (min-width: 1600px) {
+    :root {
+        --title-size: clamp(1.5rem, 5vw, 5.5rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 3.25rem);
+        --h3-size: clamp(1rem, 2.5vw, 2.25rem);
+        --body-size: clamp(0.75rem, 1.5vw, 1.5rem);
+        --small-size: clamp(0.65rem, 1vw, 1.15rem);
+    }
+}
+
 /* ===========================================
    REDUCED MOTION
    Respect user preferences

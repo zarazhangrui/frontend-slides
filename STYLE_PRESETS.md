@@ -6,6 +6,50 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 
 ---
 
+## Brand Themes
+
+### 0. Distillery Brand (DEFAULT for Distillery work)
+
+**Vibe:** Confident, premium, technical. Deep navy canvas with luminous cyan-blue arcs — the brand mark scaled up as wallpaper.
+
+**When to pick:** ANY slide deck for or about Distillery (sales proposals, internal department reviews, conference talks, client onboarding). This is the house style — do not invent alternatives unless the user explicitly opts out.
+
+**Authority:** Locked to the [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) spec. Read that file in full before generating; its rules override any generic preset guidance below.
+
+**Layout:** Navy background. Logo top-left, page number bottom-right, layered curved arcs anchored to the right edge. Title left-aligned, light weight.
+
+**Typography:**
+- Display: `Hanken Grotesk` (300/400) — light weight for titles
+- Body: `Hanken Grotesk` (400/500)
+- Eyebrow: `Hanken Grotesk` (600), uppercase, 0.18em tracking, in cyan
+
+**Colors:**
+```css
+:root {
+    --d-navy:       #0B2051;  /* canvas */
+    --d-blue:       #124EC6;  /* primary accent */
+    --d-cyan:       #61E9EE;  /* highlights */
+    --d-sky:        #19B8E8;
+    --d-periwinkle: #5070E1;
+    --d-magenta:    #C621EF;  /* sparing */
+    --d-paper:      #f6f8fc;  /* light variant only */
+    --d-grad-hero:  linear-gradient(135deg, #0B2051 0%, #124EC6 100%);
+    --d-grad-cyan:  linear-gradient(135deg, #124EC6 0%, #19B8E8 100%);
+}
+```
+
+**Signature Elements (must include):**
+- Layered concentric quarter-circle arcs anchored to right edge (the "D" mark scaled up) — see DISTILLERY_BRAND.md for the SVG
+- "DISTILLERY" wordmark + arc-D glyph top-left on every slide
+- "Distillery · Never Settle" tagline + page number bottom-right
+- Cyan square bullets (not discs)
+- Eyebrow labels with a thin cyan underline
+- Light-weight (300/400) titles — never bold
+
+**Don'ts (from the brand book):** No bold titles. No off-brand colors. No stock illustrations. No purple gradients on white. No system fonts.
+
+---
+
 ## Dark Themes
 
 ### 1. Bold Signal

@@ -1,6 +1,8 @@
-# Frontend Slides
+# Frontend Slides — Distillery Edition
 
-A Claude Code skill for creating stunning, animation-rich HTML presentations — from scratch or by converting PowerPoint files.
+A Claude Code skill for creating stunning, animation-rich HTML presentations — from scratch or by converting PowerPoint files. **This fork is preconfigured for Distillery**: deep-navy canvas, layered curved-arc motif, Hanken Grotesk type, and Francisco Maurici as the default presenter.
+
+See [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) for the full brand spec (colors, gradients, typography, templates T1–T9). When you invoke `/frontend-slides` it asks the deck's goal (sales proposal / head-of-department / internal / talk / training), whether to include a "presenting myself" intro slide, and then generates the deck against the locked Distillery preset.
 
 ## What This Does
 
@@ -86,6 +88,10 @@ The skill will:
 4. Generate an HTML presentation with all your original assets
 
 ## Included Styles
+
+### Brand (Default for Distillery)
+
+- **Distillery Brand** — Deep-navy canvas, layered cyan-blue curved arcs, Hanken Grotesk light titles. Locked to the brand book; see [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md).
 
 ### Dark Themes
 

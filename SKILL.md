@@ -7,6 +7,42 @@ description: Create stunning, animation-rich HTML presentations from scratch or 
 
 Create zero-dependency, animation-rich HTML presentations that run entirely in the browser.
 
+## Distillery Defaults (READ FIRST)
+
+This is a Distillery-customized fork of the skill. The following defaults apply to **every** deck unless the user explicitly opts out:
+
+1. **House style is the Distillery Brand preset.** See [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md). Treat it as the default style and only generate the 3-preview style picker if the user says they want a non-Distillery look.
+2. **Default deck owner / closing-slide contact** is Francisco Maurici (Head of Delivery, [francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com), headshot at `assets/fran-maurici.jpg`). Use this exact `mailto:` markup whenever his email is shown. The deck's **closing slide (T8)** always uses this contact unless the user overrides it.
+3. **Always ask the deck's goal first** — sales proposal, head-of-department deck, internal team update, conference talk, training, or other. The goal shapes tone, slide count, and which template archetypes (T1–T9 in DISTILLERY_BRAND.md) to use.
+4. **Always ask who appears on the team slide** as slide 2 (after the cover). The user provides comma-separated names; the skill looks each one up in [`assets/team/team.md`](assets/team/team.md) for email + role + bio + photo, and renders one **team slide (template T7, multi-person)**. If the user says "none", skip the slide.
+
+These three questions (goal, team slide, content) are the new Phase 1 — see below.
+
+## When to Use This Skill vs. `frontend-design`
+
+This skill is one of two surfaces Distillery uses for HTML output. Pick the right one before you start:
+
+| If the user wants…                                                          | Use this skill        |
+| --------------------------------------------------------------------------- | --------------------- |
+| Slide deck, presentation, sales proposal, conference talk, training content | **`frontend-slides`** (this one) |
+| Bento landing page, animated marketing site, single-page scrolling site, hero + sections + cards layout | **`frontend-design`** |
+| Component gallery, motion library, dashboard-style page                     | **`frontend-design`** |
+
+**Defining traits of a slide deck (this skill):**
+- Page-by-page; each "slide" is a discrete unit at exactly `100vh`
+- Keyboard navigation (arrow keys advance)
+- Designed to be presented or exported to PDF
+- Reads top-to-bottom one screen at a time, not as a continuous scroll
+
+**Defining traits of a bento site (`frontend-design`):**
+- Continuous scroll, sections of varying heights
+- Bento-grid layouts (asymmetric tiles, mixed sizes)
+- Lots of inline animation, scroll-driven effects, micro-interactions
+- Designed for the web, not for projection or PDF
+- Reference Distillery example: `/Users/distillery/Documents/Decks/distillery-motion-library/index.html`
+
+**If unsure, ask the user:** "Is this a slide deck (page-by-page, keyboard navigation, exportable to PDF) or a scrolling site (bento, landing page, marketing)?"
+
 ## Core Principles
 
 1. **Zero Dependencies** — Single HTML files with inline CSS/JS. No npm, no build tools.
@@ -61,6 +97,142 @@ These invariants apply to EVERY slide in EVERY presentation:
 
 **Content exceeds limits? Split into multiple slides. Never cram, never scroll.**
 
+### Layout Discipline — Don't Waste Space
+
+Distillery decks have a strict bias toward **paired layouts** (text + visual, or column-vs-column). Centered single-column slides are the exception, not the default.
+
+| If the slide has…                                                          | Use this template                |
+| -------------------------------------------------------------------------- | -------------------------------- |
+| ≤4 short bullets or 1–2 paragraphs                                         | **T10 Split** (text + visual)    |
+| "X vs Y" content (in scope vs out of scope, before/after, option A vs B)   | **T11 Compare** (mandatory)      |
+| 5–6 cards / features                                                       | T5 (3-up cards) or 2×3 grid      |
+| 1 pull quote                                                               | T3                               |
+| 2–4 large numbers                                                          | T6 (stats)                       |
+| 1 image filling the slide                                                  | Image slide with `.image-photo` or `.image-diagram` |
+
+**T10 vary-the-side rule:** when the deck uses T10 multiple times, alternate `.split` and `.split.reverse` so the visual side flips between left and right. Never put the visual on the same side three slides in a row.
+
+**Forbidden:** centered single-column with empty space above/below the bullets. If the content is sparse, the right answer is to add a visual (T10) — not to leave the slide empty.
+
+### Icons — Lucide
+
+The skill ships with a curated subset of [Lucide](https://lucide.dev) icons in `assets/icons/`. They are the **only** icon system the skill should use; do not hand-draw or invent SVG icons.
+
+**Available icons** (~30): `arrow-right`, `check`, `x`, `chevron-right`, `circle`, `square`, `triangle`, `shield`, `zap`, `cpu`, `database`, `cloud`, `users`, `user`, `mail`, `phone`, `calendar`, `clock`, `target`, `trending-up`, `bar-chart-3`, `pie-chart`, `lock`, `key`, `code`, `terminal`, `layers`, `settings`, `search`, `plus`.
+
+**How to use** — paste the SVG inline so it inherits `currentColor` (no CDN, no build step):
+
+```html
+<!-- Read assets/icons/check.svg and inline its <svg> markup -->
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 6 9 17l-5-5"/>
+</svg>
+```
+
+The `.icon` class (defined in `viewport-base.css`) gives consistent sizing (`clamp(18px, 1.6vw, 24px)`), `currentColor` stroke, and stroke-width 1.6 for a minimalist look. Use `.icon.lg` (~32px) for card headlines and `.icon.xl` (~48px) for hero callouts.
+
+**Need an icon that isn't in the curated set?** Pull it from `https://lucide.dev/icons/<name>` and add the SVG to `assets/icons/`. Stay minimalist — don't grab outline+filled variants of the same shape.
+
+**Where to use icons:**
+- Card headers (one icon per card, top-left of the card)
+- Numbered/lettered list markers (replace bullet squares with topic-relevant icons)
+- Inline emphasis in flows (security pillars, capability matrix, role rows)
+- Section dividers (large `.icon.xl` next to the section number)
+
+**Where NOT to use icons:**
+- Decorating every paragraph (kills hierarchy)
+- Replacing typography that should be a real heading
+- As a substitute for a chart when numbers should speak
+
+### Charts — ApexCharts
+
+Distillery decks use [ApexCharts](https://apexcharts.com) (MIT, CDN, no build step) for any data visualization. Load the runtime once in `<head>`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@4.4.0/dist/apexcharts.min.js"></script>
+```
+
+**When to add a chart (not optional):**
+- The slide compares **≥3 numeric values** → use a chart, not a bullet list of numbers
+- The slide shows a trend over time → line/area chart
+- The slide breaks down a total (cost mix, role mix, time mix) → donut chart
+- The slide tracks a single KPI (NPS, accuracy %, uptime) → radial chart
+
+**When NOT to add a chart:** when the slide already conveys the comparison visually (e.g. T11 compare with matching shapes), when there are only 2 numbers (use T6 stats instead), or when the data is qualitative.
+
+**Theme palette** — every chart uses these colors against the dark slide:
+
+```js
+const distilleryChartTheme = {
+  chart: { background: 'transparent', foreColor: '#ffffff' },
+  colors: ['#61E9EE', '#19B8E8', '#5070E1', '#124EC6', '#C621EF'],
+  grid:   { borderColor: 'rgba(255,255,255,0.10)' },
+  legend: { labels: { colors: '#ffffff' } },
+  dataLabels: { style: { colors: ['#0B2051'] } },
+  tooltip: { theme: 'dark' },
+};
+```
+
+**Four ready-to-paste presets** (drop the runtime in `<head>`, then in a slide):
+
+```js
+// 1. Horizontal bar — categorical comparison (e.g. role costs)
+new ApexCharts(document.querySelector('#chart-bar'), {
+  ...distilleryChartTheme,
+  chart: { ...distilleryChartTheme.chart, type: 'bar', height: 360, toolbar: { show: false } },
+  series: [{ name: 'Weeks', data: [3, 6, 4, 2] }],
+  xaxis:  { categories: ['Discovery','Build','Pilot','Hardening'] },
+  plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '60%' } },
+  dataLabels: { enabled: true, formatter: (v) => v + 'w' },
+}).render();
+
+// 2. Donut — proportion of a whole (e.g. role mix)
+new ApexCharts(document.querySelector('#chart-donut'), {
+  ...distilleryChartTheme,
+  chart: { ...distilleryChartTheme.chart, type: 'donut', height: 320 },
+  series: [40, 25, 20, 15],
+  labels: ['Engineering','Design','PM','QA'],
+  plotOptions: { pie: { donut: { size: '68%' } } },
+  legend:   { position: 'bottom' },
+}).render();
+
+// 3. Area — trend over time
+new ApexCharts(document.querySelector('#chart-area'), {
+  ...distilleryChartTheme,
+  chart: { ...distilleryChartTheme.chart, type: 'area', height: 320, toolbar: { show: false } },
+  series: [{ name: 'Adoption', data: [12, 28, 41, 58, 72, 84] }],
+  xaxis:  { categories: ['W1','W2','W3','W4','W5','W6'] },
+  stroke: { curve: 'smooth', width: 2 },
+  fill:   { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
+}).render();
+
+// 4. Radial — single KPI
+new ApexCharts(document.querySelector('#chart-radial'), {
+  ...distilleryChartTheme,
+  chart: { ...distilleryChartTheme.chart, type: 'radialBar', height: 320 },
+  series: [87],
+  labels: ['Accuracy'],
+  plotOptions: { radialBar: { hollow: { size: '64%' }, dataLabels: { name: { color: '#fff' }, value: { color: '#61E9EE', fontSize: '2rem' } } } },
+}).render();
+```
+
+Charts always render inside the visual side of a T10 split or as a single full-width chart on a dedicated data slide.
+
+### Image Rendering — Avoid the White-Rectangle Bug
+
+Image frames are the #1 source of visual bugs in Distillery decks. The rule is simple:
+
+- **Photos / screenshots** → `class="image-photo"` (transparent background, subtle border + shadow)
+- **Diagrams / architecture renders** → `class="image-diagram"` (dark plate that blends with the slide)
+- **Centered logos** → `class="slide-image logo"`
+
+**NEVER** set `background: white` (or `var(--d-white)`) on an image frame on a dark slide. With `object-fit: contain`, an image smaller than its frame will leave the frame's white background showing — a bordered rectangle that doesn't match the image. This is the bug to watch for in Mode C enhancement work; if you find it, replace with `.image-diagram`.
+
+If a source diagram has a white background baked in: either re-export with a transparent background, or accept the dark plate from `.image-diagram` — never paint the frame white.
+
+See `html-template.md` "Image Placement" for full CSS.
+
 ---
 
 ## Phase 0: Detect Mode
@@ -87,26 +259,57 @@ When enhancing existing presentations, viewport fitting is the biggest risk:
 
 ## Phase 1: Content Discovery (New Presentations)
 
-**Ask ALL questions in a single AskUserQuestion call** so the user fills everything out at once:
+**Ask ALL questions in a single AskUserQuestion call** so the user fills everything out at once. The first question (Goal) is mandatory — its answer drives tone, slide count, and template selection in DISTILLERY_BRAND.md.
 
-**Question 1 — Purpose** (header: "Purpose"):
-What is this presentation for? Options: Pitch deck / Teaching-Tutorial / Conference talk / Internal presentation
+**Question 1 — Goal** (header: "Goal", REQUIRED):
+What is the goal of this deck? This shapes the structure and tone. Options:
 
-**Question 2 — Length** (header: "Length"):
+- **Sales proposal** — external client, persuasive, pricing/scope/timeline. Use templates T1, T7 (team), T4, T5, T6, T8.
+- **Head-of-department deck** — internal leadership update, status + asks. Use T1, T2, T6, T9, T8.
+- **Internal team update** — same-team status, lighter chrome, can use the light-paper variant (T9).
+- **Conference talk** — external audience, narrative-driven, fewer words per slide. Use T1, T3, T4, T8.
+- **Training / onboarding** — instructional, more density allowed. Use T1, T4, T5, T9.
+- **Other** — ask the user to describe the goal in one sentence.
+
+**Question 2 — Team slide** (header: "Team", REQUIRED, free text):
+Who should appear on the team slide (slide 2)? Reply with **comma-separated names** (e.g. `Francisco Maurici, Laura Taricco, Tomas Calusio`), or `none` to skip the slide.
+
+Lookup logic for each name:
+
+1. Match (case-insensitive, trim whitespace) against the **Name** column of [`assets/team/team.md`](assets/team/team.md). On match, pull the row's email, role, bio, and photo path verbatim.
+2. **Not found** — construct the email as `firstname.lastname@distillery.com` (lowercase; multi-word last names are concatenated, e.g. Hector De Diego → `hector.dediego@`). Render an initials avatar in place of the photo (cyan ring on navy, white initials). Print a non-blocking warning to the user: `team directory: "<name>" not found — using initials avatar. Drop a photo at assets/team/<slug>.jpg and add a row to assets/team/team.md.`
+3. **Photo missing in directory** (entry exists but Photo cell is `_(no photo yet — use initials)_`) — same initials-avatar fallback, no warning.
+
+The resulting team slide is **template T7 multi-person** (see [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) → T7).
+
+**Question 3 — Length** (header: "Length"):
 Approximately how many slides? Options: Short 5-10 / Medium 10-20 / Long 20+
 
-**Question 3 — Content** (header: "Content"):
+**Question 4 — Content** (header: "Content"):
 Do you have content ready? Options: All content ready / Rough notes / Topic only
 
-**Question 4 — Inline Editing** (header: "Editing"):
+**Question 5 — Inline Editing** (header: "Editing"):
 Do you need to edit text directly in the browser after generation? Options:
 
 - "Yes (Recommended)" — Can edit text in-browser, auto-save to localStorage, export file
 - "No" — Presentation only, keeps file smaller
 
-**Remember the user's editing choice — it determines whether edit-related code is included in Phase 3.**
+**Remember the user's editing choice — it determines whether edit-related code is included in Phase 3. Remember the goal — it determines which T1–T9 templates to mix.**
 
 If user has content, ask them to share it.
+
+### Step 1.1: Confirm contact details
+
+The **closing slide (T8)** always defaults to:
+
+| Field   | Value                                                            |
+| ------- | ---------------------------------------------------------------- |
+| Name    | Francisco Maurici                                                |
+| Role    | Head of Delivery Department                                      |
+| Email   | `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)` |
+| Photo   | `assets/fran-maurici.jpg`                                        |
+
+Only ask the user to confirm if the deck is being delivered by someone other than Fran. The **team slide** contact data comes from Phase 1 Q2 lookup — do not re-ask.
 
 ### Step 1.2: Image Evaluation (if images provided)
 
@@ -130,12 +333,15 @@ If user provides an image folder:
 
 ### Step 2.0: Style Path
 
-Ask how they want to choose (header: "Style"):
+For Distillery decks, the **Distillery Brand** preset is the default. Ask (header: "Style"):
 
-- "Show me options" (recommended) — Generate 3 previews based on mood
+- "Use Distillery Brand (recommended)" — DEFAULT. Locked to [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md). Skip directly to Phase 3.
+- "Show me options" — Generate 3 previews based on mood (only if the user wants a non-Distillery look)
 - "I know what I want" — Pick from preset list directly
 
-**If direct selection:** Show preset picker and skip to Phase 3. Available presets are defined in [STYLE_PRESETS.md](STYLE_PRESETS.md).
+**If the user picks "Use Distillery Brand":** Skip steps 2.1–2.3 entirely. Read [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) and proceed to Phase 3.
+
+**If direct selection of a non-Distillery preset:** Show preset picker and skip to Phase 3. Available presets are defined in [STYLE_PRESETS.md](STYLE_PRESETS.md).
 
 ### Step 2.1: Mood Selection (Guided Discovery)
 
@@ -182,12 +388,23 @@ If images were provided, the slide outline already incorporates them from Step 1
 - [html-template.md](html-template.md) — HTML architecture and JS features
 - [viewport-base.css](viewport-base.css) — Mandatory CSS (include in full)
 - [animation-patterns.md](animation-patterns.md) — Animation reference for the chosen feeling
+- **If style = Distillery Brand:** also read [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) in full. Its colors, type scale, layout chrome, arc motif, and templates T1–T9 are mandatory.
+- **If Phase 1 Q2 returned any names (team slide):** also read [`assets/team/team.md`](assets/team/team.md) in full so you have email/role/bio/photo for every directory entry without re-fetching.
+
+**Distillery deck assembly rules:**
+
+- Slide 1 is always template T1 (cover) — eyebrow shows the deck goal in uppercase (e.g. `SALES PROPOSAL · 2026`).
+- Slide 2 is template T7 (multi-person team slide) **only if** Phase 1 Q2 returned one or more names. Use the per-person data resolved in Phase 1 Q2 (each entry has name, role, email, bio, photo path or initials-fallback). Layout follows DISTILLERY_BRAND.md → T7 multi-person rules (1 → hero, 2 → side-by-side, 3 → three-up, 4 → 2×2, 5+ → compact card grid).
+- Last slide is always template T8 (closing) with Fran's contact block.
+- Section dividers (T2) every 4–6 content slides.
+- Every slide must include the layered curved-arcs SVG and the logo top-left + page number bottom-right (see DISTILLERY_BRAND.md → Layout Anatomy).
 
 **Key requirements:**
 
 - Single self-contained HTML file, all CSS/JS inline
 - Include the FULL contents of viewport-base.css in the `<style>` block
-- Use fonts from Fontshare or Google Fonts — never system fonts
+- Use fonts from Fontshare or Google Fonts — never system fonts (for Distillery: Hanken Grotesk + Inter Tight from Google Fonts)
+- Any displayed email **must** use `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)` rendered as a real `<a href="mailto:...">` link
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
 
@@ -313,10 +530,14 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 
 | File                                               | Purpose                                                              | When to Read              |
 | -------------------------------------------------- | -------------------------------------------------------------------- | ------------------------- |
-| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 12 curated visual presets with colors, fonts, and signature elements | Phase 2 (style selection) |
+| [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md)         | Mandatory Distillery brand spec — colors, type, arcs, templates T1–T9 | Phase 3 (Distillery decks) |
+| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | Curated visual presets (Distillery Brand + 12 alternatives)          | Phase 2 (style selection) |
 | [viewport-base.css](viewport-base.css)             | Mandatory responsive CSS — copy into every presentation              | Phase 3 (generation)      |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
+| [assets/distillery-logo.png](assets/distillery-logo.png) | Full-color Distillery logo                                      | Phase 3 (Distillery decks) |
+| [assets/fran-maurici.jpg](assets/fran-maurici.jpg) | Default headshot for the closing-slide contact block (Francisco)     | Phase 3 (closing slide)   |
+| [assets/team/team.md](assets/team/team.md)         | Distillery team directory (name, email, role, bio, photo) for T7 lookup | Phase 1 Q2 + Phase 3 (team slide) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

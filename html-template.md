@@ -357,37 +357,76 @@ Save processed images with `_processed` suffix. Never overwrite originals.
 
 ### Image Placement
 
-**Use direct file paths** (not base64) — presentations are viewed locally:
+**Use direct file paths** (not base64) — presentations are viewed locally.
+
+**Two image classes — pick the one that matches the asset:**
+
+| Class            | Use for                                                | Background                  |
+| ---------------- | ------------------------------------------------------ | --------------------------- |
+| `.image-photo`   | Photographs, screenshots, real-world imagery           | **Transparent** (no frame)  |
+| `.image-diagram` | Architecture renders, flowcharts, exported diagrams    | Dark plate (subtle, not white) |
+| `.slide-image.logo` | Centered logos on title or closing slides            | Transparent                 |
 
 ```html
+<!-- Photo / screenshot — transparent, subtle border + shadow -->
+<img src="assets/screenshot.png" alt="Screenshot" class="image-photo" />
+
+<!-- Diagram exported on white — dark plate so it doesn't fight the slide -->
+<img src="assets/architecture.png" alt="Architecture" class="image-diagram" />
+
+<!-- Centered logo on title slide -->
 <img src="assets/logo_round.png" alt="Logo" class="slide-image logo" />
-<img
-  src="assets/screenshot.png"
-  alt="Screenshot"
-  class="slide-image screenshot"
-/>
 ```
 
 ```css
-.slide-image {
+/* Default: any <img> respects viewport; transparent background. */
+.slide-image,
+.image-photo,
+.image-diagram {
   max-width: 100%;
-  max-height: min(50vh, 400px);
+  max-height: min(60vh, 540px);
   object-fit: contain;
-  border-radius: 8px;
+  display: block;
+  background: transparent;
 }
-.slide-image.screenshot {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+
+/* Photo / screenshot — subtle border + soft shadow only.
+   No background fill. Works on any slide. */
+.image-photo {
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
 }
+
+/* Diagram — for white-bg PNGs that would otherwise clash with a dark slide.
+   The plate is barely lighter than the slide so the diagram blends in.
+   NEVER set this background to white. */
+.image-diagram {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--d-line, rgba(255,255,255,0.12));
+  border-radius: 12px;
+  padding: clamp(0.8rem, 1.4vw, 1.4rem);
+  max-height: min(64vh, 580px);
+}
+
+/* Centered logo */
 .slide-image.logo {
   max-height: min(30vh, 200px);
 }
 ```
 
+**Hard rule — do NOT do this on dark slides:**
+
+```css
+/* ❌ NEVER */
+.diagram-frame { background: white; }
+```
+
+A white frame creates a visible rectangle around any image that's smaller than the frame (because of `object-fit: contain`). On a navy slide this reads as a misaligned blank box behind the image — the most common image rendering bug in Distillery decks. If the source diagram has a white background baked in, **either re-export it with a transparent background, or accept the dark plate from `.image-diagram`** — never paint the frame white.
+
 **Adapt border/shadow colors to match the chosen style's accent.** Never repeat the same image on multiple slides (except logos on title + closing).
 
-**Placement patterns:** Logo centered on title slide. Screenshots in two-column layouts with text. Full-bleed images as slide backgrounds with text overlay (use sparingly).
+**Placement patterns:** Logo centered on title slide. Screenshots in T10 split layouts with text on the other side. Diagrams full-width on a dedicated slide using `.image-diagram`. Full-bleed images as slide backgrounds with text overlay (use sparingly).
 
 ---
 

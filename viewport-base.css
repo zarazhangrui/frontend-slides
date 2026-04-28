@@ -78,6 +78,77 @@ html {
     gap: clamp(0.5rem, 1.5vw, 1rem);
 }
 
+/* 7a. Split layout (T10): text on one side, visual on the other.
+   Add .reverse to swap sides. Vary per slide to avoid monotony. */
+.split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+.split.reverse > :first-child { order: 2; }
+.split.reverse > :last-child  { order: 1; }
+.split > .visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+}
+.split > .visual > img,
+.split > .visual > svg,
+.split > .visual > canvas {
+    max-width: 100%;
+    max-height: min(70vh, 600px);
+    object-fit: contain;
+}
+
+/* 7b. Compare layout (T11): X vs Y, mirrored columns with center divider.
+   Mandatory for in-scope/out-of-scope, before/after, option A/B. */
+.compare {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: clamp(1.5rem, 3vw, 3rem);
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+}
+.compare > .divider {
+    background: linear-gradient(to bottom,
+        transparent,
+        rgba(255,255,255,0.18) 20%,
+        rgba(255,255,255,0.18) 80%,
+        transparent);
+}
+.compare > .col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.6rem, 1.2vw, 1rem);
+}
+.compare .col-label {
+    font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+/* 7c. Lucide icon defaults — minimalist 24px stroke, currentColor. */
+.icon {
+    width: clamp(18px, 1.6vw, 24px);
+    height: clamp(18px, 1.6vw, 24px);
+    stroke: currentColor;
+    stroke-width: 1.6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+.icon.lg { width: clamp(28px, 2.4vw, 36px); height: clamp(28px, 2.4vw, 36px); }
+.icon.xl { width: clamp(40px, 3.6vw, 56px); height: clamp(40px, 3.6vw, 56px); stroke-width: 1.4; }
+
 /* 8. Images constrained to viewport */
 img, .image-container {
     max-width: 100%;

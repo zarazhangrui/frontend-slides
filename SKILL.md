@@ -16,7 +16,7 @@ This is a Distillery-customized fork of the skill. The following defaults apply 
    - Name: **Francisco Maurici**
    - Role: **Head of Delivery Department**
    - Email: **[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)** — use this exact `mailto:` markup whenever an email is shown.
-   - Headshot: `assets/fran-maurici.png` (already in the repo)
+   - Headshot: `assets/fran-maurici.jpg` (already in the repo)
 3. **Always ask the deck's goal first** — sales proposal, head-of-department deck, internal team update, conference talk, training, or other. The goal shapes tone, slide count, and which template archetypes (T1–T9 in DISTILLERY_BRAND.md) to use.
 4. **Always offer a "presenting myself" intro slide** as slide 2 (after the cover). Use template T7 from DISTILLERY_BRAND.md with Fran's headshot.
 
@@ -278,7 +278,7 @@ What is the goal of this deck? This shapes the structure and tone. Options:
 **Question 2 — Intro slide** (header: "Intro", REQUIRED):
 Should I include a "presenting myself" intro slide as slide 2? Options:
 
-- **Yes** — Insert template T7 (people slide) using `assets/fran-maurici.png`, name "Francisco Maurici", role "Head of Delivery Department", email `francisco.maurici@distillery.com`. Bio is one sentence the user provides or a sensible default ("Leading delivery at Distillery, helping technical leaders ship purpose-fit projects.").
+- **Yes** — Insert template T7 (people slide) using `assets/fran-maurici.jpg`, name "Francisco Maurici", role "Head of Delivery Department", email `francisco.maurici@distillery.com`. Bio is one sentence the user provides or a sensible default ("Leading delivery at Distillery, helping technical leaders ship purpose-fit projects.").
 - **No** — Skip the intro slide; deck starts straight with content after the cover.
 
 **Question 3 — Length** (header: "Length"):
@@ -306,7 +306,7 @@ If the deck includes any contact block (sales proposals, closing slides, intro s
 | Name    | Francisco Maurici                                                |
 | Role    | Head of Delivery Department                                      |
 | Email   | `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)` |
-| Photo   | `assets/fran-maurici.png`                                        |
+| Photo   | `assets/fran-maurici.jpg`                                        |
 
 Only ask the user to confirm if the deck is being delivered by someone other than Fran.
 
@@ -392,7 +392,7 @@ If images were provided, the slide outline already incorporates them from Step 1
 **Distillery deck assembly rules:**
 
 - Slide 1 is always template T1 (cover) — eyebrow shows the deck goal in uppercase (e.g. `SALES PROPOSAL · 2026`).
-- Slide 2 is template T7 (presenting myself) **only if** the user said yes in Phase 1 Q2. Use `assets/fran-maurici.png`, name "Francisco Maurici", role "Head of Delivery Department", email `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)`.
+- Slide 2 is template T7 (presenting myself) **only if** the user said yes in Phase 1 Q2. Use `assets/fran-maurici.jpg`, name "Francisco Maurici", role "Head of Delivery Department", email `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)`.
 - Last slide is always template T8 (closing) with Fran's contact block.
 - Section dividers (T2) every 4–6 content slides.
 - Every slide must include the layered curved-arcs SVG and the logo top-left + page number bottom-right (see DISTILLERY_BRAND.md → Layout Anatomy).
@@ -534,7 +534,7 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
 | [assets/distillery-logo.png](assets/distillery-logo.png) | Full-color Distillery logo                                      | Phase 3 (Distillery decks) |
-| [assets/fran-maurici.png](assets/fran-maurici.png) | Default headshot for the "presenting myself" intro slide             | Phase 3 (intro slide)     |
+| [assets/fran-maurici.jpg](assets/fran-maurici.jpg) | Default headshot for the "presenting myself" intro slide             | Phase 3 (intro slide)     |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

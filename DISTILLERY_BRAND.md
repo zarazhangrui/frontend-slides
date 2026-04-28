@@ -87,19 +87,19 @@ The book specifies **Graphik** (primary) and **Hanken Grotesk** (secondary). Gra
 
 ## Background System — Two-BG (House Default)
 
-Distillery decks use a **two-background system**: one image for content slides, a more dramatic one for title / section / closing slides. The skill ships a default pair (`assets/bg-content.svg`, `assets/bg-separator.svg`); a deck can swap the pair for client-themed branding while keeping the structure.
+Distillery decks use a **two-background system**: one image for content slides, a more dramatic one for title / section / closing slides. The skill ships a default pair (`assets/bg-content.jpg`, `assets/bg-separator.jpg`); a deck can swap the pair for client-themed branding while keeping the structure.
 
 ```css
 /* Default for every slide */
 .slide {
-    background: url("assets/bg-content.svg") center/cover no-repeat var(--d-navy);
+    background: url("assets/bg-content.jpg") center/cover no-repeat var(--d-navy);
 }
 
 /* Stronger background for title, section dividers, and closing */
 .slide.title,
 .slide.section,
 .slide.closing {
-    background: url("assets/bg-separator.svg") center/cover no-repeat var(--d-navy);
+    background: url("assets/bg-separator.jpg") center/cover no-repeat var(--d-navy);
 }
 
 /* Light-report variant (T9) keeps paper bg, no SVG */
@@ -384,10 +384,10 @@ No bouncy springs, no continuous loops, no parallax on scroll. Honor `prefers-re
 | `assets/logo-wordmark-white.svg`  | **Default logo** — white wordmark for navy/dark slides. Use everywhere unless the slide is light-paper. |
 | `assets/logo-wordmark-dark.svg`   | Dark wordmark for light-background slides (T9 light report) |
 | `assets/logo-icon.svg`            | Icon-only mark (the gradient swirl). Use for favicons or where the wordmark won't fit. |
-| `assets/bg-content.svg`           | **Default content-slide background.** Used on every `.slide`. |
-| `assets/bg-separator.svg`         | **Title / section / closing background.** Used on `.slide.title`, `.slide.section`, `.slide.closing`. |
+| `assets/bg-content.jpg`           | **Default content-slide background.** Used on every `.slide`. Navy radial-arcs photo, 1920×1080, ~91 KB. |
+| `assets/bg-separator.jpg`         | **Title / section / closing background.** Used on `.slide.title`, `.slide.section`, `.slide.closing`. |
 | `assets/distillery-logo.png`      | Legacy full-color PNG (kept for fallback only) |
-| `assets/fran-maurici.png`         | Default headshot for the "presenting myself" slide (when the user is Francisco Maurici) |
+| `assets/fran-maurici.jpg`         | Default headshot for the "presenting myself" slide (when the user is Francisco Maurici) |
 | `assets/icons/*.svg`              | Curated Lucide icon set (~30 icons). Reference by path: `assets/icons/check.svg`. See SKILL.md "Icons". |
 
 **Logo usage — the only correct way:**

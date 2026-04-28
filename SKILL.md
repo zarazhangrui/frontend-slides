@@ -12,15 +12,11 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 This is a Distillery-customized fork of the skill. The following defaults apply to **every** deck unless the user explicitly opts out:
 
 1. **House style is the Distillery Brand preset.** See [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md). Treat it as the default style and only generate the 3-preview style picker if the user says they want a non-Distillery look.
-2. **Default author identity** for any contact block, byline, or "presenting myself" slide:
-   - Name: **Francisco Maurici**
-   - Role: **Head of Delivery Department**
-   - Email: **[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)** — use this exact `mailto:` markup whenever an email is shown.
-   - Headshot: `assets/fran-maurici.jpg` (already in the repo)
+2. **Default deck owner / closing-slide contact** is Francisco Maurici (Head of Delivery, [francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com), headshot at `assets/fran-maurici.jpg`). Use this exact `mailto:` markup whenever his email is shown. The deck's **closing slide (T8)** always uses this contact unless the user overrides it.
 3. **Always ask the deck's goal first** — sales proposal, head-of-department deck, internal team update, conference talk, training, or other. The goal shapes tone, slide count, and which template archetypes (T1–T9 in DISTILLERY_BRAND.md) to use.
-4. **Always offer a "presenting myself" intro slide** as slide 2 (after the cover). Use template T7 from DISTILLERY_BRAND.md with Fran's headshot.
+4. **Always ask who appears on the team slide** as slide 2 (after the cover). The user provides comma-separated names; the skill looks each one up in [`assets/team/team.md`](assets/team/team.md) for email + role + bio + photo, and renders one **team slide (template T7, multi-person)**. If the user says "none", skip the slide.
 
-These three questions (goal, intro slide, content) are the new Phase 1 — see below.
+These three questions (goal, team slide, content) are the new Phase 1 — see below.
 
 ## When to Use This Skill vs. `frontend-design`
 
@@ -268,18 +264,23 @@ When enhancing existing presentations, viewport fitting is the biggest risk:
 **Question 1 — Goal** (header: "Goal", REQUIRED):
 What is the goal of this deck? This shapes the structure and tone. Options:
 
-- **Sales proposal** — external client, persuasive, pricing/scope/timeline. Use templates T1, T7 (intro), T4, T5, T6, T8.
+- **Sales proposal** — external client, persuasive, pricing/scope/timeline. Use templates T1, T7 (team), T4, T5, T6, T8.
 - **Head-of-department deck** — internal leadership update, status + asks. Use T1, T2, T6, T9, T8.
 - **Internal team update** — same-team status, lighter chrome, can use the light-paper variant (T9).
 - **Conference talk** — external audience, narrative-driven, fewer words per slide. Use T1, T3, T4, T8.
 - **Training / onboarding** — instructional, more density allowed. Use T1, T4, T5, T9.
 - **Other** — ask the user to describe the goal in one sentence.
 
-**Question 2 — Intro slide** (header: "Intro", REQUIRED):
-Should I include a "presenting myself" intro slide as slide 2? Options:
+**Question 2 — Team slide** (header: "Team", REQUIRED, free text):
+Who should appear on the team slide (slide 2)? Reply with **comma-separated names** (e.g. `Francisco Maurici, Laura Taricco, Tomas Calusio`), or `none` to skip the slide.
 
-- **Yes** — Insert template T7 (people slide) using `assets/fran-maurici.jpg`, name "Francisco Maurici", role "Head of Delivery Department", email `francisco.maurici@distillery.com`. Bio is one sentence the user provides or a sensible default ("Leading delivery at Distillery, helping technical leaders ship purpose-fit projects.").
-- **No** — Skip the intro slide; deck starts straight with content after the cover.
+Lookup logic for each name:
+
+1. Match (case-insensitive, trim whitespace) against the **Name** column of [`assets/team/team.md`](assets/team/team.md). On match, pull the row's email, role, bio, and photo path verbatim.
+2. **Not found** — construct the email as `firstname.lastname@distillery.com` (lowercase; multi-word last names are concatenated, e.g. Hector De Diego → `hector.dediego@`). Render an initials avatar in place of the photo (cyan ring on navy, white initials). Print a non-blocking warning to the user: `team directory: "<name>" not found — using initials avatar. Drop a photo at assets/team/<slug>.jpg and add a row to assets/team/team.md.`
+3. **Photo missing in directory** (entry exists but Photo cell is `_(no photo yet — use initials)_`) — same initials-avatar fallback, no warning.
+
+The resulting team slide is **template T7 multi-person** (see [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) → T7).
 
 **Question 3 — Length** (header: "Length"):
 Approximately how many slides? Options: Short 5-10 / Medium 10-20 / Long 20+
@@ -299,7 +300,7 @@ If user has content, ask them to share it.
 
 ### Step 1.1: Confirm contact details
 
-If the deck includes any contact block (sales proposals, closing slides, intro slide), default to:
+The **closing slide (T8)** always defaults to:
 
 | Field   | Value                                                            |
 | ------- | ---------------------------------------------------------------- |
@@ -308,7 +309,7 @@ If the deck includes any contact block (sales proposals, closing slides, intro s
 | Email   | `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)` |
 | Photo   | `assets/fran-maurici.jpg`                                        |
 
-Only ask the user to confirm if the deck is being delivered by someone other than Fran.
+Only ask the user to confirm if the deck is being delivered by someone other than Fran. The **team slide** contact data comes from Phase 1 Q2 lookup — do not re-ask.
 
 ### Step 1.2: Image Evaluation (if images provided)
 
@@ -388,11 +389,12 @@ If images were provided, the slide outline already incorporates them from Step 1
 - [viewport-base.css](viewport-base.css) — Mandatory CSS (include in full)
 - [animation-patterns.md](animation-patterns.md) — Animation reference for the chosen feeling
 - **If style = Distillery Brand:** also read [DISTILLERY_BRAND.md](DISTILLERY_BRAND.md) in full. Its colors, type scale, layout chrome, arc motif, and templates T1–T9 are mandatory.
+- **If Phase 1 Q2 returned any names (team slide):** also read [`assets/team/team.md`](assets/team/team.md) in full so you have email/role/bio/photo for every directory entry without re-fetching.
 
 **Distillery deck assembly rules:**
 
 - Slide 1 is always template T1 (cover) — eyebrow shows the deck goal in uppercase (e.g. `SALES PROPOSAL · 2026`).
-- Slide 2 is template T7 (presenting myself) **only if** the user said yes in Phase 1 Q2. Use `assets/fran-maurici.jpg`, name "Francisco Maurici", role "Head of Delivery Department", email `[francisco.maurici@distillery.com](mailto:francisco.maurici@distillery.com)`.
+- Slide 2 is template T7 (multi-person team slide) **only if** Phase 1 Q2 returned one or more names. Use the per-person data resolved in Phase 1 Q2 (each entry has name, role, email, bio, photo path or initials-fallback). Layout follows DISTILLERY_BRAND.md → T7 multi-person rules (1 → hero, 2 → side-by-side, 3 → three-up, 4 → 2×2, 5+ → compact card grid).
 - Last slide is always template T8 (closing) with Fran's contact block.
 - Section dividers (T2) every 4–6 content slides.
 - Every slide must include the layered curved-arcs SVG and the logo top-left + page number bottom-right (see DISTILLERY_BRAND.md → Layout Anatomy).
@@ -534,7 +536,8 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
 | [assets/distillery-logo.png](assets/distillery-logo.png) | Full-color Distillery logo                                      | Phase 3 (Distillery decks) |
-| [assets/fran-maurici.jpg](assets/fran-maurici.jpg) | Default headshot for the "presenting myself" intro slide             | Phase 3 (intro slide)     |
+| [assets/fran-maurici.jpg](assets/fran-maurici.jpg) | Default headshot for the closing-slide contact block (Francisco)     | Phase 3 (closing slide)   |
+| [assets/team/team.md](assets/team/team.md)         | Distillery team directory (name, email, role, bio, photo) for T7 lookup | Phase 1 Q2 + Phase 3 (team slide) |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

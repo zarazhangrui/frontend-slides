@@ -240,10 +240,24 @@ Each presentation should mix from these archetypes. Pick the one that matches th
 - 2-4 large numbers in `--d-cyan`, 600 weight, with one-line caption underneath in white
 - Numbers `clamp(3rem, 7vw, 6rem)`
 
-### T7. People — "Presenting Myself" (navy)
-- **Use this for the Phase 1.5 intro slide.**
-- Left 40%: circular portrait, `clamp(220px, 28vw, 360px)`, 4px solid `--d-cyan` ring
-- Right 60%: eyebrow `MEET YOUR CONTACT`, name in light weight, role in cyan, then a 2-3 line bio. Email + LinkedIn-style row at the bottom.
+### T7. People — "Meet the Team" (navy)
+- **Use this for the team slide (slide 2).** Person data comes from [`assets/team/team.md`](assets/team/team.md) — see SKILL.md Phase 1 Q2 for the lookup contract.
+- Slide eyebrow: `MEET THE TEAM` (or `MEET YOUR CONTACT` when N = 1).
+- All portraits are **circular**, `4px solid --d-cyan` ring, square-cropped JPEG sources from `assets/team/`.
+- **Initials-avatar fallback** (when no photo): same circular shape and cyan ring, `--d-navy` background, white initials in `font-weight: 300`, sized to match the photo it replaces. Initials = first letter of first name + first letter of last word in the name (e.g. "Hector De Diego" → "HD").
+
+**Layout by person count (N):**
+
+| N   | Layout                                                                                                                                  |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Hero** — left 40% portrait `clamp(220px, 28vw, 360px)`. Right 60%: eyebrow → name (light weight) → role (cyan) → 2–3 line bio → email + LinkedIn row at the bottom. |
+| 2   | **Side-by-side** — two equal columns, each with a centered portrait `clamp(180px, 18vw, 240px)` above name + role + 1-line bio + email. |
+| 3   | **Three-up** — three equal columns, portrait `clamp(140px, 14vw, 200px)`, name + role + 1-line bio + email below. Slide heading: `Meet the team` above the row. |
+| 4   | **2×2 grid** — same per-card layout as 3-up, portrait `clamp(120px, 12vw, 180px)`.                                                       |
+| 5–6 | **3×2 grid** — compact cards: portrait `clamp(96px, 10vw, 140px)`, name + role only (drop bio). Email shown as a small icon-link row.    |
+| 7+  | **Compact tiles** — auto-fit grid `grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))`. Portrait `clamp(80px, 8vw, 120px)`, name + role only. Consider splitting across 2 slides if > 9. |
+
+For N ≥ 3, use a `gap` of `clamp(2rem, 3vw, 3rem)` between cards. All cards align to the slide vertical center via `.slide-content { display: flex; align-items: center; }`.
 
 ### T8. Closing / Thank You (navy + extra-large arcs)
 - Hero: `Thank you.` or `Let's build it.`
@@ -387,7 +401,9 @@ No bouncy springs, no continuous loops, no parallax on scroll. Honor `prefers-re
 | `assets/bg-content.jpg`           | **Default content-slide background.** Used on every `.slide`. Navy radial-arcs photo, 1920×1080, ~91 KB. |
 | `assets/bg-separator.jpg`         | **Title / section / closing background.** Used on `.slide.title`, `.slide.section`, `.slide.closing`. |
 | `assets/distillery-logo.png`      | Legacy full-color PNG (kept for fallback only) |
-| `assets/fran-maurici.jpg`         | Default headshot for the "presenting myself" slide (when the user is Francisco Maurici) |
+| `assets/fran-maurici.jpg`         | Default headshot for the closing-slide contact block (Francisco Maurici)                |
+| `assets/team/team.md`             | Distillery team directory (name, email, role, bio, photo) for T7 multi-person lookup    |
+| `assets/team/<slug>.jpg`          | Per-person headshots referenced by `team.md`. Square JPEG, ~256px+, quality ~88         |
 | `assets/icons/*.svg`              | Curated Lucide icon set (~30 icons). Reference by path: `assets/icons/check.svg`. See SKILL.md "Icons". |
 
 **Logo usage — the only correct way:**

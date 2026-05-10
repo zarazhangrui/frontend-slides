@@ -74,6 +74,15 @@ Reference architecture for generating slide presentations. Every presentation fo
         .reveal:nth-child(3) { transition-delay: 0.3s; }
         .reveal:nth-child(4) { transition-delay: 0.4s; }
 
+        /* ===========================================
+           DIAGRAM LAYOUTS
+           Include this section WHEN the presentation contains
+           relationship diagrams (cycles, pipelines, feedback loops,
+           hierarchies, hubs). Copy the full CSS from the
+           "CSS Reference" section of diagram-patterns.md.
+           Skip entirely if the deck has no diagrams.
+           =========================================== */
+
         /* ... preset-specific styles ... */
     </style>
 </head>
@@ -319,6 +328,20 @@ Save processed images with `_processed` suffix. Never overwrite originals.
 **Adapt border/shadow colors to match the chosen style's accent.** Never repeat the same image on multiple slides (except logos on title + closing).
 
 **Placement patterns:** Logo centered on title slide. Screenshots in two-column layouts with text. Full-bleed images as slide backgrounds with text overlay (use sparingly).
+
+---
+
+## Diagram Layouts in HTML
+
+When slides contain relationship diagrams (identified in Phase 1, Step 1.2), use the HTML structures defined in `diagram-patterns.md`.
+
+**Key principles:**
+- Diagrams are **semantic** — the spatial layout carries meaning. Do not flatten them into lists or grids.
+- Use **SVG** for curved connections, arrows, and animated draw-on effects. SVG is zero-dependency and scales perfectly.
+- Use **CSS absolute positioning** for node placement on cycles and hubs.
+- Always include the **SVG `<defs>`** for arrow markers once per presentation.
+
+**Common mistake:** Replacing a cycle diagram with a `card-grid` "because it fits the viewport." A grid destroys the closed-loop semantic. Use `cycle-diagram` instead and reduce node count if space is tight.
 
 ---
 

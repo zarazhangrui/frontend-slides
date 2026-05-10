@@ -118,7 +118,11 @@ If user provides an image folder:
 2. **View each image** — Use the Read tool (Claude is multimodal)
 3. **Evaluate** — For each: what it shows, USABLE or NOT USABLE (with reason), what concept it represents, dominant colors
 4. **Co-design the outline** — Curated images inform slide structure alongside text. This is NOT "plan slides then add images" — design around both from the start (e.g., 3 screenshots → 3 feature slides, 1 logo → title/closing slide)
-5. **Confirm via AskUserQuestion** (header: "Outline"): "Does this slide outline and image selection look right?" Options: Looks good / Adjust images / Adjust outline
+5. **Diagram Detection** — If images contain flowcharts, cycle diagrams, relationship maps, or architecture diagrams:
+   - Identify the **diagram type**: cycle / pipeline / feedback-loop / hierarchy / hub-spoke
+   - Count **nodes** and **connections**
+   - Flag slides that require diagram layouts — these must NOT use `card-grid` or `bullet-list`
+6. **Confirm via AskUserQuestion** (header: "Outline"): "Does this slide outline and image selection look right?" Options: Looks good / Adjust images / Adjust outline
 
 **Logo in previews:** If a usable logo was identified, embed it (base64) into each style preview in Phase 2 — the user sees their brand styled three different ways.
 
@@ -182,6 +186,7 @@ If images were provided, the slide outline already incorporates them from Step 1
 - [html-template.md](html-template.md) — HTML architecture and JS features
 - [viewport-base.css](viewport-base.css) — Mandatory CSS (include in full)
 - [animation-patterns.md](animation-patterns.md) — Animation reference for the chosen feeling
+- [diagram-patterns.md](diagram-patterns.md) — Diagram layouts: cycles, pipelines, feedback loops, hierarchies, hubs
 
 **Key requirements:**
 
@@ -190,6 +195,16 @@ If images were provided, the slide outline already incorporates them from Step 1
 - Use fonts from Fontshare or Google Fonts — never system fonts
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
+
+**When generating slides from source material containing diagrams:**
+
+1. **DO NOT** convert relationship diagrams into `card-grid`, `bullet-list`, or simple horizontal flows. These destroy the visual topology.
+2. **DO** read `diagram-patterns.md` and use the appropriate layout: `cycle-diagram`, `pipeline-diagram`, `feedback-diagram`, `hierarchy-diagram`, or `hub-diagram`.
+3. For **cycle diagrams** with 4-8 nodes: Use SVG-based circular layout with arrow markers showing direction. Preserve the closed-loop visual.
+4. For **feedback loops**: Use curved SVG paths with arrowheads or dashed-border containers to clearly show the return path. Never rely on text alone (e.g., "↻ 持续迭代").
+5. For **pipeline / hub diagrams**: Use connecting lines (`pipeline-connector-h`, `hub-line`) between nodes. The connection itself carries meaning.
+6. Include the **Diagram CSS** from `diagram-patterns.md` in the presentation's `<style>` block. It is designed to coexist with viewport-base.css.
+7. **Content density for diagrams** differs from text slides — see the limits table in `diagram-patterns.md`. Split across slides if the diagram has too many nodes.
 
 ---
 
@@ -317,6 +332,7 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [viewport-base.css](viewport-base.css)             | Mandatory responsive CSS — copy into every presentation              | Phase 3 (generation)      |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
+| [diagram-patterns.md](diagram-patterns.md)         | Diagram layouts: cycles, pipelines, feedback loops, hierarchies, hubs | Phase 3 (generation)     |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

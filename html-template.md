@@ -188,6 +188,66 @@ Every presentation must include:
    - Export/save file functionality
    - See "Inline Editing Implementation" section below
 
+## Fullscreen Controller (Required in Every Presentation)
+
+Every presentation must include a fullscreen toggle. Presenters use `F` to go fullscreen before presenting; without it they must leave the browser to use system fullscreen, which breaks keyboard navigation.
+
+HTML — add one button near the nav dots:
+
+```html
+<button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen (F)">⛶</button>
+```
+
+CSS:
+
+```css
+.fullscreen-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 9999;
+}
+body:hover .fullscreen-btn { opacity: 1; }
+```
+
+JS — `FullscreenController` class (add inside `<script>`, instantiate after `SlidePresentation`):
+
+```javascript
+class FullscreenController {
+    constructor() {
+        this.btn = document.getElementById('fullscreenBtn');
+        this.btn?.addEventListener('click', () => this.toggle());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'f' || e.key === 'F') this.toggle();
+        });
+        document.addEventListener('fullscreenchange', () => this.updateIcon());
+    }
+    toggle() {
+        document.fullscreenElement
+            ? document.exitFullscreen()
+            : document.documentElement.requestFullscreen();
+    }
+    updateIcon() {
+        if (this.btn) this.btn.textContent = document.fullscreenElement ? '✕' : '⛶';
+    }
+}
+new FullscreenController();
+```
+
+Closes #34.
+
+---
+
 ## Inline Editing Implementation (Opt-In Only)
 
 **If the user chose "No" for inline editing in Phase 1, do NOT generate any edit-related HTML, CSS, or JS.**

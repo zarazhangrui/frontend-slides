@@ -317,6 +317,38 @@ exportFile() {
 }
 ```
 
+### Inline Edit — Enter Key & Paste Fix
+
+When `contenteditable` is active on elements inside a themed `<div>` or `<section>`, pressing Enter inserts a `<div>` (Chrome default) instead of a `<br>`, which inherits none of the element's styles and makes the new line appear unstyled. Pasting rich text injects foreign fonts and colors that override the theme.
+
+Add these three guards to every inline-editing implementation:
+
+```javascript
+// 1. Force <br> on Enter instead of <div>
+document.execCommand('defaultParagraphSeparator', false, 'br');
+
+// 2. Intercept Enter to prevent the browser default <div> insertion
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.querySelector('[contenteditable]:focus')) {
+        e.preventDefault();
+        document.execCommand('insertLineBreak');
+    }
+});
+
+// 3. Strip rich-text formatting on paste — keep plain text only
+document.addEventListener('paste', e => {
+    const active = document.activeElement;
+    if (!active?.isContentEditable) return;
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+});
+```
+
+Without these fixes: after pressing Enter, new lines render with no theme font or color (issue #49); pasting from a browser or document injects foreign styles that break the theme.
+
+---
+
 ## Image Pipeline (Skip If No Images)
 
 If user chose "No images" in Phase 1, skip this entirely. If images were provided, process them before generating HTML.

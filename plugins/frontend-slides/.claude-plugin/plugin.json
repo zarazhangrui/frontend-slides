@@ -9,5 +9,6 @@
   "homepage": "https://github.com/zarazhangrui/frontend-slides",
   "repository": "https://github.com/zarazhangrui/frontend-slides",
   "license": "MIT",
-  "keywords": ["presentations", "slides", "html", "design", "powerpoint", "animations"]
+  "keywords": ["presentations", "slides", "html", "design", "powerpoint", "animations"],
+  "skills": "./skills/"
 }

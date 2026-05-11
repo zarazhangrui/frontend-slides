@@ -317,6 +317,34 @@ exportFile() {
 }
 ```
 
+## Bullet / List Patterns
+
+**Never use `display:grid` on `<li>` elements that contain inline `<code>`.** CSS grid wraps each text node and inline element in anonymous boxes, causing the bullet marker to be swallowed into one of those boxes. The list renders with broken indentation and missing or misplaced bullets.
+
+Safe hanging-indent pattern (works with inline `<code>`, nested lists, and screen readers):
+
+```css
+ul {
+    list-style: none;
+    padding: 0;
+}
+ul li {
+    position: relative;
+    padding-left: 1.5em;
+    margin-bottom: 0.4em;
+}
+ul li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+}
+```
+
+Use this pattern instead of `display:grid` / `display:flex` on `<li>` whenever list items mix text with inline elements.
+
+---
+
 ## Image Pipeline (Skip If No Images)
 
 If user chose "No images" in Phase 1, skip this entirely. If images were provided, process them before generating HTML.

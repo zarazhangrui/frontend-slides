@@ -20,7 +20,7 @@ You tend to converge toward generic, "on distribution" outputs. In frontend desi
 
 Focus on:
 
-- Typography: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics.
+- Typography: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics. **Never use italic fonts in any language (no `font-style: italic`, no `<i>` / `<em>` styled as italic, no italic font weights / variants — applies to Latin, CJK, Arabic, and every other script).** Italic rendering tends to look poor on screen, hurts readability, and reads as "AI slop." For emphasis, use weight, size, color, letter-spacing, or an underline accent instead.
 - Color & Theme: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes. Draw from IDE themes and cultural aesthetics for inspiration.
 - Motion: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions.
 - Backgrounds: Create atmosphere and depth rather than defaulting to solid colors. Layer CSS gradients, use geometric patterns, or add contextual effects that match the overall aesthetic.
@@ -31,6 +31,7 @@ Avoid generic AI-generated aesthetics:
 - Cliched color schemes (particularly purple gradients on white backgrounds)
 - Predictable layouts and component patterns
 - Cookie-cutter design that lacks context-specific character
+- **Italic text in any language** — italic rendering is consistently low-quality on screen, hurts readability, and is a tell of AI-generated design. Use weight, size, color, or spacing for emphasis instead.
 
 Interpret creatively and make unexpected choices that feel genuinely designed for the context. Vary between light and dark themes, different fonts, different aesthetics. You still tend to converge on common choices (Space Grotesk, for example) across generations. Avoid this: it is critical that you think outside the box!
 

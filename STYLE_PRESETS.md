@@ -120,7 +120,7 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 - Abstract soft gradient circles (blurred, overlapping)
 - Warm color accents (pink, gold, terracotta)
 - Thin vertical accent lines
-- Italic signature typography
+- Refined serif display typography with generous letter-spacing (upright only — never italic)
 - **No illustrations—only abstract CSS shapes**
 
 ---

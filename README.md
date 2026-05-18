@@ -122,6 +122,7 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a concise 
 | `scripts/extract-pptx.py` | PPT content extraction         | Phase 4 (conversion)      |
 | `scripts/deploy.sh`       | Deploy to Vercel               | Phase 6 (sharing)         |
 | `scripts/export-pdf.sh`   | Export slides to PDF           | Phase 6 (sharing)         |
+| `scripts/export-pptx.sh`  | Export to editable PPTX        | Phase 6 (sharing)         |
 
 This design follows [OpenAI's harness engineering](https://openai.com/index/harness-engineering/) principle: "give the agent a map, not a 1,000-page instruction manual."
 
@@ -164,12 +165,25 @@ bash scripts/export-pdf.sh ./presentation.html ./output.pdf
 
 Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080 and combine into a PDF. Installs automatically if needed. Animations are not preserved (it's a static snapshot).
 
+### Export to editable PPTX
+
+Convert your slides to a native, editable PowerPoint file — for venues that require `.pptx`, for collaborators who want to edit text directly, or for repurposing slides in other decks:
+
+```bash
+bash scripts/export-pptx.sh ./my-deck/index.html
+bash scripts/export-pptx.sh ./presentation.html ./output.pptx
+```
+
+Uses [Playwright](https://playwright.dev) + [dom-to-pptx](https://github.com/atharva9167/dom-to-pptx) to map each `.slide`'s computed styles to native PowerPoint shapes: text frames, vector gradients, real shadows, embedded images. Animations are not preserved.
+
+Unlike PDF export this is **not a screenshot** — every text run remains directly editable in PowerPoint, Keynote, Google Slides, and WPS.
+
 ## Requirements
 
 - [Claude Code](https://claude.ai/claude-code) CLI
 - For PPT conversion: Python with `python-pptx` library
 - For URL deployment: Node.js + Vercel account (free)
-- For PDF export: Node.js (Playwright installs automatically)
+- For PDF and PPTX export: Node.js (Playwright + dom-to-pptx install automatically)
 
 ## Credits
 

@@ -1,33 +1,50 @@
 /* ===========================================
    VIEWPORT FITTING: MANDATORY BASE STYLES
    Include this ENTIRE file in every presentation.
-   These styles ensure slides fit exactly in the viewport.
+
+   Navigation uses a TRANSFORM-based slide deck (not scroll-based). All
+   slides live inside <div class="deck">; JS sets the deck's
+   `transform: translateY(-idx * 100vh)` to navigate between slides.
+
+   Why transform instead of scroll:
+     - body has `overflow: hidden` so no scrollbar ever shows — important
+       in fullscreen presentation mode where the right-edge scrollbar is
+       a constant visual distraction
+     - The "slide advances" feels like an actual slide deck, not a long
+       webpage that happens to snap to multiples of 100vh
+     - Trackpad fine-scrolls can't land between two slides
    =========================================== */
 
-/* 1. Lock html/body to viewport */
+/* 1. Lock html/body — no scrolling, no scrollbar */
 html, body {
     height: 100%;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
-html {
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
+/* 2. The deck container holds all slides in a vertical stack
+      (total height = N × 100vh). JS sets `transform: translateY(-idx*100vh)`
+      to navigate. The CSS transition gives the smooth slide motion. */
+.deck {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
 }
 
-/* 2. Each slide = exact viewport height */
+/* 3. Each slide = exact viewport height */
 .slide {
     width: 100vw;
     height: 100vh;
     height: 100dvh; /* Dynamic viewport height for mobile browsers */
     overflow: hidden; /* CRITICAL: Prevent ANY overflow */
-    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
-/* 3. Content container with flex for centering */
+/* 4. Content container with flex for centering */
 .slide-content {
     flex: 1;
     display: flex;
@@ -38,7 +55,7 @@ html {
     padding: var(--slide-padding);
 }
 
-/* 4. ALL typography uses clamp() for responsive scaling */
+/* 5. ALL typography uses clamp() for responsive scaling */
 :root {
     /* Titles scale from mobile to desktop */
     --title-size: clamp(1.5rem, 5vw, 4rem);
@@ -55,13 +72,13 @@ html {
     --element-gap: clamp(0.25rem, 1vw, 1rem);
 }
 
-/* 5. Cards/containers use viewport-relative max sizes */
+/* 6. Cards/containers use viewport-relative max sizes */
 .card, .container, .content-box {
     max-width: min(90vw, 1000px);
     max-height: min(80vh, 700px);
 }
 
-/* 6. Lists auto-scale with viewport */
+/* 7. Lists auto-scale with viewport */
 .feature-list, .bullet-list {
     gap: clamp(0.4rem, 1vh, 1rem);
 }
@@ -71,14 +88,14 @@ html {
     line-height: 1.4;
 }
 
-/* 7. Grids adapt to available space */
+/* 8. Grids adapt to available space */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
     gap: clamp(0.5rem, 1.5vw, 1rem);
 }
 
-/* 8. Images constrained to viewport */
+/* 9. Images constrained to viewport */
 img, .image-container {
     max-width: 100%;
     max-height: min(50vh, 400px);
@@ -139,15 +156,17 @@ img, .image-container {
 
 /* ===========================================
    REDUCED MOTION
-   Respect user preferences
+   Respect user preferences. Disable the deck transition for users who
+   prefer no motion — slides change instantly without losing the
+   transform-based "no scrollbar" benefit.
    =========================================== */
 @media (prefers-reduced-motion: reduce) {
+    .deck {
+        transition: none !important;
+    }
+
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.2s !important;
-    }
-
-    html {
-        scroll-behavior: auto;
     }
 }

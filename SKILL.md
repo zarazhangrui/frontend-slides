@@ -210,7 +210,7 @@ When converting PowerPoint files:
 2. **Open** — Use `open [filename].html` to launch in browser
 3. **Summarize** — Tell the user:
    - File location, style name, slide count
-   - Navigation: Arrow keys, Space, scroll/swipe, click nav dots
+   - Navigation: Arrow keys, Space, mouse wheel, click slide / nav dots (no scrollbar — transform-based deck)
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - If inline editing was enabled: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
 

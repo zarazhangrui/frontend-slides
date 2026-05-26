@@ -582,3 +582,16 @@ Created by [@zarazhangrui](https://github.com/zarazhangrui).
 ## License
 
 MIT — Use it, modify it, share it.
+
+## 📚 Examples
+
+Check the [`examples/`](examples/) directory for sample presentations:
+
+- **[theme-gallery.html](examples/theme-gallery.html)** - Preview all available themes
+- **[quickstart-minimal.html](examples/quickstart-minimal.html)** - Minimal 3-slide example
+
+## 🚀 Quick Start
+
+1. Copy `examples/quickstart-minimal.html`
+2. Edit content in your text editor
+3. Open in browser - Done!

@@ -35,13 +35,18 @@ err()   { echo -e "${RED}✗${NC} $*" >&2; }
 
 # Default resolution: 1920x1080 (full HD, ~1-2MB per slide)
 # Compact resolution: 1280x720 (HD, ~50-70% smaller files)
+# HiDPI: 2x pixel density via deviceScaleFactor (same layout, sharper output)
 VIEWPORT_W=1920
 VIEWPORT_H=1080
+SCALE=1
 COMPACT=false
 
 POSITIONAL=()
 for arg in "$@"; do
     case $arg in
+        --hidpi)
+            SCALE=2
+            ;;
         --compact)
             COMPACT=true
             VIEWPORT_W=1280
@@ -57,12 +62,13 @@ set -- "${POSITIONAL[@]}"
 # ─── Input validation ─────────────────────────────────────
 
 if [[ $# -lt 1 ]]; then
-    err "Usage: bash scripts/export-pdf.sh <path-to-html> [output.pdf] [--compact]"
+    err "Usage: bash scripts/export-pdf.sh <path-to-html> [output.pdf] [--compact] [--hidpi]"
     err ""
     err "Examples:"
     err "  bash scripts/export-pdf.sh ./my-deck/index.html"
     err "  bash scripts/export-pdf.sh ./presentation.html ./slides.pdf"
     err "  bash scripts/export-pdf.sh ./presentation.html --compact   # smaller file size"
+    err "  bash scripts/export-pdf.sh ./presentation.html --hidpi     # 2x pixel density, same layout"
     exit 1
 fi
 
@@ -145,6 +151,9 @@ const OUTPUT_PDF = process.argv[4];
 const SCREENSHOT_DIR = process.argv[5];
 const VP_WIDTH = parseInt(process.argv[6]) || 1920;
 const VP_HEIGHT = parseInt(process.argv[7]) || 1080;
+const SCALE      = parseInt(process.argv[8]) || 1;
+const OUT_WIDTH  = VP_WIDTH  * SCALE;
+const OUT_HEIGHT = VP_HEIGHT * SCALE;
 
 // ─── Simple static file server ────────────────────────────
 // (We need HTTP so that Google Fonts and relative assets load correctly)
@@ -187,12 +196,16 @@ const port = await new Promise((resolve) => {
 });
 
 console.log(`  Local server on port ${port}`);
+if (SCALE > 1) {
+  console.log(`  HiDPI mode: viewport ${VP_WIDTH}×${VP_HEIGHT} @ ${SCALE}x → output ${OUT_WIDTH}×${OUT_HEIGHT}px`);
+}
 
 // ─── Screenshot each slide ────────────────────────────────
 
 const browser = await chromium.launch();
 const page = await browser.newPage({
   viewport: { width: VP_WIDTH, height: VP_HEIGHT },
+  deviceScaleFactor: SCALE,
 });
 
 // Load the presentation
@@ -305,17 +318,17 @@ const pdfHtml = `<!DOCTYPE html>
 <head>
 <style>
   * { margin: 0; padding: 0; }
-  @page { size: ${VP_WIDTH}px ${VP_HEIGHT}px; margin: 0; }
+  @page { size: ${OUT_WIDTH}px ${OUT_HEIGHT}px; margin: 0; }
   .page {
-    width: ${VP_WIDTH}px;
-    height: ${VP_HEIGHT}px;
+    width: ${OUT_WIDTH}px;
+    height: ${OUT_HEIGHT}px;
     page-break-after: always;
     overflow: hidden;
   }
   .page:last-child { page-break-after: auto; }
   img {
-    width: ${VP_WIDTH}px;
-    height: ${VP_HEIGHT}px;
+    width: ${OUT_WIDTH}px;
+    height: ${OUT_HEIGHT}px;
     display: block;
     object-fit: contain;
   }
@@ -327,8 +340,8 @@ const pdfHtml = `<!DOCTYPE html>
 await pdfPage.setContent(pdfHtml, { waitUntil: 'load' });
 await pdfPage.pdf({
   path: OUTPUT_PDF,
-  width: `${VP_WIDTH}px`,
-  height: `${VP_HEIGHT}px`,
+  width: `${OUT_WIDTH}px`,
+  height: `${OUT_HEIGHT}px`,
   printBackground: true,
   margin: { top: 0, right: 0, bottom: 0, left: 0 },
 });
@@ -383,10 +396,13 @@ echo ""
 
 # Run from the temp dir so Node can find the locally-installed playwright
 if [[ "$COMPACT" == "true" ]]; then
-    info "Using compact mode (1280×720) for smaller file size"
+    info "Using compact mode (${VIEWPORT_W}×${VIEWPORT_H}) for smaller file size"
+fi
+if [[ "$SCALE" -gt 1 ]]; then
+    info "Using HiDPI mode (${SCALE}x pixel density)"
 fi
 
-node "$TEMP_SCRIPT" "$SERVE_DIR" "$HTML_FILENAME" "$OUTPUT_PDF" "$SCREENSHOT_DIR" "$VIEWPORT_W" "$VIEWPORT_H" || {
+node "$TEMP_SCRIPT" "$SERVE_DIR" "$HTML_FILENAME" "$OUTPUT_PDF" "$SCREENSHOT_DIR" "$VIEWPORT_W" "$VIEWPORT_H" "$SCALE" || {
     err "PDF export failed."
     rm -rf "$TEMP_DIR"
     exit 1

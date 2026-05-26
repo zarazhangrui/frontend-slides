@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bold Signal Example | Frontend Slides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY
+           =========================================== */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        /* ===========================================
+           THEME: BOLD SIGNAL
+           =========================================== */
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            --card-bg: #FF5722;
+            --text-primary: #ffffff;
+            --text-on-card: #1a1a1a;
+            
+            --font-display: 'Archivo Black', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            
+            --title-size: clamp(2rem, 8vw, 5rem);
+            --body-size: clamp(1rem, 2vw, 1.5rem);
+            --slide-padding: clamp(2rem, 5vw, 6rem);
+            --content-gap: clamp(1rem, 3vw, 2rem);
+            
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            background-image: var(--bg-gradient);
+            color: var(--text-primary);
+        }
+
+        .slide-number {
+            position: absolute;
+            top: var(--slide-padding);
+            left: var(--slide-padding);
+            font-family: var(--font-display);
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            opacity: 0.5;
+        }
+
+        .card {
+            background: var(--card-bg);
+            color: var(--text-on-card);
+            padding: clamp(2rem, 5vw, 4rem);
+            max-width: min(90vw, 1000px);
+            max-height: min(80vh, 700px);
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            line-height: 0.9;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: var(--body-size);
+            font-weight: 500;
+            margin-top: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+        }
+
+        .visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card-reveal {
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+            transition: opacity 1s var(--ease-out-expo), transform 1s var(--ease-out-expo);
+        }
+
+        .visible .card-reveal {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <section class="slide visible">
+        <div class="slide-number">01</div>
+        <div class="slide-content">
+            <div class="card card-reveal">
+                <h1 class="reveal" style="transition-delay: 0.2s;">Bold<br>Signal</h1>
+                <p class="subtitle reveal" style="transition-delay: 0.4s;">A high-impact theme for confident presentations.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="slide-number">02</div>
+        <div class="slide-content">
+            <h1 class="reveal">Maximum<br>Clarity</h1>
+            <p class="subtitle reveal">Designed to fit perfectly on every screen.</p>
+        </div>
+    </section>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.slide').forEach(slide => {
+            observer.observe(slide);
+        });
+    </script>
+</body>
+</html>

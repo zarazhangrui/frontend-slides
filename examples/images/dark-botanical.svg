@@ -1,0 +1,21 @@
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="450" fill="#0f0f0f" />
+  
+  <!-- Abstract Shapes -->
+  <defs>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="40" />
+    </filter>
+  </defs>
+  <circle cx="700" cy="50" r="150" fill="#d4a574" filter="url(#blur)" opacity="0.3" />
+  <circle cx="100" cy="400" r="120" fill="#e8b4b8" filter="url(#blur)" opacity="0.2" />
+  
+  <!-- Accent Line -->
+  <line x1="400" y1="80" x2="400" y2="160" stroke="#d4a574" stroke-width="1" />
+  
+  <!-- Text Content -->
+  <text x="400" y="240" fill="#e8e4df" font-family="Georgia, serif" font-size="64" text-anchor="middle">Dark</text>
+  <text x="400" y="310" fill="#e8e4df" font-family="Georgia, serif" font-size="64" text-anchor="middle">Botanical</text>
+  <text x="400" y="360" fill="#9a9590" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" letter-spacing="1">Sophisticated, organic, and premium aesthetic.</text>
+</svg>

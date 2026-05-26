@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook Tabs Example | Frontend Slides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY
+           =========================================== */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        /* ===========================================
+           THEME: NOTEBOOK TABS
+           =========================================== */
+        :root {
+            --bg-outer: #2d2d2d;
+            --bg-page: #f8f6f1;
+            --text-primary: #1a1a1a;
+            
+            --tab-1: #98d4bb;
+            --tab-2: #c7b8ea;
+            --tab-3: #f4b8c5;
+            
+            --font-display: 'Bodoni Moda', serif;
+            --font-body: 'DM Sans', sans-serif;
+            
+            --title-size: clamp(2rem, 7vw, 4.5rem);
+            --body-size: clamp(0.9rem, 1.8vw, 1.25rem);
+            --slide-padding: clamp(2rem, 6vw, 8rem);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-outer);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notebook-page {
+            background: var(--bg-page);
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tabs {
+            position: absolute;
+            right: 0;
+            top: 20%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tab {
+            width: 40px;
+            height: 100px;
+            background: var(--tab-color);
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            transform: translateX(10px);
+            width: 50px;
+            color: rgba(0,0,0,0.8);
+        }
+
+        .binder-holes {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 40px 0;
+            opacity: 0.1;
+        }
+
+        .hole {
+            width: 20px;
+            height: 20px;
+            background: #000;
+            border-radius: 50%;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-style: italic;
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: var(--body-size);
+            margin-top: 1rem;
+            max-width: 600px;
+        }
+
+        /* Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .visible .reveal {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <section class="slide visible">
+        <div class="notebook-page">
+            <div class="binder-holes">
+                <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+            </div>
+            <div class="tabs">
+                <div class="tab active" style="--tab-color: var(--tab-1);">Introduction</div>
+                <div class="tab" style="--tab-color: var(--tab-2);">Analysis</div>
+                <div class="tab" style="--tab-color: var(--tab-3);">Strategy</div>
+            </div>
+            <div class="slide-content">
+                <h1 class="reveal">Notebook<br>Tabs</h1>
+                <p class="subtitle reveal" style="transition-delay: 0.3s;">An editorial, tactile style inspired by physical planners and journals.</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

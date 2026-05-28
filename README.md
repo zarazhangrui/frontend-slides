@@ -540,6 +540,26 @@ This skill was born from the belief that:
 
 4. **Comments are kindness.** Code should explain itself to future-you (or anyone else who opens it).
 
+## Real-World Integration: Alaya.love Loom
+
+[Alaya.love](https://alaya.love) uses Frontend Slides in its **Loom Pitch** feature — an AI agent that generates startup pitch decks from a topic, renders them as zero-dependency HTML presentations, and writes them to an Obsidian vault.
+
+```python
+# Loom Pitch uses 3 styles from STYLE_PRESETS.md
+style = "bold-signal"  # or "electric-studio" or "neon-cyber"
+html = _build_pitch_html(topic, content, style)
+```
+
+The generated decks are scroll-snap HTML files with:
+
+- **Keyboard navigation** (← → ↑ ↓ Space)
+- **Touch swipe** on mobile
+- **Progress bar** + nav dots
+- **Staggered reveal animations** with `prefers-reduced-motion` support
+- **Fixed viewport scaling** compatible with `viewport-base.css`
+
+The pitch agent produces both Markdown (for the vault) and HTML (for the presentation) — a complete zero-dependency pipeline from idea → deck.
+
 ## Sharing Your Presentations
 
 After creating a presentation, the skill offers two ways to share it:

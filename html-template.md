@@ -107,6 +107,7 @@ Reference architecture for generating slide presentations. Every presentation fo
                 this.stage = document.getElementById('deckStage');
                 this.setupStageScale();
                 this.setupKeyboardNav();
+                this.setupWheelNav();
                 this.setupTouchNav();
                 this.showSlide(0);
             }
@@ -126,8 +127,120 @@ Reference architecture for generating slide presentations. Every presentation fo
                 // Arrow keys, Space, Page Up/Down
             }
 
+            setupWheelNav() {
+                const WHEEL_THRESHOLD = 30;
+                const WHEEL_COOLDOWN = 450;
+                const WHEEL_RESET = 180;
+                let wheelAccum = 0;
+                let lastWheelTime = 0;
+                let wheelResetTimer = null;
+
+                const isInteractiveTarget = (target) => {
+                    return target?.closest?.('a, button, input, textarea, select, summary, [contenteditable], [data-wheel-ignore]');
+                };
+
+                window.addEventListener('wheel', (e) => {
+                    if (e.ctrlKey || e.metaKey || isInteractiveTarget(e.target)) return;
+
+                    const primaryDelta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+                    if (Math.abs(primaryDelta) < 1) return;
+
+                    e.preventDefault();
+
+                    const now = Date.now();
+                    if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+
+                    wheelAccum += primaryDelta;
+                    clearTimeout(wheelResetTimer);
+                    wheelResetTimer = setTimeout(() => {
+                        wheelAccum = 0;
+                    }, WHEEL_RESET);
+
+                    if (Math.abs(wheelAccum) < WHEEL_THRESHOLD) return;
+
+                    const direction = wheelAccum > 0 ? 1 : -1;
+                    wheelAccum = 0;
+                    lastWheelTime = now;
+                    this.showSlide(this.currentSlide + direction);
+                }, { passive: false });
+            }
+
             setupTouchNav() {
-                // Touch/swipe support for mobile
+                const touchSurface = window;
+                const SWIPE_THRESHOLD = 48;
+                const SWIPE_RESTRAINT = 80;
+                const SWIPE_MAX_TIME = 1200;
+                let startX = 0;
+                let startY = 0;
+                let lastX = 0;
+                let lastY = 0;
+                let startTime = 0;
+                let tracking = false;
+
+                const isInteractiveTarget = (target) => {
+                    const interactive = target?.closest?.('a, button, input, textarea, select, summary, [contenteditable], [data-swipe-ignore]');
+                    return interactive && !interactive.hasAttribute('data-swipe-zone');
+                };
+
+                touchSurface.addEventListener('touchstart', (e) => {
+                    if (e.touches.length !== 1 || isInteractiveTarget(e.target)) {
+                        tracking = false;
+                        return;
+                    }
+
+                    const touch = e.touches[0];
+                    tracking = true;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    lastX = touch.clientX;
+                    lastY = touch.clientY;
+                    startTime = Date.now();
+                }, { passive: true });
+
+                touchSurface.addEventListener('touchmove', (e) => {
+                    if (!tracking || e.touches.length !== 1) return;
+
+                    const touch = e.touches[0];
+                    lastX = touch.clientX;
+                    lastY = touch.clientY;
+
+                    const dx = touch.clientX - startX;
+                    const dy = touch.clientY - startY;
+                    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                touchSurface.addEventListener('touchend', (e) => {
+                    if (!tracking) return;
+
+                    const touch = e.changedTouches[0];
+                    const endX = touch ? touch.clientX : lastX;
+                    const endY = touch ? touch.clientY : lastY;
+                    const dx = endX - startX;
+                    const dy = endY - startY;
+                    const elapsed = Date.now() - startTime;
+                    tracking = false;
+
+                    const isHorizontalSwipe =
+                        Math.abs(dx) >= SWIPE_THRESHOLD &&
+                        Math.abs(dy) <= SWIPE_RESTRAINT &&
+                        Math.abs(dx) > Math.abs(dy) * 1.2 &&
+                        elapsed <= SWIPE_MAX_TIME;
+
+                    if (!isHorizontalSwipe) return;
+
+                    e.preventDefault();
+                    if (dx < 0) {
+                        this.showSlide(this.currentSlide + 1);
+                    } else {
+                        this.showSlide(this.currentSlide - 1);
+                    }
+                }, { passive: false });
+
+                touchSurface.addEventListener('touchcancel', () => {
+                    tracking = false;
+                }, { passive: true });
             }
 
             showSlide(index) {

@@ -21,6 +21,42 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 
 ## Installation
 
+### Cursor Local Plugin
+
+For local testing in Cursor, symlink the Cursor plugin package into your local plugins folder:
+
+```bash
+mkdir -p ~/.cursor/plugins/local
+ln -s /path/to/frontend-slides/plugins/frontend-slides ~/.cursor/plugins/local/frontend-slides
+```
+
+Restart Cursor, or run `Developer: Reload Window`, then use it by typing:
+
+```text
+/frontend-slides
+```
+
+The Cursor plugin keeps the skill and all support files together: style presets, fixed-stage CSS, HTML templates, animation patterns, bold templates, and export/deploy scripts.
+
+### Cursor Manual Skill Installation
+
+If you only want the skill without plugin packaging, copy the skill directory into Cursor:
+
+```bash
+mkdir -p ~/.cursor/skills/frontend-slides
+cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.cursor/skills/frontend-slides/
+cp -R bold-template-pack ~/.cursor/skills/frontend-slides/
+cp -R scripts ~/.cursor/skills/frontend-slides/
+```
+
+Then invoke it in Cursor with:
+
+```text
+/frontend-slides
+```
+
+Once the Cursor version works well for you, share it with the community at https://cursor.directory/plugins/new so other Cursor users can install and build on it.
+
 ### Via Claude Code Custom Marketplace Source
 
 Install directly from this public GitHub repo. Run these as two separate Claude Code messages; do not paste both lines into the prompt at once.
@@ -92,6 +128,8 @@ The Claude Code plugin gives Claude Code a custom marketplace-source install flo
 > "I want to create a pitch deck for my AI startup"
 ```
 
+In Cursor, use `/frontend-slides` instead.
+
 If installed manually as a standalone Claude Code skill, use `/frontend-slides` instead.
 
 In non-Claude agents, ask the agent to use the Frontend Slides skill and point it at this repo or `SKILL.md`.
@@ -111,6 +149,8 @@ The skill will:
 
 > "Convert my presentation.pptx to a web slideshow"
 ```
+
+In Cursor, use `/frontend-slides` with the same prompt.
 
 The skill will:
 

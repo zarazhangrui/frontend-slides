@@ -1,0 +1,22 @@
+{
+  "name": "frontend-slides",
+  "displayName": "Frontend Slides",
+  "version": "2.1.0",
+  "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files.",
+  "author": {
+    "name": "zarazhangrui",
+    "url": "https://github.com/zarazhangrui"
+  },
+  "homepage": "https://github.com/zarazhangrui/frontend-slides",
+  "repository": "https://github.com/zarazhangrui/frontend-slides",
+  "license": "MIT",
+  "keywords": [
+    "presentations",
+    "slides",
+    "html",
+    "design",
+    "powerpoint",
+    "animations",
+    "templates"
+  ]
+}

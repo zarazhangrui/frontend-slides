@@ -3,16 +3,16 @@
   "name": "frontend-slides",
   "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files.",
   "owner": {
-    "name": "zarazhangrui",
-    "url": "https://github.com/zarazhangrui"
+    "name": "wengzige",
+    "url": "https://github.com/wengzige"
   },
   "plugins": [
     {
       "name": "frontend-slides",
-      "description": "Zero-dependency HTML presentation generator with safe presets, bold template-library styles, PPT conversion, and anti-AI-slop design philosophy.",
+      "description": "Zero-dependency HTML presentation generator with safe presets, bold template-library styles, PPT conversion, a portable visual deck editor, and anti-AI-slop design philosophy.",
       "source": "./plugins/frontend-slides",
       "category": "productivity",
-      "tags": ["presentations", "slides", "html", "design", "powerpoint", "templates"]
+      "tags": ["presentations", "slides", "html", "design", "powerpoint", "templates", "editor"]
     }
   ]
 }

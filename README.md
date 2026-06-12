@@ -2,6 +2,8 @@
 
 A coding-agent skill for creating stunning HTML presentations — from scratch or by converting PowerPoint files. It is packaged as a Claude Code plugin, and the core `SKILL.md` can also be read by other coding agents with filesystem and shell access.
 
+This fork builds on the original Frontend Slides project and keeps the same user-facing mission: generate portable, zero-dependency HTML decks. The main fork-specific direction is to incubate the Visual Deck Editor as a first-class runtime here first, then split it into a separate repository only after the editor has a stable integration contract, demo decks outside this skill, and basic regression checks.
+
 ## What This Does
 
 **Frontend Slides** helps non-designers create beautiful web presentations without knowing CSS or JavaScript. It uses a "show, don't tell" approach: instead of asking you to describe your aesthetic preferences in words, it generates visual previews and lets you pick what you like.
@@ -27,6 +29,18 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 - **HTML-adaptive editing** — The editor infers editable text, images, media, SVG/canvas elements, and shape-like boxes from ordinary slide HTML instead of requiring deck-specific attributes.
 - **More practical editing controls** — The editor now documents right-panel text editing, drag-and-drop image replacement, shape insertion through a menu, multi-step undo/redo with keyboard shortcuts, snapping guides, lightweight font selection, and a single Save action.
 - **Cleaner saved output** — Save/export should remove editor chrome, temporary detection markers, selection UI, and other editing-only state so the deck remains portable.
+- **Editor incubation path** — The editor is documented as a reusable module under [`visual-editor/`](visual-editor/README.md), while still being bundled with generated decks until it is mature enough to maintain as its own project.
+
+## Fork Direction
+
+The best path for this fork is to keep Frontend Slides as the full presentation-generation skill while treating the Visual Deck Editor as an incubating runtime inside the repo.
+
+1. Keep this fork focused on generating, packaging, previewing, editing, and exporting HTML slide decks.
+2. Keep editor behavior deck-neutral: fixed-stage slide contract in, clean portable `index.html` out.
+3. Keep editor documentation and integration rules in `visual-editor/`, `SKILL.md`, and `html-template.md`.
+4. Split the editor into its own GitHub repository only after it has a stable API, standalone demos, and basic browser regression checks.
+
+Until that point, editor changes should land in this fork so the feature can evolve with real generated decks instead of becoming a detached half-library.
 
 ## Installation
 
@@ -35,7 +49,7 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 Install directly from this public GitHub repo. Run these as two separate Claude Code messages; do not paste both lines into the prompt at once.
 
 ```text
-/plugin marketplace add https://github.com/zarazhangrui/frontend-slides
+/plugin marketplace add https://github.com/wengzige/frontend-slides
 ```
 
 After that finishes, run:
@@ -44,7 +58,7 @@ After that finishes, run:
 /plugin install frontend-slides@frontend-slides
 ```
 
-Use the HTTPS URL. The shorter `zarazhangrui/frontend-slides` form may make Claude Code try SSH, which can fail if GitHub is not already in your `known_hosts` file.
+Use the HTTPS URL. The shorter `wengzige/frontend-slides` form may make Claude Code try SSH, which can fail if GitHub is not already in your `known_hosts` file.
 
 Then use it by typing `/frontend-slides:frontend-slides` in Claude Code. Claude Code namespaces plugin-installed skills as `/plugin-name:skill-name`.
 
@@ -58,14 +72,14 @@ mkdir -p ~/.claude/skills/frontend-slides/scripts
 
 # Copy the user-facing skill files
 cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.claude/skills/frontend-slides/
-cp -R bold-template-pack ~/.claude/skills/frontend-slides/
+cp -R bold-template-pack visual-editor ~/.claude/skills/frontend-slides/
 cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh ~/.claude/skills/frontend-slides/scripts/
 ```
 
 Or clone directly:
 
 ```bash
-git clone https://github.com/zarazhangrui/frontend-slides.git ~/.claude/skills/frontend-slides
+git clone https://github.com/wengzige/frontend-slides.git ~/.claude/skills/frontend-slides
 ```
 
 Then use it by typing `/frontend-slides` in Claude Code. Standalone skills are not namespaced.
@@ -75,7 +89,7 @@ Then use it by typing `/frontend-slides` in Claude Code. Standalone skills are n
 Agents such as Codex, Kimi Code, OpenCode, Gemini CLI, or other local coding assistants can use the same core skill. The simplest path is to send the agent this GitHub repo link and ask it to use the Frontend Slides skill:
 
 ```text
-https://github.com/zarazhangrui/frontend-slides
+https://github.com/wengzige/frontend-slides
 ```
 
 If the agent can read GitHub repos or browse files, it should start from `SKILL.md` and load only the referenced support files it needs:
@@ -587,7 +601,9 @@ Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080
 
 ## Credits
 
-Created by [@zarazhangrui](https://github.com/zarazhangrui).
+Originally created by [@zarazhangrui](https://github.com/zarazhangrui).
+
+This fork is maintained by [@wengzige](https://github.com/wengzige) and incubates the portable Visual Deck Editor described above.
 
 ## License
 

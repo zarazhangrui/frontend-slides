@@ -177,6 +177,8 @@ Every presentation must include:
 
 The visual deck editor is a lightweight post-draft affordance. Do not ask the user whether they want it during the pre-generation Q&A. Include it by default unless the user explicitly asks for a locked/export-only presentation or no editing controls.
 
+Project boundary: this editor is being incubated as a portable deck-editor runtime inside Frontend Slides. Keep the implementation deck-neutral and compatible with the contract in `visual-editor/README.md`; do not bake in a specific generated deck, project name, or fork-only assumption.
+
 The editor must understand ordinary slide HTML instead of requiring every editable object to be pre-marked. At startup, scan the fixed-stage deck (`#deckStage` / `.deck-stage`, `.slide`) and infer editable objects from the rendered DOM:
 
 - Text: headings, paragraphs, list items, table cells, code/pre blocks, inline text, and visible leaf text nodes

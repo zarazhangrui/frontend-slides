@@ -242,7 +242,7 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 - Portable project folder named after the presentation, with `index.html` as the entry file and all CSS/JS inline
 - Put every referenced image/video/media asset inside the same folder, normally under `assets/`, using relative paths such as `assets/hero.png`
 - Include the FULL contents of viewport-base.css in the `<style>` block
-- Include the reusable visual deck editor from `html-template.md` by default, unless the user explicitly asks for a locked/export-only file
+- Include the reusable visual deck editor runtime from `html-template.md` by default, unless the user explicitly asks for a locked/export-only file
 - Use fonts from Fontshare or Google Fonts — never system fonts
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
@@ -250,6 +250,8 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 ### Universal Visual Editor Contract
 
 The post-draft editor is a general `frontend-slides` feature, not a one-off enhancement for a single deck. The editor must adapt to ordinary slide HTML; do not make the HTML adapt to a brittle editor.
+
+This fork incubates the editor as a first-class runtime inside Frontend Slides before any standalone repository split. Keep editor behavior deck-neutral, documented in `visual-editor/README.md`, and synchronized between the root skill files and the plugin copy. Do not create a separate editor project until the integration contract, standalone demos, and regression checks are stable.
 
 - Target the fixed presentation contract: `#deckStage` / `.deck-stage`, `.slide`, and 1920x1080 stage coordinates. Do not hard-code a project name, deck title, or slide-specific class into the editor core.
 - Discover editable objects from normal DOM first. Infer text from headings, paragraphs, lists, table cells, inline text nodes, code/pre blocks, and visible leaf text. Infer media from `img`, `picture`, `video`, `canvas`, `svg`, CSS background images, and media-like descendants. Infer visual boxes from rendered size plus visible background, border, shadow, clip-path, or SVG/canvas/media content.

@@ -1,0 +1,4386 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML 如何改变 PPT 演讲模式</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..500;1,6..72,400..500&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===========================================
+       CSS CUSTOM PROPERTIES (COBALT GRID THEME)
+       Change these variables to adjust the entire deck.
+       =========================================== */
+    :root {
+      --stage-bg: #111111;
+      --slide-bg: #f0ebde;
+      --paper: #f0ebde;
+      --paper-2: #e6e0ce;
+      --ink: #1f2be0;
+      --ink-soft: #5560e5;
+      --grid: rgba(31, 43, 224, 0.10);
+      --ink-faint: rgba(31, 43, 224, 0.18);
+      --font-display: "Newsreader", "Noto Serif SC", Georgia, serif;
+      --font-display-cjk: "Noto Serif SC", "Newsreader", Georgia, serif;
+      --font-body: "Hanken Grotesk", "Noto Serif SC", sans-serif;
+      --font-mono: "DM Mono", ui-monospace, monospace;
+      --edge: 76px;
+      --pad-top: 130px;
+      --pad-bottom: 148px;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-normal: 640ms;
+    }
+
+    /* ===========================================
+       FIXED 16:9 STAGE: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       Slides are authored at 1920×1080 and scaled as a whole.
+       =========================================== */
+
+    /* 1. Lock the browser viewport */
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 2. Full-window deck viewport */
+    .deck-viewport {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 3. Fixed 16:9 design canvas.
+       JavaScript sets transform: translate(...) scale(...). */
+    .deck-stage {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        transform-origin: 0 0;
+        background: var(--slide-bg, #fff);
+    }
+
+    /* 4. Slides stack inside the fixed stage.
+       Content must be laid out at 1920×1080, not reflowed per device. */
+    .slide {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        background: var(--slide-bg, #fff);
+    }
+
+    .slide.active,
+    .slide.visible {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        z-index: 1;
+    }
+
+    /* 5. Keep media inside authored slide bounds */
+    img,
+    video,
+    canvas,
+    svg {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* 6. Presentation chrome stays outside the slide design system */
+    .deck-controls {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 1000;
+    }
+
+    /* 7. Print one fixed-size slide per page */
+    @media print {
+        html,
+        body {
+            width: 1920px;
+            height: auto;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-viewport {
+            position: static;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-stage {
+            position: static;
+            width: auto;
+            height: auto;
+            transform: none !important;
+            background: none;
+        }
+
+        .slide {
+            position: relative;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            width: 1920px;
+            height: 1080px;
+            break-after: page;
+            page-break-after: always;
+        }
+
+        .slide:last-child {
+            break-after: auto;
+            page-break-after: auto;
+        }
+
+        .deck-controls {
+            display: none !important;
+        }
+    }
+
+    /* 8. Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.2s !important;
+        }
+    }
+
+    /* ===========================================
+       GLOBAL RESET AND TYPOGRAPHY
+       Maintains the two-color editorial system.
+       =========================================== */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      color: var(--ink);
+      font-family: var(--font-body);
+    }
+
+    .slide {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body);
+      transition: opacity 280ms ease;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        linear-gradient(100deg, transparent 0 42%, rgba(31, 43, 224, 0.16) 48%, transparent 56%),
+        repeating-linear-gradient(90deg, transparent 0 72px, rgba(31, 43, 224, 0.08) 72px 74px, transparent 74px 148px);
+      transform: translateX(-105%);
+    }
+
+    .slide > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .display {
+      font-family: var(--font-display-cjk);
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 0.98;
+    }
+
+    .serif {
+      font-family: var(--font-display-cjk);
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.02;
+    }
+
+    .body-copy {
+      font-family: var(--font-body);
+      font-size: 28px;
+      font-weight: 400;
+      line-height: 1.64;
+      letter-spacing: 0;
+    }
+
+    .body-small {
+      font-size: 22px;
+      line-height: 1.62;
+      letter-spacing: 0;
+    }
+
+    .micro {
+      font-family: var(--font-body);
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .mono,
+    .mono-chrome {
+      font-family: var(--font-mono);
+      font-weight: 400;
+      letter-spacing: 0.06em;
+    }
+
+    /* ===========================================
+       UNIVERSAL SLIDE CHROME
+       Thin cobalt rules, page numbers, and nav hints.
+       =========================================== */
+    .chrome-line {
+      position: absolute;
+      left: var(--edge);
+      right: var(--edge);
+      height: 1.5px;
+      background: var(--ink);
+      z-index: 5;
+    }
+
+    .chrome-line.top {
+      top: 58px;
+    }
+
+    .chrome-line.bottom {
+      bottom: 32px;
+    }
+
+    .page-num,
+    .nav-hint {
+      position: absolute;
+      bottom: 68px;
+      z-index: 5;
+      font: 400 17px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      color: var(--ink);
+    }
+
+    .page-num {
+      right: var(--edge);
+    }
+
+    .nav-hint {
+      left: var(--edge);
+      opacity: 0.42;
+    }
+
+    .frame {
+      position: absolute;
+      inset: var(--pad-top) var(--edge) var(--pad-bottom);
+      z-index: 2;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 34px;
+      padding-bottom: 24px;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .topbar h2 {
+      max-width: 1180px;
+      font-size: 86px;
+    }
+
+    .topbar .lab {
+      min-width: 320px;
+      text-align: right;
+      font: 400 20px/1.2 var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    /* ===========================================
+       DECORATIVE ELEMENTS
+       QR blocks, pixel scanlines, and vertical labels.
+       =========================================== */
+    .pixel-glitch {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      opacity: 0.92;
+    }
+
+    .pixel-glitch.right {
+      right: 0;
+      top: 132px;
+      width: 340px;
+      height: 760px;
+    }
+
+    .pixel-glitch.left {
+      left: 0;
+      top: 120px;
+      width: 300px;
+      height: 760px;
+    }
+
+    .pixel-glitch i {
+      height: 42px;
+      background-image: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 9px);
+      background-color: var(--paper);
+      border-top: 1px solid var(--grid);
+      border-bottom: 1px solid var(--grid);
+    }
+
+    .pixel-glitch i:nth-child(1) { width: 100%; }
+    .pixel-glitch i:nth-child(2) { width: 88%; }
+    .pixel-glitch i:nth-child(3) { width: 76%; }
+    .pixel-glitch i:nth-child(4) { width: 94%; }
+    .pixel-glitch i:nth-child(5) { width: 64%; }
+    .pixel-glitch i:nth-child(6) { width: 82%; }
+    .pixel-glitch i:nth-child(7) { width: 54%; }
+    .pixel-glitch i:nth-child(8) { width: 70%; }
+    .pixel-glitch i:nth-child(9) { width: 44%; }
+    .pixel-glitch.right i { margin-left: auto; }
+
+    .qr-block {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 2px;
+      padding: 5px;
+      background: var(--paper);
+      box-shadow: 0 0 0 2px var(--paper);
+      z-index: 4;
+    }
+
+    .qr-block i {
+      background: transparent;
+    }
+
+    .qr-block i.on {
+      background: var(--ink);
+    }
+
+    .vertical-label {
+      position: absolute;
+      right: 86px;
+      top: 238px;
+      z-index: 4;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      font: 400 17px/1.4 var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    /* ===========================================
+       CONTENT COMPONENTS
+       Reusable grids, ledgers, charts, and diagrams.
+       =========================================== */
+    .index-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 52px;
+      margin-top: 48px;
+    }
+
+    .index-row {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 18px;
+      min-height: 126px;
+      padding: 22px 0 24px;
+      border-bottom: 1px solid var(--ink-faint);
+    }
+
+    .index-row .num {
+      font: 400 22px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    .index-row h3 {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+
+    .index-row p {
+      font-size: 21px;
+      line-height: 1.58;
+      max-width: 590px;
+    }
+
+    .statement-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 70px;
+      align-items: end;
+      height: 100%;
+    }
+
+    .statement-title {
+      font-size: 126px;
+      line-height: 1.02;
+      max-width: 860px;
+    }
+
+    .statement-title .box {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0 18px 12px;
+    }
+
+    .statement-copy {
+      border-top: 1.5px solid var(--ink);
+      padding-top: 30px;
+      max-width: 650px;
+    }
+
+    .visual-statement {
+      display: grid;
+      grid-template-columns: 0.76fr 1.24fr;
+      gap: 58px;
+      align-items: stretch;
+      height: 100%;
+    }
+
+    .visual-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px 0 0;
+    }
+
+    .visual-copy h2 {
+      font-size: 112px;
+      line-height: 1;
+      max-width: 680px;
+    }
+
+    .visual-copy .box {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0 18px 12px;
+    }
+
+    .visual-panel {
+      position: relative;
+      min-height: 646px;
+      border: 1.5px solid var(--ink);
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .visual-panel img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(0.96) contrast(1.04);
+    }
+
+    .visual-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(240, 235, 222, 0.18) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(240, 235, 222, 0.18) 1px, transparent 1px);
+      background-size: 38px 38px;
+      mix-blend-mode: multiply;
+    }
+
+    .visual-panel::before,
+    .motion-board::before,
+    .loop-photo::before,
+    .browser-mock::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(90deg, transparent 0 38%, rgba(31, 43, 224, 0.42) 49%, transparent 60%);
+      transform: translateX(-120%);
+      mix-blend-mode: multiply;
+    }
+
+    .image-caption {
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--ink);
+      background: var(--paper);
+      font: 400 16px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      z-index: 2;
+    }
+
+    .dense-visual-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 48px;
+      align-items: stretch;
+      margin-top: 42px;
+      height: 604px;
+    }
+
+    .compact-index {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-content: stretch;
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .compact-index .index-row {
+      min-height: 132px;
+      padding: 20px 0;
+    }
+
+    .compact-index .index-row h3 {
+      font-size: 38px;
+    }
+
+    .compact-index .index-row p {
+      max-width: 640px;
+    }
+
+    .motion-visual {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      margin-top: 42px;
+      height: 604px;
+    }
+
+    .motion-board {
+      position: relative;
+      border: 1.5px solid var(--ink);
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .motion-board img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0.92;
+    }
+
+    .motion-ribbon {
+      position: absolute;
+      left: 38px;
+      right: 38px;
+      bottom: 42px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1.5px solid var(--ink);
+      background: rgba(240, 235, 222, 0.92);
+      z-index: 2;
+    }
+
+    .motion-ribbon span {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--ink-faint);
+      font: 400 15px/1 var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+
+    .motion-ribbon span::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      margin-right: 10px;
+      background: var(--ink);
+      transform: scale(0.6);
+    }
+
+    .motion-ribbon span:last-child {
+      border-right: 0;
+    }
+
+    .motion-notes {
+      display: grid;
+      grid-template-columns: 1fr;
+      border-top: 1.5px solid var(--ink);
+    }
+
+    .motion-note {
+      min-height: 120px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--ink-faint);
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .motion-note h3 {
+      font-size: 38px;
+      margin-bottom: 8px;
+    }
+
+    .motion-note p {
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .split-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 58px;
+    }
+
+    .compare-panel {
+      border-top: 1.5px solid var(--ink);
+      padding-top: 26px;
+      min-height: 420px;
+    }
+
+    .compare-panel .big {
+      font-size: 74px;
+      margin-bottom: 30px;
+    }
+
+    .compare-panel li {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 18px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--ink-faint);
+      font-size: 24px;
+      line-height: 1.46;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      margin-top: 62px;
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .time-step {
+      min-height: 420px;
+      padding: 28px 26px 34px;
+      border-right: 1px solid var(--ink-faint);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .time-step:last-child {
+      border-right: 0;
+    }
+
+    .time-step .step-num {
+      font: 400 22px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    .time-step h3 {
+      font-size: 46px;
+      line-height: 1.05;
+    }
+
+    .time-step p {
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    .browser-mock {
+      position: relative;
+      height: 560px;
+      margin-top: 42px;
+      border: 1.5px solid var(--ink);
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+    }
+
+    .code-pane {
+      border-right: 1.5px solid var(--ink);
+      padding: 38px;
+      font: 400 24px/1.75 var(--font-mono);
+      letter-spacing: 0.02em;
+    }
+
+    .stage-pane {
+      position: relative;
+      padding: 44px;
+    }
+
+    .mini-stage {
+      position: absolute;
+      left: 44px;
+      right: 44px;
+      top: 74px;
+      height: 310px;
+      border: 1.5px solid var(--ink);
+      background:
+        linear-gradient(90deg, var(--ink) 0 26%, transparent 26% 100%),
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+      background-size: auto, 28px 28px, 28px 28px;
+    }
+
+    .mini-stage span {
+      position: absolute;
+      left: 34px;
+      bottom: 28px;
+      color: var(--paper);
+      font: 500 44px/0.96 var(--font-display);
+      letter-spacing: 0;
+    }
+
+    .runtime-notes {
+      position: absolute;
+      left: 44px;
+      right: 44px;
+      bottom: 42px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--ink-faint);
+    }
+
+    .runtime-notes div {
+      padding: 18px 12px 0 0;
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .participation-map {
+      position: relative;
+      height: 560px;
+      margin-top: 50px;
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .node {
+      position: absolute;
+      width: 280px;
+      min-height: 130px;
+      padding: 24px;
+      border: 1.5px solid var(--ink);
+      background: var(--paper);
+    }
+
+    .node h3 {
+      font-size: 34px;
+      margin-bottom: 10px;
+    }
+
+    .node p {
+      font-size: 19px;
+      line-height: 1.5;
+    }
+
+    .node.speaker { left: 90px; top: 210px; }
+    .node.deck { left: 640px; top: 74px; width: 360px; }
+    .node.audience { right: 90px; top: 210px; }
+    .node.feedback { left: 640px; bottom: 60px; width: 360px; }
+
+    .map-line {
+      position: absolute;
+      height: 1.5px;
+      background: var(--ink);
+      transform-origin: left center;
+    }
+
+    .map-line.l1 { left: 370px; top: 272px; width: 300px; transform: rotate(-23deg); }
+    .map-line.l2 { left: 985px; top: 226px; width: 320px; transform: rotate(23deg); }
+    .map-line.l3 { right: 368px; top: 398px; width: 330px; transform: rotate(156deg); }
+    .map-line.l4 { left: 370px; top: 402px; width: 320px; transform: rotate(22deg); }
+
+    .participation-redesign {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 48px;
+      margin-top: 42px;
+      height: 604px;
+    }
+
+    .loop-photo {
+      position: relative;
+      border: 1.5px solid var(--ink);
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .loop-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .loop-steps {
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1.5px solid var(--ink);
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .loop-step {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 24px;
+      align-items: center;
+      border-bottom: 1px solid var(--ink-faint);
+      opacity: 0;
+      transform: translateX(28px);
+    }
+
+    .loop-step:last-child {
+      border-bottom: 0;
+    }
+
+    .loop-step .num {
+      font: 400 48px/1 var(--font-display);
+      letter-spacing: -0.015em;
+    }
+
+    .loop-step h3 {
+      font-size: 44px;
+      line-height: 1.05;
+      margin-bottom: 12px;
+    }
+
+    .loop-step p {
+      font-size: 22px;
+      line-height: 1.52;
+      max-width: 560px;
+    }
+
+    .chart-layout {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 70px;
+      align-items: end;
+      margin-top: 56px;
+    }
+
+    .big-stat {
+      font-family: var(--font-display);
+      font-size: 214px;
+      line-height: 0.9;
+      letter-spacing: -0.015em;
+    }
+
+    .pixel-chart {
+      height: 486px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 22px;
+      align-items: end;
+      padding-bottom: 42px;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .bar {
+      height: 420px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 6px;
+    }
+
+    .bar i {
+      height: 32px;
+      background: var(--grid);
+    }
+
+    .bar i.on {
+      background: var(--ink);
+    }
+
+    .tick-row {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 22px;
+      margin-top: 16px;
+      font: 400 16px/1 var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+
+    .ledger {
+      margin-top: 46px;
+      border-top: 1.5px solid var(--ink);
+    }
+
+    .ledger-row {
+      display: grid;
+      grid-template-columns: 80px 0.8fr 1.45fr 0.55fr;
+      gap: 28px;
+      min-height: 72px;
+      align-items: center;
+      border-bottom: 1px solid var(--ink-faint);
+      font-size: 20px;
+      line-height: 1.46;
+    }
+
+    .ledger-row.head {
+      min-height: 54px;
+      font: 600 15px/1 var(--font-body);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .ledger-row .name {
+      font-family: var(--font-display-cjk);
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 1.12;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 24px;
+      margin-top: 62px;
+    }
+
+    .workflow-card {
+      min-height: 470px;
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1px solid var(--ink-faint);
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .workflow-card .serial {
+      font: 400 24px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    .workflow-card h3 {
+      font-size: 44px;
+      line-height: 1.04;
+    }
+
+    .workflow-card p {
+      font-size: 20px;
+      line-height: 1.52;
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 36px;
+      margin-top: 58px;
+    }
+
+    .risk-card {
+      min-height: 414px;
+      border-top: 1.5px solid var(--ink);
+      padding-top: 26px;
+    }
+
+    .risk-card h3 {
+      font-size: 50px;
+      line-height: 1.05;
+      margin-bottom: 24px;
+    }
+
+    .risk-card p {
+      font-size: 23px;
+      line-height: 1.58;
+    }
+
+    .closing {
+      position: absolute;
+      right: var(--edge);
+      top: 160px;
+      width: 1240px;
+      text-align: right;
+    }
+
+    .closing h2 {
+      font-size: 112px;
+      line-height: 1.02;
+    }
+
+    .closing p {
+      width: 710px;
+      margin: 40px 0 0 auto;
+      font-size: 30px;
+      line-height: 1.58;
+    }
+
+    .footer-grid {
+      position: absolute;
+      left: 430px;
+      right: var(--edge);
+      bottom: 150px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+      border-top: 1.5px solid var(--ink);
+      padding-top: 24px;
+    }
+
+    .footer-grid div {
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    /* ===========================================
+       ANIMATIONS
+       Active slides reveal content in editorial beats.
+       =========================================== */
+    .reveal,
+    .reveal-left,
+    .reveal-scale,
+    .index-row,
+    .time-step,
+    .workflow-card,
+    .risk-card,
+    .ledger-row,
+    .compare-panel {
+      opacity: 0;
+      transform: translateY(26px);
+      transition:
+        opacity var(--duration-normal) var(--ease-out-expo),
+        transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .reveal-left {
+      transform: translateX(-34px);
+    }
+
+    .reveal-scale {
+      transform: scale(0.96);
+    }
+
+    .slide.visible .reveal,
+    .slide.visible .reveal-left,
+    .slide.visible .reveal-scale,
+    .slide.visible .index-row,
+    .slide.visible .time-step,
+    .slide.visible .workflow-card,
+    .slide.visible .risk-card,
+    .slide.visible .ledger-row,
+    .slide.visible .compare-panel {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+
+    .slide.visible .reveal:nth-child(2),
+    .slide.visible .index-row:nth-child(2),
+    .slide.visible .time-step:nth-child(2),
+    .slide.visible .workflow-card:nth-child(2),
+    .slide.visible .risk-card:nth-child(2),
+    .slide.visible .ledger-row:nth-child(2),
+    .slide.visible .compare-panel:nth-child(2) {
+      transition-delay: 90ms;
+    }
+
+    .slide.visible .reveal:nth-child(3),
+    .slide.visible .index-row:nth-child(3),
+    .slide.visible .time-step:nth-child(3),
+    .slide.visible .workflow-card:nth-child(3),
+    .slide.visible .risk-card:nth-child(3),
+    .slide.visible .ledger-row:nth-child(3) {
+      transition-delay: 180ms;
+    }
+
+    .slide.visible .reveal:nth-child(4),
+    .slide.visible .index-row:nth-child(4),
+    .slide.visible .time-step:nth-child(4),
+    .slide.visible .workflow-card:nth-child(4),
+    .slide.visible .risk-card:nth-child(4),
+    .slide.visible .ledger-row:nth-child(4) {
+      transition-delay: 270ms;
+    }
+
+    .slide.visible .reveal:nth-child(5),
+    .slide.visible .index-row:nth-child(5),
+    .slide.visible .time-step:nth-child(5),
+    .slide.visible .workflow-card:nth-child(5),
+    .slide.visible .ledger-row:nth-child(5) {
+      transition-delay: 360ms;
+    }
+
+    .pixel-glitch i {
+      opacity: 0;
+      transform: translateX(22px);
+      transition: opacity 520ms ease, transform 520ms ease;
+    }
+
+    .slide.visible .pixel-glitch i {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .slide.visible .pixel-glitch i:nth-child(2) { transition-delay: 60ms; }
+    .slide.visible .pixel-glitch i:nth-child(3) { transition-delay: 110ms; }
+    .slide.visible .pixel-glitch i:nth-child(4) { transition-delay: 160ms; }
+    .slide.visible .pixel-glitch i:nth-child(5) { transition-delay: 210ms; }
+    .slide.visible .pixel-glitch i:nth-child(6) { transition-delay: 260ms; }
+    .slide.visible .pixel-glitch i:nth-child(7) { transition-delay: 310ms; }
+    .slide.visible .pixel-glitch i:nth-child(8) { transition-delay: 360ms; }
+
+    .slide.visible::after {
+      animation: slideSweep 900ms 120ms var(--ease-out-expo) both;
+    }
+
+    .slide.visible .visual-panel::before,
+    .slide.visible .motion-board::before,
+    .slide.visible .loop-photo::before,
+    .slide.visible .browser-mock::before {
+      animation: scanSweep 1050ms 360ms var(--ease-out-expo) both;
+    }
+
+    .slide.visible .visual-panel img,
+    .slide.visible .motion-board img,
+    .slide.visible .loop-photo img {
+      animation: imageDrift 8s 650ms ease-in-out both;
+      transform-origin: center;
+    }
+
+    .slide.visible .statement-title .box,
+    .slide.visible .visual-copy .box {
+      animation: inkStamp 720ms 360ms var(--ease-out-expo) both;
+      transform-origin: left bottom;
+    }
+
+    .slide.visible .motion-ribbon span {
+      animation: ribbonPop 560ms var(--ease-out-expo) both;
+    }
+
+    .slide.visible .motion-ribbon span:nth-child(1) { animation-delay: 520ms; }
+    .slide.visible .motion-ribbon span:nth-child(2) { animation-delay: 620ms; }
+    .slide.visible .motion-ribbon span:nth-child(3) { animation-delay: 720ms; }
+    .slide.visible .motion-ribbon span:nth-child(4) { animation-delay: 820ms; }
+    .slide.visible .motion-ribbon span:nth-child(5) { animation-delay: 920ms; }
+
+    .slide.visible .motion-ribbon span::before {
+      animation: pulseCell 1200ms ease-in-out infinite;
+    }
+
+    .slide.visible .loop-step {
+      animation: loopStepIn 620ms var(--ease-out-expo) both;
+    }
+
+    .slide.visible .loop-step:nth-child(1) { animation-delay: 250ms; }
+    .slide.visible .loop-step:nth-child(2) { animation-delay: 430ms; }
+    .slide.visible .loop-step:nth-child(3) { animation-delay: 610ms; }
+
+    .slide.visible .compact-index .index-row {
+      animation: rowFlash 680ms var(--ease-out-expo) both;
+    }
+
+    .slide.visible .compact-index .index-row:nth-child(1) { animation-delay: 180ms; }
+    .slide.visible .compact-index .index-row:nth-child(2) { animation-delay: 290ms; }
+    .slide.visible .compact-index .index-row:nth-child(3) { animation-delay: 400ms; }
+    .slide.visible .compact-index .index-row:nth-child(4) { animation-delay: 510ms; }
+
+    @keyframes slideSweep {
+      0% { opacity: 0; transform: translateX(-105%); }
+      22% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(105%); }
+    }
+
+    @keyframes scanSweep {
+      0% { opacity: 0; transform: translateX(-120%); }
+      28% { opacity: 0.75; }
+      100% { opacity: 0; transform: translateX(120%); }
+    }
+
+    @keyframes imageDrift {
+      0% { transform: scale(1.03) translate(-8px, 6px); }
+      45% { transform: scale(1.07) translate(10px, -8px); }
+      100% { transform: scale(1.045) translate(0, 0); }
+    }
+
+    @keyframes inkStamp {
+      0% { clip-path: inset(0 100% 0 0); transform: translateY(12px); }
+      100% { clip-path: inset(0 0 0 0); transform: translateY(0); }
+    }
+
+    @keyframes ribbonPop {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseCell {
+      0%, 100% { opacity: 0.38; transform: scale(0.55); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes loopStepIn {
+      0% { opacity: 0; transform: translateX(28px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes rowFlash {
+      0% { opacity: 0; transform: translateY(20px); background: rgba(31, 43, 224, 0.10); }
+      100% { opacity: 1; transform: translateY(0); background: transparent; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slide.visible::after,
+      .slide.visible .visual-panel::before,
+      .slide.visible .motion-board::before,
+      .slide.visible .loop-photo::before,
+      .slide.visible .browser-mock::before,
+      .slide.visible .visual-panel img,
+      .slide.visible .motion-board img,
+      .slide.visible .loop-photo img,
+      .slide.visible .statement-title .box,
+      .slide.visible .visual-copy .box,
+      .slide.visible .motion-ribbon span,
+      .slide.visible .motion-ribbon span::before,
+      .slide.visible .loop-step,
+      .slide.visible .compact-index .index-row {
+        animation: none !important;
+      }
+    }
+
+    /* ===========================================
+       PPT-LIKE EDITING CONTROLS
+       Visual editing layer for text, media, layout, and motion.
+       =========================================== */
+    .edit-hotzone {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 82px;
+      height: 82px;
+      z-index: 10000;
+    }
+
+    .edit-toggle {
+      position: fixed;
+      top: 18px;
+      width: 42px;
+      height: 42px;
+      border: 1.5px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      font: 500 18px/1 var(--font-mono);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+      z-index: 10001;
+    }
+
+    .edit-toggle {
+      left: 18px;
+    }
+
+    .editor-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 10010;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      color: #111111;
+      font-family: var(--font-body);
+      transition: opacity 180ms ease, visibility 180ms ease;
+    }
+
+    body.editing .editor-shell {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .editor-toolbar,
+    .editor-slides,
+    .editor-panel {
+      pointer-events: auto;
+      border: 1px solid rgba(17, 17, 17, 0.16);
+      border-radius: 8px;
+      background: rgba(248, 246, 239, 0.94);
+      box-shadow: 0 18px 50px rgba(17, 17, 17, 0.16);
+      backdrop-filter: blur(14px);
+    }
+
+    .editor-toolbar {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      align-items: center;
+      max-width: calc(100vw - 28px);
+      overflow-x: auto;
+      padding: 8px;
+      transform: translateX(-50%);
+    }
+
+    .editor-slides {
+      position: fixed;
+      top: 76px;
+      bottom: 18px;
+      left: 14px;
+      width: 224px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .editor-panel {
+      position: fixed;
+      top: 76px;
+      right: 14px;
+      bottom: 18px;
+      width: 326px;
+      padding: 14px;
+      overflow: auto;
+    }
+
+    .editor-title {
+      margin: 0 0 10px;
+      color: rgba(17, 17, 17, 0.58);
+      font: 600 11px/1 var(--font-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .editor-button,
+    .toolbar-select,
+    .slide-chip {
+      min-height: 34px;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111111;
+      font: 600 13px/1 var(--font-body);
+      letter-spacing: 0;
+    }
+
+    .editor-button {
+      flex: 0 0 auto;
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    .shape-picker-wrap {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .shape-menu {
+      position: fixed;
+      top: 64px;
+      left: 50%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 184px;
+      padding: 8px;
+      border: 1px solid rgba(17, 17, 17, 0.16);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 18px 44px rgba(17, 17, 17, 0.18);
+      pointer-events: auto;
+      transform: translateX(-50%);
+      z-index: 10040;
+    }
+
+    .shape-menu[hidden] {
+      display: none;
+    }
+
+    .shape-choice {
+      height: 32px;
+      border: 1px solid rgba(17, 17, 17, 0.16);
+      border-radius: 6px;
+      background: #f7f7f5;
+      color: #111111;
+      font: 600 12px/1 var(--font-body);
+      pointer-events: auto;
+    }
+
+    .toolbar-select {
+      flex: 0 0 auto;
+      width: 128px;
+      padding: 0 32px 0 10px;
+      white-space: nowrap;
+    }
+
+    .editor-button.primary {
+      background: var(--ink);
+      color: #ffffff;
+      border-color: var(--ink);
+    }
+
+    .editor-button.danger {
+      color: #b42318;
+    }
+
+    .editor-button:disabled,
+    .editor-field:disabled,
+    .editor-select:disabled,
+    .editor-textarea:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .slide-rail-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .slide-chip {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 8px;
+      width: 100%;
+      min-height: 52px;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .slide-chip.active {
+      border-color: var(--ink);
+      background: rgba(31, 43, 224, 0.10);
+    }
+
+    .slide-chip-num {
+      display: grid;
+      place-items: center;
+      height: 34px;
+      border-radius: 4px;
+      background: #111111;
+      color: #ffffff;
+      font: 500 12px/1 var(--font-mono);
+    }
+
+    .slide-chip-title {
+      overflow: hidden;
+      align-self: center;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.24;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .inspector-section {
+      padding: 12px 0;
+      border-top: 1px solid rgba(17, 17, 17, 0.12);
+    }
+
+    .inspector-section.edit-attention {
+      border-radius: 8px;
+      background: rgba(255, 61, 139, 0.08);
+      box-shadow: 0 0 0 2px rgba(255, 61, 139, 0.22);
+    }
+
+    .inspector-section:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .selection-name {
+      min-height: 28px;
+      font: 700 15px/1.35 var(--font-body);
+    }
+
+    .field-label {
+      display: block;
+      margin: 10px 0 6px;
+      color: rgba(17, 17, 17, 0.58);
+      font: 600 11px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .field-help {
+      margin: -2px 0 8px;
+      color: rgba(17, 17, 17, 0.62);
+      font: 500 12px/1.38 var(--font-body);
+    }
+
+    .motion-status {
+      min-height: 32px;
+      margin: 0 0 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 6px;
+      background: rgba(17, 17, 17, 0.04);
+      color: rgba(17, 17, 17, 0.72);
+      font: 600 12px/1.35 var(--font-body);
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .editor-field,
+    .editor-select,
+    .editor-textarea {
+      width: 100%;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111111;
+      font: 500 13px/1.3 var(--font-body);
+    }
+
+    .editor-field,
+    .editor-select {
+      height: 34px;
+      padding: 0 9px;
+    }
+
+    .editor-field[type="color"] {
+      padding: 4px;
+    }
+
+    .editor-textarea {
+      min-height: 88px;
+      padding: 9px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .file-picker-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .file-input-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .file-name {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      height: 34px;
+      padding: 0 10px;
+      overflow: hidden;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 6px;
+      background: rgba(17, 17, 17, 0.04);
+      color: rgba(17, 17, 17, 0.58);
+      font: 500 12px/1 var(--font-body);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .drop-zone {
+      display: grid;
+      place-items: center;
+      min-height: 78px;
+      padding: 12px;
+      border: 1.5px dashed rgba(31, 43, 224, 0.5);
+      border-radius: 8px;
+      background: rgba(31, 43, 224, 0.06);
+      color: rgba(17, 17, 17, 0.68);
+      font-size: 13px;
+      line-height: 1.38;
+      text-align: center;
+    }
+
+    .drop-zone.dragging {
+      border-color: var(--ink);
+      background: rgba(31, 43, 224, 0.13);
+      color: var(--ink);
+    }
+
+    .inspector-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .editor-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      z-index: 10030;
+      min-width: 180px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: #111111;
+      color: #ffffff;
+      font: 600 13px/1 var(--font-body);
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .editor-toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .editor-layer {
+      position: absolute;
+      z-index: 20;
+    }
+
+    .text-layer {
+      min-width: 240px;
+      min-height: 64px;
+      padding: 14px 18px;
+      border: 1.5px solid var(--ink);
+      background: rgba(240, 235, 222, 0.92);
+      color: var(--ink);
+      font: 700 38px/1.16 var(--font-display-cjk);
+    }
+
+    .image-layer {
+      width: 520px;
+      height: 320px;
+      border: 1.5px solid var(--ink);
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .image-layer img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .shape-layer {
+      width: 280px;
+      height: 180px;
+      border: 1.5px solid var(--ink);
+      background: rgba(31, 43, 224, 0.16);
+    }
+
+    .shape-layer[data-shape="roundRect"] {
+      border-radius: 28px;
+    }
+
+    .shape-layer[data-shape="circle"] {
+      border-radius: 999px;
+    }
+
+    .shape-layer[data-shape="triangle"] {
+      border: 0;
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    }
+
+    .shape-layer[data-shape="line"] {
+      height: 14px;
+      border: 0;
+    }
+
+    .shape-layer[data-shape="arrow"] {
+      border: 0;
+      clip-path: polygon(0 36%, 66% 36%, 66% 14%, 100% 50%, 66% 86%, 66% 64%, 0 64%);
+    }
+
+    .edit-moved {
+      animation: none !important;
+      transition: none !important;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+      transform-origin: top left;
+    }
+
+    .slide.visible .edit-moved.reveal,
+    .slide.visible .edit-moved.reveal-left,
+    .slide.visible .edit-moved.reveal-scale,
+    .slide.visible .edit-moved.editor-anim-rise,
+    .slide.visible .edit-moved.editor-anim-drop,
+    .slide.visible .edit-moved.editor-anim-left,
+    .slide.visible .edit-moved.editor-anim-right,
+    .slide.visible .edit-moved.editor-anim-scale,
+    .slide.visible .edit-moved.editor-anim-zoom,
+    .slide.visible .edit-moved.editor-anim-pop,
+    .slide.visible .edit-moved.editor-anim-rotate,
+    .slide.visible .edit-moved.editor-anim-blur,
+    .slide.visible .edit-moved.editor-anim-flip,
+    .slide.visible .edit-moved.editor-anim-fade {
+      opacity: 1;
+      filter: none !important;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .editor-anim-none {
+      opacity: 1 !important;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .editor-anim-fade,
+    .editor-anim-rise,
+    .editor-anim-drop,
+    .editor-anim-left,
+    .editor-anim-right,
+    .editor-anim-scale,
+    .editor-anim-zoom,
+    .editor-anim-pop,
+    .editor-anim-rotate,
+    .editor-anim-blur,
+    .editor-anim-flip {
+      opacity: 0;
+      transform-origin: center;
+      transition:
+        opacity var(--edit-duration, 640ms) var(--ease-out-expo),
+        transform var(--edit-duration, 640ms) var(--ease-out-expo),
+        filter var(--edit-duration, 640ms) var(--ease-out-expo);
+      transition-delay: var(--edit-delay, 0ms);
+    }
+
+    .edit-moved.editor-anim-fade,
+    .edit-moved.editor-anim-rise,
+    .edit-moved.editor-anim-drop,
+    .edit-moved.editor-anim-left,
+    .edit-moved.editor-anim-right,
+    .edit-moved.editor-anim-scale,
+    .edit-moved.editor-anim-zoom,
+    .edit-moved.editor-anim-pop,
+    .edit-moved.editor-anim-rotate,
+    .edit-moved.editor-anim-blur,
+    .edit-moved.editor-anim-flip {
+      animation: none !important;
+      transition:
+        opacity var(--edit-duration, 640ms) var(--ease-out-expo),
+        transform var(--edit-duration, 640ms) var(--ease-out-expo),
+        filter var(--edit-duration, 640ms) var(--ease-out-expo) !important;
+      transition-delay: var(--edit-delay, 0ms) !important;
+    }
+
+    .editor-anim-fade {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-rise {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) + 34px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-drop {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) - 42px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-left {
+      transform: translate(calc(var(--edit-x, 0px) - 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-right {
+      transform: translate(calc(var(--edit-x, 0px) + 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-scale {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.92), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.92)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-zoom {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.14), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.14)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-pop {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.72), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.72)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-rotate {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(-8deg) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.96), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.96)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-blur {
+      filter: blur(14px);
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.03), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.03)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-flip {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(70deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .edit-moved.editor-anim-fade {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-rise {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) + 34px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-drop {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) - 42px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-left {
+      transform: translate(calc(var(--edit-x, 0px) - 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-right {
+      transform: translate(calc(var(--edit-x, 0px) + 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-scale {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.92), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.92)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-zoom {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.14), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.14)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-pop {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.72), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.72)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-rotate {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(-8deg) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.96), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.96)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-blur {
+      filter: blur(14px);
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.03), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.03)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-flip {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(70deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .slide.visible .editor-anim-fade,
+    .slide.visible .editor-anim-rise,
+    .slide.visible .editor-anim-drop,
+    .slide.visible .editor-anim-left,
+    .slide.visible .editor-anim-right,
+    .slide.visible .editor-anim-scale,
+    .slide.visible .editor-anim-zoom,
+    .slide.visible .editor-anim-pop,
+    .slide.visible .editor-anim-rotate,
+    .slide.visible .editor-anim-blur,
+    .slide.visible .editor-anim-flip {
+      opacity: 1;
+      filter: none;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-motion-preview.editor-anim-fade {
+      animation: editorPreviewFade var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-rise {
+      animation: editorPreviewRise var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-left {
+      animation: editorPreviewLeft var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-scale {
+      animation: editorPreviewScale var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-drop {
+      animation: editorPreviewDrop var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-right {
+      animation: editorPreviewRight var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-zoom {
+      animation: editorPreviewZoom var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-pop {
+      animation: editorPreviewPop var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-rotate {
+      animation: editorPreviewRotate var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-blur {
+      animation: editorPreviewBlur var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-flip {
+      animation: editorPreviewFlip var(--edit-duration, 640ms) var(--ease-out-expo) var(--edit-delay, 0ms) both !important;
+    }
+
+    @keyframes editorPreviewFade {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewRise {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) + 34px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewLeft {
+      from {
+        opacity: 0;
+        transform: translate(calc(var(--edit-x, 0px) - 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewScale {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.92), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.92)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewDrop {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) - 42px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewRight {
+      from {
+        opacity: 0;
+        transform: translate(calc(var(--edit-x, 0px) + 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewZoom {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.14), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.14)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewPop {
+      0% {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.72), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.72)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      72% {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.04), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.04)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      100% {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewRotate {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(-8deg) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.96), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.96)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(0deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewBlur {
+      from {
+        opacity: 0;
+        filter: blur(14px);
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.03), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.03)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewFlip {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(70deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(0deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    .editor-frame {
+      position: absolute;
+      display: none;
+      z-index: 850;
+      border: 2px solid #ff3d8b;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 12px 30px rgba(17, 17, 17, 0.18);
+    }
+
+    .editor-frame.active {
+      display: block;
+    }
+
+    .editor-guide {
+      position: absolute;
+      display: none;
+      z-index: 840;
+      background: #ff3d8b;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
+    }
+
+    .editor-guide.active {
+      display: block;
+    }
+
+    .editor-guide.vertical {
+      top: 0;
+      width: 2px;
+      height: 1080px;
+      transform: translateX(-1px);
+    }
+
+    .editor-guide.horizontal {
+      left: 0;
+      width: 1920px;
+      height: 2px;
+      transform: translateY(-1px);
+    }
+
+    .frame-move {
+      position: absolute;
+      left: -2px;
+      top: -30px;
+      height: 26px;
+      padding: 0 9px;
+      display: flex;
+      align-items: center;
+      background: #ff3d8b;
+      color: #ffffff;
+      font: 700 13px/1 var(--font-body);
+      white-space: nowrap;
+      cursor: move;
+      pointer-events: auto;
+    }
+
+    .frame-resize {
+      position: absolute;
+      right: -8px;
+      bottom: -8px;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #ff3d8b;
+      background: #ffffff;
+      cursor: nwse-resize;
+      pointer-events: auto;
+    }
+
+    .edit-toggle.show,
+    .edit-toggle.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.editing [data-editable],
+    body.editing [data-editor-kind="text"] {
+      outline: 1.5px dashed rgba(31, 43, 224, 0.54);
+      outline-offset: 5px;
+      cursor: text;
+    }
+
+    body.editing [data-editable-media],
+    body.editing [data-editable-box],
+    body.editing [data-editor-kind="media"],
+    body.editing [data-editor-kind="box"],
+    body.editing .editor-layer {
+      outline: 1.5px dashed rgba(31, 43, 224, 0.54);
+      outline-offset: 5px;
+      cursor: pointer;
+    }
+
+    body.editing .editor-selected {
+      outline: none !important;
+    }
+
+    body.editing.dragging-file .slide.active {
+      box-shadow: inset 0 0 0 12px rgba(31, 43, 224, 0.14);
+    }
+
+    .deck-controls {
+      padding: 8px 12px;
+      border: 1px solid rgba(31, 43, 224, 0.28);
+      background: rgba(240, 235, 222, 0.88);
+      color: var(--ink);
+      font: 400 13px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      opacity: 0.72;
+    }
+
+    @media (max-width: 960px) {
+      .editor-toolbar {
+        top: 8px;
+        width: calc(100vw - 16px);
+        justify-content: flex-start;
+      }
+
+      .editor-slides {
+        top: 68px;
+        left: 8px;
+        right: 8px;
+        bottom: auto;
+        width: auto;
+        height: 74px;
+        padding: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      .slide-rail-list {
+        display: flex;
+        gap: 8px;
+      }
+
+      .slide-chip {
+        width: 148px;
+        min-width: 148px;
+      }
+
+      .editor-panel {
+        top: auto;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: auto;
+        max-height: 240px;
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+        gap: 12px;
+      }
+
+      .inspector-section {
+        min-width: 0;
+        padding: 0;
+        border-top: 0;
+      }
+
+      .editor-textarea {
+        min-height: 64px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-viewport" aria-label="HTML 如何改变 PPT 演讲模式">
+    <main class="deck-stage" id="deckStage">
+      <section class="slide cover active visible" data-page="01" aria-label="标题">
+        <div class="pixel-glitch right" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="qr-block" style="right: 392px; top: 152px;" aria-hidden="true">
+          <i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i>
+          <i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+          <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i>
+          <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i>
+          <i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+          <i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i>
+          <i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i>
+          <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i>
+        </div>
+        <div class="frame">
+          <div class="micro reveal">HTML / PRESENTATION MODE</div>
+          <h1 class="display reveal" data-editable style="font-size: 136px; max-width: 1120px; margin-top: 70px;">HTML 如何改变 PPT 演讲模式</h1>
+          <p class="body-copy reveal" data-editable style="width: 780px; margin-top: 46px;">当幻灯片变成网页，演讲不再只是翻页，而是一套可以演示、互动、分发和持续迭代的现场系统。</p>
+          <div class="ledger reveal" style="width: 760px; margin-top: 58px;">
+            <div class="ledger-row" style="grid-template-columns: 82px 1fr 1fr 0.45fr;"><span class="mono">01</span><span class="name">动效</span><span>让内容有节奏</span><span class="mono">MOTION</span></div>
+            <div class="ledger-row" style="grid-template-columns: 82px 1fr 1fr 0.45fr;"><span class="mono">02</span><span class="name">交互</span><span>让现场能参与</span><span class="mono">INPUT</span></div>
+            <div class="ledger-row" style="grid-template-columns: 82px 1fr 1fr 0.45fr;"><span class="mono">03</span><span class="name">链接</span><span>让演讲可传播</span><span class="mono">URL</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide statement" data-page="02" aria-label="核心判断">
+        <div class="frame">
+          <div class="visual-statement">
+            <div class="visual-copy">
+              <div>
+              <div class="micro reveal">CORE THESIS</div>
+                <h2 class="serif reveal" data-editable style="margin-top: 36px;">PPT 是页面；<br><span class="box">HTML 是运行时</span></h2>
+              </div>
+              <div class="statement-copy reveal" style="max-width: 690px;">
+                <p class="body-copy" data-editable>传统 PPT 把表达压缩进一页页静态画布；HTML 把表达放回浏览器运行时。区别不只是“更炫”，而是演讲者可以把状态、逻辑、输入和传播都纳入演讲。</p>
+              </div>
+            </div>
+            <div class="visual-panel reveal-scale" data-editable-media>
+              <img src="assets/web-stage.svg" alt="浏览器窗口成为现场演讲舞台的钴蓝视觉图">
+              <div class="image-caption">BROWSER AS STAGE</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="03" aria-label="传统 PPT 的边界">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>传统 PPT 的四个边界</h2>
+            <div class="lab">STATIC SLIDE MODEL</div>
+          </div>
+          <div class="dense-visual-grid">
+            <div class="visual-panel reveal-scale" data-editable-media>
+              <img src="assets/static-vs-live.svg" alt="静态 PPT 页面与实时 HTML 舞台对比图">
+              <div class="image-caption">STATIC → LIVE</div>
+            </div>
+            <div class="compact-index">
+              <div class="index-row"><div class="num">01</div><div><h3 class="serif" data-editable>内容被锁在页里</h3><p data-editable>图片、文字、动画是最终状态，很难在现场根据问题改变结构。</p></div></div>
+              <div class="index-row"><div class="num">02</div><div><h3 class="serif" data-editable>动效只是过场</h3><p data-editable>动画通常是装饰，难以承担状态变化、实时反馈或交互逻辑。</p></div></div>
+              <div class="index-row"><div class="num">03</div><div><h3 class="serif" data-editable>观众只能接收</h3><p data-editable>现场互动常常需要切到外部工具，演讲节奏会被打断。</p></div></div>
+              <div class="index-row"><div class="num">04</div><div><h3 class="serif" data-editable>传播依赖附件</h3><p data-editable>文件版本、字体、系统兼容、导出格式，都可能成为后续传播成本。</p></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="04" aria-label="动效成为叙事节拍">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>动效从装饰，变成叙事节拍</h2>
+            <div class="lab">MOTION AS TIMELINE</div>
+          </div>
+          <div class="motion-visual">
+            <div class="motion-board reveal-scale" data-editable-media>
+              <img src="assets/web-stage.svg" alt="浏览器舞台与动效时间轴视觉图">
+              <div class="motion-ribbon" aria-hidden="true"><span>00 SET</span><span>01 FOCUS</span><span>02 MORPH</span><span>03 RESPOND</span><span>04 CLOSE</span></div>
+            </div>
+            <div class="motion-notes">
+              <div class="motion-note"><div class="mono">00</div><div><h3 class="serif" data-editable>铺场</h3><p data-editable>先让观众看到结构，而不是一次性塞满信息。</p></div></div>
+              <div class="motion-note"><div class="mono">01</div><div><h3 class="serif" data-editable>聚焦</h3><p data-editable>用入场、遮罩、缩放把注意力推到当前讲点。</p></div></div>
+              <div class="motion-note"><div class="mono">02</div><div><h3 class="serif" data-editable>变形</h3><p data-editable>同一个元素在状态之间过渡，保留观众的认知连续性。</p></div></div>
+              <div class="motion-note"><div class="mono">03</div><div><h3 class="serif" data-editable>响应</h3><p data-editable>根据点击、输入或滚动改变画面，演讲进入现场节奏。</p></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="05" aria-label="演示可以运行">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>演示可以真的运行</h2>
+            <div class="lab">FROM MOCKUP TO RUNTIME</div>
+          </div>
+          <div class="browser-mock reveal-scale">
+            <div class="code-pane" aria-label="代码示意">
+              <div>&lt;section class="slide"&gt;</div>
+              <div>&nbsp;&nbsp;state: live;</div>
+              <div>&nbsp;&nbsp;input: click | key | data;</div>
+              <div>&nbsp;&nbsp;render: browser;</div>
+              <div>&lt;/section&gt;</div>
+            </div>
+            <div class="stage-pane">
+              <div class="mini-stage"><span>live<br>scene</span></div>
+              <div class="runtime-notes">
+                <div data-editable>不只是截图，而是可操作界面。</div>
+                <div data-editable>不只是动图，而是可控制状态。</div>
+                <div data-editable>不只是演示，而是现场产品。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="06" aria-label="观众变成参与者">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>观众从观看者，变成参与者</h2>
+            <div class="lab">AUDIENCE INPUT LOOP</div>
+          </div>
+          <div class="participation-redesign">
+            <div class="loop-photo reveal-scale" data-editable-media>
+              <img src="assets/audience-loop.svg" alt="观众用手机连接到 HTML 演讲页面的现场图">
+              <div class="image-caption">LIVE INPUT LOOP</div>
+            </div>
+            <div class="loop-steps">
+              <div class="loop-step"><div class="num">01</div><div><h3 class="serif" data-editable>观众进入</h3><p data-editable>扫码、点击或手机打开同一页面，观众不再只是看投影。</p></div></div>
+              <div class="loop-step"><div class="num">02</div><div><h3 class="serif" data-editable>现场反馈</h3><p data-editable>投票、选择、提问、输入都能回到当前演讲画面。</p></div></div>
+              <div class="loop-step"><div class="num">03</div><div><h3 class="serif" data-editable>演讲调度</h3><p data-editable>演讲者根据反馈展开路径，把“讲稿”变成共同推进的现场。</p></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="07" aria-label="实时数据和媒体">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>数据和媒体可以现场更新</h2>
+            <div class="lab">LIVE DATA SURFACE</div>
+          </div>
+          <div class="chart-layout">
+            <div class="reveal">
+              <div class="big-stat">3×</div>
+              <p class="body-copy" data-editable style="margin-top: 20px;">HTML 的价值不在于把 PPT 做成网页，而在于让内容接入数据、媒体、接口与设备，成为一个可更新的表面。</p>
+            </div>
+            <div class="reveal">
+              <div class="pixel-chart" aria-hidden="true">
+                <div class="bar"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+                <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              </div>
+              <div class="tick-row"><span>TEXT</span><span>MOTION</span><span>VIDEO</span><span>INPUT</span><span>API</span><span>DATA</span><span>DEVICE</span><span>SHARE</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="08" aria-label="传播从文件变成链接">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>传播从“发文件”，变成“发链接”</h2>
+            <div class="lab">DISTRIBUTION SHIFT</div>
+          </div>
+          <div class="ledger">
+            <div class="ledger-row head"><span>NO.</span><span>模式</span><span>现场之后发生什么</span><span>结果</span></div>
+            <div class="ledger-row"><span class="mono">01</span><span class="name" data-editable>PPT 附件</span><span data-editable>收件人下载、打开、确认版本、替换字体、再转发。</span><span class="mono">FRICTION</span></div>
+            <div class="ledger-row"><span class="mono">02</span><span class="name" data-editable>PDF 截图</span><span data-editable>稳定但失去动画、互动、视频和现场状态。</span><span class="mono">STATIC</span></div>
+            <div class="ledger-row"><span class="mono">03</span><span class="name" data-editable>HTML 链接</span><span data-editable>浏览器直接打开，手机、电脑、投影都访问同一份内容。</span><span class="mono">LIVE</span></div>
+            <div class="ledger-row"><span class="mono">04</span><span class="name" data-editable>部署页面</span><span data-editable>演讲结束后还能修订、补充材料、嵌入表单和追踪反馈。</span><span class="mono">ITERATE</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="09" aria-label="新工作流">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>新的演讲工作流</h2>
+            <div class="lab">AUTHOR → REHEARSE → RUN → SHARE</div>
+          </div>
+          <div class="workflow">
+            <div class="workflow-card"><div class="serial">01</div><h3 class="serif" data-editable>写结构</h3><p data-editable>先定义故事、状态、转场，而不是先填满页面。</p></div>
+            <div class="workflow-card"><div class="serial">02</div><h3 class="serif" data-editable>做场景</h3><p data-editable>把关键论点设计成可运行画面，保留演讲者控制权。</p></div>
+            <div class="workflow-card"><div class="serial">03</div><h3 class="serif" data-editable>排节奏</h3><p data-editable>用动效和互动安排注意力，而不是靠口头提醒观众看哪里。</p></div>
+            <div class="workflow-card"><div class="serial">04</div><h3 class="serif" data-editable>现场运行</h3><p data-editable>键盘、点击、触控、数据输入，都可以成为演讲的一部分。</p></div>
+            <div class="workflow-card"><div class="serial">05</div><h3 class="serif" data-editable>链接复用</h3><p data-editable>结束后继续访问、修订、补充和传播。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="10" aria-label="边界和取舍">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>不是所有演讲都需要 HTML</h2>
+            <div class="lab">TRADEOFFS MATTER</div>
+          </div>
+          <div class="risk-grid">
+            <div class="risk-card"><h3 class="serif" data-editable>简单汇报</h3><p data-editable>如果目标只是稳定传达文字和图表，传统 PPT 或 PDF 仍然足够。</p></div>
+            <div class="risk-card"><h3 class="serif" data-editable>现场稳定</h3><p data-editable>HTML 需要提前测试浏览器、离线策略、字体加载和投影比例。</p></div>
+            <div class="risk-card"><h3 class="serif" data-editable>维护成本</h3><p data-editable>一旦引入代码，就要把内容当成产品：版本、兼容、复用都要管理。</p></div>
+          </div>
+          <p class="body-copy reveal" data-editable style="position: absolute; left: 0; bottom: 0; width: 1040px;">真正的判断标准不是“能不能做得更酷”，而是这场演讲是否需要运行时能力来让观点更清楚。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-page="11" aria-label="演讲者能力变化">
+        <div class="frame">
+          <div class="topbar reveal">
+            <h2 class="serif" data-editable>演讲者的能力边界被重画</h2>
+            <div class="lab">NEW PRESENTER SKILLSET</div>
+          </div>
+          <div class="index-list">
+            <div class="index-row"><div class="num">A</div><div><h3 class="serif" data-editable>从排版到编排</h3><p data-editable>不只决定页面长什么样，还决定信息以什么顺序出现。</p></div></div>
+            <div class="index-row"><div class="num">B</div><div><h3 class="serif" data-editable>从播放到调度</h3><p data-editable>演讲者可以根据现场反馈切换路径、展开细节。</p></div></div>
+            <div class="index-row"><div class="num">C</div><div><h3 class="serif" data-editable>从素材到系统</h3><p data-editable>图、视频、数据和交互不是附件，而是同一个界面。</p></div></div>
+            <div class="index-row"><div class="num">D</div><div><h3 class="serif" data-editable>从结束到延续</h3><p data-editable>演讲不在散场时终止，链接可以继续承载后续沟通。</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-page="12" aria-label="结尾">
+        <div class="pixel-glitch left" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="qr-block" style="left: 330px; top: 176px;" aria-hidden="true">
+          <i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i>
+          <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i>
+          <i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+          <i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+          <i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i>
+          <i></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i>
+          <i class="on"></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i>
+          <i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        </div>
+        <div class="closing">
+          <div class="micro reveal">CLOSING NOTE</div>
+          <h2 class="serif reveal" data-editable>下一代 PPT，不是更炫，而是更像一个现场</h2>
+          <p class="body-copy reveal" data-editable>HTML 改变的不是幻灯片文件，而是演讲关系：内容可以运行，观众可以进入，传播可以继续，表达可以迭代。</p>
+        </div>
+        <div class="footer-grid reveal">
+          <div data-editable><span class="mono">01</span><br>从页面到场景</div>
+          <div data-editable><span class="mono">02</span><br>从播放到运行</div>
+          <div data-editable><span class="mono">03</span><br>从文件到链接</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="deck-controls" id="deckControls" aria-live="polite">01 / 12</div>
+  <div class="edit-hotzone" aria-hidden="true"></div>
+  <button class="edit-toggle" id="editToggle" title="Edit mode (E)" aria-label="Toggle edit mode">E</button>
+  <div class="editor-shell" id="editorShell" aria-label="演示编辑器">
+    <div class="editor-toolbar" role="toolbar" aria-label="编辑工具">
+      <button class="editor-button" id="undoBtn" type="button" disabled>撤回</button>
+      <button class="editor-button" id="addTextBtn" type="button">添加文字框</button>
+      <button class="editor-button" id="addImageBtn" type="button">添加图片</button>
+      <div class="shape-picker-wrap">
+        <button class="editor-button" id="addShapeBtn" type="button" aria-haspopup="menu" aria-expanded="false">添加形状</button>
+      </div>
+      <button class="editor-button primary" id="saveBtn" type="button">保存到本地</button>
+      <button class="editor-button danger" id="exitEditBtn" type="button">退出编辑</button>
+    </div>
+    <div class="shape-menu" id="shapeMenu" role="menu" hidden>
+      <button class="shape-choice" type="button" data-shape-choice="rect">矩形</button>
+      <button class="shape-choice" type="button" data-shape-choice="roundRect">圆角矩形</button>
+      <button class="shape-choice" type="button" data-shape-choice="circle">圆形</button>
+      <button class="shape-choice" type="button" data-shape-choice="triangle">三角形</button>
+      <button class="shape-choice" type="button" data-shape-choice="line">直线</button>
+      <button class="shape-choice" type="button" data-shape-choice="arrow">箭头</button>
+    </div>
+    <aside class="editor-slides" aria-label="幻灯片列表">
+      <p class="editor-title">Slides</p>
+      <div class="slide-rail-list" id="slideRail"></div>
+    </aside>
+    <aside class="editor-panel" aria-label="属性面板">
+      <section class="inspector-section">
+        <p class="editor-title">Selection</p>
+        <div class="selection-name" id="selectionName">未选中元素</div>
+        <div class="drop-zone" id="imageDropZone">拖图片到这里，或拖到画面里<br>可替换选中图片，也可新增图片</div>
+      </section>
+      <section class="inspector-section">
+        <p class="editor-title">Content</p>
+        <label class="field-label" for="textInput">文字</label>
+        <p class="field-help">点选或双击文字后，在这里改内容；画面中不直接输入。</p>
+        <textarea class="editor-textarea" id="textInput" disabled></textarea>
+        <label class="field-label" for="imageInput">图片文件</label>
+        <div class="file-picker-row">
+          <button class="editor-button" id="imagePickBtn" type="button" disabled>选择图片</button>
+          <span class="file-name" id="imageFileName">未选择图片</span>
+          <input class="file-input-hidden" id="imageInput" type="file" accept="image/*" disabled tabindex="-1">
+        </div>
+        <label class="field-label" for="shapeInput">形状类型</label>
+        <select class="editor-select" id="shapeInput" disabled>
+          <option value="rect">矩形</option>
+          <option value="roundRect">圆角矩形</option>
+          <option value="circle">圆形</option>
+          <option value="triangle">三角形</option>
+          <option value="line">直线</option>
+          <option value="arrow">箭头</option>
+        </select>
+      </section>
+      <section class="inspector-section">
+        <p class="editor-title">Style</p>
+        <label class="field-label" for="fontFamilyInput">字体</label>
+        <select class="editor-select" id="fontFamilyInput" disabled>
+          <option value="">跟随原样式</option>
+          <option value="var(--font-body)">正文无衬线</option>
+          <option value="var(--font-display-cjk)">中文标题衬线</option>
+          <option value="var(--font-display)">英文衬线</option>
+          <option value="var(--font-mono)">等宽代码</option>
+        </select>
+        <div class="field-grid">
+          <label><span class="field-label">字号</span><input class="editor-field" id="fontSizeInput" type="number" min="8" max="220" disabled></label>
+          <label><span class="field-label">颜色</span><input class="editor-field" id="colorInput" type="color" disabled></label>
+        </div>
+        <div class="field-grid">
+          <label><span class="field-label">背景</span><input class="editor-field" id="bgInput" type="color" disabled></label>
+          <label><span class="field-label">透明</span><input class="editor-field" id="opacityInput" type="number" min="0" max="100" step="5" disabled></label>
+        </div>
+      </section>
+      <section class="inspector-section">
+        <p class="editor-title">Layout</p>
+        <div class="field-grid">
+          <label><span class="field-label">X</span><input class="editor-field" id="xInput" type="number" disabled></label>
+          <label><span class="field-label">Y</span><input class="editor-field" id="yInput" type="number" disabled></label>
+        </div>
+        <div class="field-grid">
+          <label><span class="field-label">宽</span><input class="editor-field" id="widthInput" type="number" min="10" disabled></label>
+          <label><span class="field-label">高</span><input class="editor-field" id="heightInput" type="number" min="10" disabled></label>
+        </div>
+        <div class="inspector-actions">
+          <button class="editor-button" id="bringForwardBtn" type="button" disabled>上移层级</button>
+          <button class="editor-button" id="sendBackwardBtn" type="button" disabled>下移层级</button>
+        </div>
+      </section>
+      <section class="inspector-section">
+        <p class="editor-title">Motion</p>
+        <p class="motion-status" id="motionStatus">未选中元素</p>
+        <label class="field-label" for="animSelect">入场方式</label>
+        <select class="editor-select" id="animSelect" disabled>
+          <option value="">跟随原始</option>
+          <option value="none">无</option>
+          <option value="fade">淡入</option>
+          <option value="rise">上浮</option>
+          <option value="drop">下落</option>
+          <option value="left">左侧滑入</option>
+          <option value="right">右侧滑入</option>
+          <option value="scale">缩放入场</option>
+          <option value="zoom">缩小落定</option>
+          <option value="pop">弹出</option>
+          <option value="rotate">旋入</option>
+          <option value="blur">模糊显现</option>
+          <option value="flip">翻转入场</option>
+        </select>
+        <div class="field-grid">
+          <label><span class="field-label">顺序</span><input class="editor-field" id="motionOrderInput" type="number" min="1" step="1" disabled></label>
+          <label><span class="field-label">延迟 ms</span><input class="editor-field" id="delayInput" type="number" min="0" step="50" disabled></label>
+        </div>
+        <div class="field-grid">
+          <label><span class="field-label">时长 ms</span><input class="editor-field" id="durationInput" type="number" min="100" step="50" disabled></label>
+        </div>
+        <div class="inspector-actions">
+          <button class="editor-button" id="previewMotionBtn" type="button" disabled>预览当前</button>
+          <button class="editor-button" id="previewSlideMotionBtn" type="button">重播本页</button>
+        </div>
+        <div class="inspector-actions">
+          <button class="editor-button" id="restoreMotionBtn" type="button" disabled>恢复原始</button>
+        </div>
+      </section>
+      <section class="inspector-section">
+        <div class="inspector-actions">
+          <button class="editor-button danger" id="deleteBtn" type="button" disabled>删除</button>
+          <button class="editor-button" id="resetBtn" type="button">重置编辑</button>
+        </div>
+      </section>
+    </aside>
+    <div class="editor-guide vertical" id="editorGuideV" aria-hidden="true"></div>
+    <div class="editor-guide horizontal" id="editorGuideH" aria-hidden="true"></div>
+    <div class="editor-frame" id="editorFrame" aria-hidden="true">
+      <div class="frame-move" id="frameMove">拖动</div>
+      <div class="frame-resize" id="frameResize"></div>
+    </div>
+    <div class="editor-toast" id="editorToast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    /* ===========================================
+       SLIDE PRESENTATION CONTROLLER
+       Handles scaling, navigation, touch, and wheel gestures.
+       =========================================== */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll(".slide"));
+        this.stage = document.getElementById("deckStage");
+        this.controls = document.getElementById("deckControls");
+        this.currentSlide = 0;
+        this.wheelLocked = false;
+        this.injectChrome();
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.setupClickNav();
+        this.setupHashNav();
+        this.showSlide(0);
+      }
+
+      injectChrome() {
+        const total = String(this.slides.length).padStart(2, "0");
+        this.slides.forEach((slide, index) => {
+          slide.querySelectorAll("[data-generated-chrome]").forEach((node) => node.remove());
+          const page = String(index + 1).padStart(2, "0");
+          slide.insertAdjacentHTML("beforeend", `
+            <div class="chrome-line top" data-generated-chrome aria-hidden="true"></div>
+            <div class="chrome-line bottom" data-generated-chrome aria-hidden="true"></div>
+            <div class="nav-hint" data-generated-chrome aria-hidden="true">ARROWS / SPACE / SWIPE</div>
+            <div class="page-num" data-generated-chrome aria-hidden="true">${page} / ${total}</div>
+          `);
+        });
+      }
+
+      setupStageScale() {
+        const scale = () => {
+          const editing = document.body.classList.contains("editing");
+          const compactEditor = editing && window.innerWidth <= 960;
+          const editorInsets = editing
+            ? compactEditor
+              ? { left: 12, right: 12, top: 150, bottom: 260 }
+              : { left: 252, right: 354, top: 78, bottom: 20 }
+            : { left: 0, right: 0, top: 0, bottom: 0 };
+          const availableWidth = Math.max(320, window.innerWidth - editorInsets.left - editorInsets.right);
+          const availableHeight = Math.max(240, window.innerHeight - editorInsets.top - editorInsets.bottom);
+          const factor = Math.min(availableWidth / 1920, availableHeight / 1080);
+          const x = editorInsets.left + (availableWidth - 1920 * factor) / 2;
+          const y = editorInsets.top + (availableHeight - 1080 * factor) / 2;
+          this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        this.scaleStage = scale;
+        this.scaleStage();
+        window.addEventListener("resize", this.scaleStage);
+      }
+
+      setupKeyboardNav() {
+        document.addEventListener("keydown", (event) => {
+          if (document.body.classList.contains("editing")) return;
+          if (["ArrowRight", " ", "PageDown"].includes(event.key)) {
+            event.preventDefault();
+            this.next();
+          }
+          if (["ArrowLeft", "PageUp"].includes(event.key)) {
+            event.preventDefault();
+            this.prev();
+          }
+          if (event.key === "Home") this.showSlide(0);
+          if (event.key === "End") this.showSlide(this.slides.length - 1);
+        });
+      }
+
+      setupTouchNav() {
+        let startX = 0;
+        let startY = 0;
+        window.addEventListener("touchstart", (event) => {
+          const touch = event.changedTouches[0];
+          startX = touch.clientX;
+          startY = touch.clientY;
+        }, { passive: true });
+        window.addEventListener("touchend", (event) => {
+          const touch = event.changedTouches[0];
+          const dx = touch.clientX - startX;
+          const dy = touch.clientY - startY;
+          if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
+            dx < 0 ? this.next() : this.prev();
+          }
+        }, { passive: true });
+      }
+
+      setupWheelNav() {
+        window.addEventListener("wheel", (event) => {
+          if (document.body.classList.contains("editing")) return;
+          if (this.wheelLocked || Math.abs(event.deltaY) < 28) return;
+          this.wheelLocked = true;
+          event.deltaY > 0 ? this.next() : this.prev();
+          window.setTimeout(() => { this.wheelLocked = false; }, 520);
+        }, { passive: true });
+      }
+
+      setupClickNav() {
+        document.addEventListener("click", (event) => {
+          if (document.body.classList.contains("editing")) return;
+          if (event.target.closest("button")) return;
+          if (event.clientX > window.innerWidth * 0.82) this.next();
+          if (event.clientX < window.innerWidth * 0.18) this.prev();
+        });
+      }
+
+      setupHashNav() {
+        window.addEventListener("hashchange", () => {
+          const page = Number.parseInt(window.location.hash.replace("#", ""), 10);
+          if (Number.isFinite(page)) this.showSlide(page - 1);
+        });
+      }
+
+      showSlide(index) {
+        this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.slides.forEach((slide, i) => {
+          slide.classList.toggle("active", i === this.currentSlide);
+          slide.classList.toggle("visible", i === this.currentSlide);
+        });
+        this.controls.textContent = `${String(this.currentSlide + 1).padStart(2, "0")} / ${String(this.slides.length).padStart(2, "0")}`;
+        const hash = `#${this.currentSlide + 1}`;
+        if (window.location.hash !== hash) {
+          history.replaceState(null, "", hash);
+        }
+      }
+
+      next() {
+        this.showSlide(this.currentSlide + 1);
+      }
+
+      prev() {
+        this.showSlide(this.currentSlide - 1);
+      }
+    }
+
+    /* ===========================================
+       VISUAL DECK EDITOR
+       Supports inline text, drag/drop images, layout edits, and motion tuning.
+       =========================================== */
+    class DeckEditor {
+      constructor(presentation) {
+        this.presentation = presentation;
+        this.storageKey = this.makeStorageKey();
+        this.legacyStorageKeys = ["html-change-ppt-talk-visual-edits-v2"];
+        this.isActive = false;
+        this.selected = null;
+        this.hideTimeout = null;
+        this.dragState = null;
+        this.undoStack = [];
+        this.historyIndex = -1;
+        this.isRestoringHistory = false;
+        this.historyLimit = 40;
+        this.lastInsert = { x: 720, y: 300 };
+        this.snapThreshold = 12;
+        this.motionFrameRaf = null;
+        this.toggle = document.getElementById("editToggle");
+        this.hotzone = document.querySelector(".edit-hotzone");
+        this.stage = document.getElementById("deckStage");
+        this.frame = document.getElementById("editorFrame");
+        this.frameMove = document.getElementById("frameMove");
+        this.frameResize = document.getElementById("frameResize");
+        this.guideV = this.ensureOverlayElement("editorGuideV", "editor-guide vertical");
+        this.guideH = this.ensureOverlayElement("editorGuideH", "editor-guide horizontal");
+        this.toast = document.getElementById("editorToast");
+        this.attachFrame();
+        this.controls = {
+          slideRail: document.getElementById("slideRail"),
+          undo: document.getElementById("undoBtn"),
+          addText: document.getElementById("addTextBtn"),
+          addImage: document.getElementById("addImageBtn"),
+          addShape: document.getElementById("addShapeBtn"),
+          shapeMenu: document.getElementById("shapeMenu"),
+          save: document.getElementById("saveBtn"),
+          exit: document.getElementById("exitEditBtn"),
+          selectionName: document.getElementById("selectionName"),
+          dropZone: document.getElementById("imageDropZone"),
+          imagePick: document.getElementById("imagePickBtn"),
+          imageName: document.getElementById("imageFileName"),
+          text: document.getElementById("textInput"),
+          image: document.getElementById("imageInput"),
+          shape: document.getElementById("shapeInput"),
+          fontFamily: document.getElementById("fontFamilyInput"),
+          fontSize: document.getElementById("fontSizeInput"),
+          color: document.getElementById("colorInput"),
+          bg: document.getElementById("bgInput"),
+          opacity: document.getElementById("opacityInput"),
+          x: document.getElementById("xInput"),
+          y: document.getElementById("yInput"),
+          width: document.getElementById("widthInput"),
+          height: document.getElementById("heightInput"),
+          bringForward: document.getElementById("bringForwardBtn"),
+          sendBackward: document.getElementById("sendBackwardBtn"),
+          motionStatus: document.getElementById("motionStatus"),
+          anim: document.getElementById("animSelect"),
+          order: document.getElementById("motionOrderInput"),
+          delay: document.getElementById("delayInput"),
+          duration: document.getElementById("durationInput"),
+          previewMotion: document.getElementById("previewMotionBtn"),
+          previewSlideMotion: document.getElementById("previewSlideMotionBtn"),
+          restoreMotion: document.getElementById("restoreMotionBtn"),
+          delete: document.getElementById("deleteBtn"),
+          reset: document.getElementById("resetBtn")
+        };
+        this.prepareEditableElements();
+        this.prepareEditableIds();
+        this.restore();
+        this.pushHistory();
+        this.renderSlideRail();
+        this.bindControls();
+        this.bindEditableEvents();
+        this.updateInspector();
+      }
+
+      attachFrame() {
+        this.stage.querySelectorAll("#editorFrame, .editor-frame, #editorGuideV, #editorGuideH, .editor-guide").forEach((node) => {
+          if (node !== this.frame && node !== this.guideV && node !== this.guideH) node.remove();
+        });
+        this.frame.classList.remove("active");
+        this.frame.removeAttribute("style");
+        this.hideGuides();
+        this.stage.appendChild(this.guideV);
+        this.stage.appendChild(this.guideH);
+        this.stage.appendChild(this.frame);
+      }
+
+      ensureOverlayElement(id, className) {
+        let element = document.getElementById(id);
+        if (!element) {
+          element = document.createElement("div");
+          element.id = id;
+          element.setAttribute("aria-hidden", "true");
+        }
+        element.className = className;
+        return element;
+      }
+
+      makeStorageKey() {
+        return `frontend-slides:${location.pathname}:${document.title}:visual-edits:v1`;
+      }
+
+      getEditableElements() {
+        return Array.from(new Set(this.stage.querySelectorAll("[data-editable], [data-editable-media], [data-editable-box], [data-editor-kind], .editor-layer")));
+      }
+
+      prepareEditableElements() {
+        this.stage.querySelectorAll("[data-editor-auto], [data-editor-kind]").forEach((element) => {
+          delete element.dataset.editorAuto;
+          delete element.dataset.editorKind;
+        });
+        this.stage.querySelectorAll(".slide *").forEach((element) => {
+          if (this.shouldIgnoreEditorCandidate(element)) return;
+          const explicitKind = this.explicitEditorKind(element);
+          const kind = explicitKind || this.inferEditorKind(element);
+          if (!kind) return;
+          element.dataset.editorKind = kind;
+          if (!explicitKind) element.dataset.editorAuto = "true";
+        });
+      }
+
+      shouldIgnoreEditorCandidate(element) {
+        if (element.closest(".editor-shell, .editor-frame, .editor-guide")) return true;
+        if (element.closest("[data-generated-chrome]")) return true;
+        if (element.matches("script, style, template, meta, link, br, defs, clipPath, mask, pattern, linearGradient, radialGradient, stop")) return true;
+        if (element.matches(".deck-progress, .deck-count, .deck-controls, .edit-hotzone, .edit-toggle")) return true;
+        return false;
+      }
+
+      explicitEditorKind(element) {
+        if (element.classList.contains("text-layer")) return "text";
+        if (element.classList.contains("image-layer")) return "media";
+        if (element.classList.contains("shape-layer")) return "box";
+        if (element.classList.contains("editor-layer")) return "";
+        if (element.matches("[data-editable-media]")) return "media";
+        if (element.matches("[data-editable-box]")) return "box";
+        if (element.matches("[data-editable]")) return "text";
+        return "";
+      }
+
+      inferEditorKind(element) {
+        if (element.matches("img, picture, video, canvas, svg") || this.isBackgroundMediaCandidate(element)) return "media";
+        if (this.isTextCandidate(element)) return "text";
+        if (this.isVisualBoxCandidate(element)) return "box";
+        return "";
+      }
+
+      isTextCandidate(element) {
+        if (!this.hasVisibleText(element)) return false;
+        if (element.querySelector("img, picture, video, canvas, svg")) return false;
+        const textTags = "h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,caption,td,th,button,a,label,span,small,strong,em,b,i,code,pre";
+        if (element.matches(textTags)) return !this.hasTextBlockChild(element);
+        return this.hasDirectText(element) && !this.hasTextBlockChild(element);
+      }
+
+      hasVisibleText(element) {
+        return Boolean(element.textContent && element.textContent.replace(/\s+/g, "").length);
+      }
+
+      hasDirectText(element) {
+        return Array.from(element.childNodes).some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+      }
+
+      hasTextBlockChild(element) {
+        return Array.from(element.children).some((child) => {
+          if (child.matches("span,small,strong,em,b,i,code")) return false;
+          return this.hasVisibleText(child);
+        });
+      }
+
+      isVisualBoxCandidate(element) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 24 || rect.height < 18) return false;
+        if (rect.width > 1700 && rect.height > 850) return false;
+        if (element.matches("main, article, nav, ul, ol, table, tbody, thead, tr, section.slide")) return false;
+        if (this.isBroadLayoutContainer(element)) return false;
+        const style = getComputedStyle(element);
+        const borderWidth = ["Top", "Right", "Bottom", "Left"].some((side) => Number.parseFloat(style[`border${side}Width`]) > 0);
+        const hasBackground = style.backgroundImage !== "none" || !["rgba(0, 0, 0, 0)", "transparent"].includes(style.backgroundColor);
+        const hasShape = style.clipPath !== "none" || style.boxShadow !== "none";
+        return borderWidth || hasBackground || hasShape;
+      }
+
+      hasCssBackgroundImage(element) {
+        const style = getComputedStyle(element);
+        return style.backgroundImage && style.backgroundImage !== "none";
+      }
+
+      isBackgroundMediaCandidate(element) {
+        if (!this.hasCssBackgroundImage(element)) return false;
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 96 || rect.height < 72) return false;
+        if (element.matches("main, article, nav, section.slide")) return false;
+        return !this.isBroadLayoutContainer(element);
+      }
+
+      isBroadLayoutContainer(element) {
+        const style = getComputedStyle(element);
+        if (!["grid", "flex"].includes(style.display)) return false;
+        const substantialChildren = Array.from(element.children).filter((child) => {
+          const rect = child.getBoundingClientRect();
+          return rect.width >= 36 && rect.height >= 24 && this.hasVisibleText(child);
+        });
+        return substantialChildren.length > 2;
+      }
+
+      prepareEditableIds() {
+        this.getEditableElements().forEach((element, index) => {
+          if (!element.dataset.editId) element.dataset.editId = `edit-${index}`;
+        });
+      }
+
+      bindControls() {
+        this.toggle.addEventListener("click", () => this.toggleEditMode());
+        this.hotzone.addEventListener("mouseenter", () => this.showButtons());
+        this.hotzone.addEventListener("mouseleave", () => this.scheduleHide());
+        this.hotzone.addEventListener("click", () => this.toggleEditMode());
+        this.toggle.addEventListener("mouseenter", () => this.showButtons());
+        this.toggle.addEventListener("mouseleave", () => this.scheduleHide());
+
+        this.controls.undo.addEventListener("click", () => this.undo());
+        this.controls.addText.addEventListener("click", () => this.addText());
+        this.controls.addImage.addEventListener("click", () => {
+          this.openImagePicker();
+        });
+        this.controls.imagePick.addEventListener("click", () => this.openImagePicker());
+        this.controls.addShape.addEventListener("click", () => this.toggleShapeMenu());
+        this.controls.shapeMenu.querySelectorAll("[data-shape-choice]").forEach((button) => {
+          button.addEventListener("click", () => {
+            this.addShape(button.dataset.shapeChoice || "rect");
+            this.closeShapeMenu();
+          });
+        });
+        this.controls.save.addEventListener("click", () => this.exportHtml());
+        this.controls.exit.addEventListener("click", () => this.toggleEditMode(false));
+        this.controls.reset.addEventListener("click", () => this.resetDraft());
+        this.controls.image.addEventListener("change", (event) => this.handleFileInput(event));
+        this.controls.delete.addEventListener("click", () => this.deleteSelected());
+        this.controls.bringForward.addEventListener("click", () => this.bumpZIndex(1));
+        this.controls.sendBackward.addEventListener("click", () => this.bumpZIndex(-1));
+        this.controls.previewMotion.addEventListener("click", () => this.previewMotion());
+        this.controls.previewSlideMotion.addEventListener("click", () => this.replayActiveSlideMotion());
+        this.controls.restoreMotion.addEventListener("click", () => this.restoreOriginalMotion(this.selected, true));
+
+        ["text", "shape", "fontFamily", "fontSize", "color", "bg", "opacity", "x", "y", "width", "height", "anim", "order", "delay", "duration"].forEach((name) => {
+          const control = this.controls[name];
+          control.addEventListener("input", () => this.applyInspectorValue(name));
+          control.addEventListener("change", () => this.applyInspectorValue(name));
+        });
+
+        document.addEventListener("keydown", (event) => this.handleKeydown(event));
+        document.addEventListener("click", (event) => {
+          if (!event.target.closest(".shape-picker-wrap") && !event.target.closest("#shapeMenu")) this.closeShapeMenu();
+        });
+        document.addEventListener("pointerdown", (event) => this.handleDocumentPointerDown(event), true);
+        document.addEventListener("pointermove", (event) => this.handlePointerMove(event));
+        document.addEventListener("pointerup", () => this.finishPointerAction());
+        document.addEventListener("pointercancel", () => this.finishPointerAction());
+        window.addEventListener("blur", () => this.finishPointerAction());
+
+        this.frameMove.addEventListener("pointerdown", (event) => this.startPointerAction(event, "move"));
+        this.frameResize.addEventListener("pointerdown", (event) => this.startPointerAction(event, "resize"));
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+          window.addEventListener(eventName, (event) => this.handleDrag(event));
+          this.controls.dropZone.addEventListener(eventName, (event) => this.handleDrag(event));
+        });
+        ["dragleave", "drop"].forEach((eventName) => {
+          window.addEventListener(eventName, (event) => this.clearDrag(event));
+          this.controls.dropZone.addEventListener(eventName, (event) => this.clearDrag(event));
+        });
+        window.addEventListener("drop", (event) => this.handleDrop(event));
+        window.addEventListener("resize", () => this.updateFrame());
+      }
+
+      bindEditableEvents() {
+        this.getEditableElements().forEach((element) => this.bindElement(element));
+      }
+
+      bindElement(element) {
+        if (element.dataset.editorBound) return;
+        element.dataset.editorBound = "true";
+        element.addEventListener("pointerdown", (event) => {
+          if (!this.isActive) return;
+          const target = this.getEditableTarget(event.target);
+          const canDragBody = target && (target.classList.contains("editor-layer") || target.matches("[data-editable-media], [data-editable-box], [data-editor-kind='media'], [data-editor-kind='box']"));
+          if (!canDragBody) return;
+          event.preventDefault();
+          event.stopPropagation();
+          this.select(target);
+          this.startPointerAction(event, "move");
+        });
+        element.addEventListener("click", (event) => {
+          if (!this.isActive) return;
+          event.preventDefault();
+          event.stopPropagation();
+          this.select(this.getEditableTarget(event.target) || element);
+        });
+        element.addEventListener("dblclick", (event) => {
+          if (!this.isActive) return;
+          const target = this.getEditableTarget(event.target) || element;
+          event.preventDefault();
+          event.stopPropagation();
+          this.select(target);
+          if (this.isTextElement(target)) {
+            this.focusTextEditor();
+          }
+        });
+        element.addEventListener("input", () => {
+          if (!this.isActive) return;
+          this.save(false);
+          this.updateInspector();
+          this.updateFrame();
+        });
+      }
+
+      renderSlideRail() {
+        this.controls.slideRail.innerHTML = "";
+        this.presentation.slides.forEach((slide, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `slide-chip${index === this.presentation.currentSlide ? " active" : ""}`;
+          button.innerHTML = `<span class="slide-chip-num">${String(index + 1).padStart(2, "0")}</span><span class="slide-chip-title">${slide.getAttribute("aria-label") || `Slide ${index + 1}`}</span>`;
+          button.addEventListener("click", () => {
+            this.presentation.showSlide(index);
+            this.renderSlideRail();
+            this.clearSelection();
+          });
+          this.controls.slideRail.appendChild(button);
+        });
+      }
+
+      handleKeydown(event) {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && this.isActive && !event.shiftKey) {
+          event.preventDefault();
+          this.undo();
+          return;
+        }
+        if ((event.key === "e" || event.key === "E") && !this.isFormTarget(event.target)) {
+          event.preventDefault();
+          this.toggleEditMode();
+        }
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+          event.preventDefault();
+          this.exportHtml();
+        }
+        if (!this.isActive || this.isFormTarget(event.target)) return;
+        if (event.key === "Delete" || event.key === "Backspace") {
+          event.preventDefault();
+          this.deleteSelected();
+        }
+        if (this.selected && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+          event.preventDefault();
+          const step = event.shiftKey ? 10 : 1;
+          const box = this.getStageBox(this.selected);
+          const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
+          const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
+          this.setStagePosition(this.selected, box.x + dx, box.y + dy, box.width, box.height);
+          this.updateInspector();
+          this.save(false, true);
+        }
+      }
+
+      isFormTarget(target) {
+        return target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+      }
+
+      showButtons() {
+        window.clearTimeout(this.hideTimeout);
+        this.toggle.classList.add("show");
+      }
+
+      scheduleHide() {
+        this.hideTimeout = window.setTimeout(() => {
+          if (!this.isActive) {
+            this.toggle.classList.remove("show");
+          }
+        }, 400);
+      }
+
+      toggleEditMode(force) {
+        this.isActive = typeof force === "boolean" ? force : !this.isActive;
+        document.body.classList.toggle("editing", this.isActive);
+        this.toggle.classList.toggle("active", this.isActive);
+        this.showButtons();
+        this.getEditableElements().forEach((element) => {
+          element.removeAttribute("contenteditable");
+        });
+        this.presentation.scaleStage();
+        this.updateFrame();
+        if (!this.isActive) {
+          this.hideGuides();
+          this.save(false);
+          this.clearSelection();
+        }
+        this.renderSlideRail();
+      }
+
+      handleDocumentPointerDown(event) {
+        if (!this.isActive) return;
+        if (event.target.closest(".editor-shell") || event.target.closest(".editor-frame") || event.target.closest(".edit-toggle")) return;
+        const target = this.getEditableTarget(event.target);
+        if (target) return;
+        this.clearSelection();
+      }
+
+      getEditableTarget(target) {
+        let element = target && target.closest("[data-editable], [data-editable-media], [data-editable-box], [data-editor-kind], .editor-layer");
+        if (!element || !this.stage.contains(element)) return null;
+        if (element.closest(".editor-shell") || element.closest(".editor-frame")) return null;
+        element = this.preferExplicitEditableAncestor(element);
+        return element.closest(".slide") ? element : null;
+      }
+
+      preferExplicitEditableAncestor(element) {
+        if (!element || element.classList.contains("editor-layer")) return element;
+        if (element.dataset.editorAuto !== "true") return element;
+        const explicitParent = element.parentElement?.closest("[data-editable], [data-editable-media], [data-editable-box], .editor-layer");
+        if (!explicitParent || !this.stage.contains(explicitParent)) return element;
+        return explicitParent.closest(".slide") === element.closest(".slide") ? explicitParent : element;
+      }
+
+      select(element) {
+        if (this.selected === element) {
+          this.updateFrame();
+          return;
+        }
+        this.clearSelection(false);
+        this.selected = element;
+        element.classList.add("editor-selected");
+        this.updateFrame();
+        this.updateInspector();
+      }
+
+      clearSelection(update = true) {
+        this.stopMotionFrameTracking();
+        if (this.selected) this.selected.classList.remove("editor-selected");
+        this.selected = null;
+        this.frame.classList.remove("active");
+        if (update) this.updateInspector();
+      }
+
+      updateInspector() {
+        const element = this.selected;
+        const hasSelection = Boolean(element);
+        const canUseImage = hasSelection && this.isImageElement(element);
+        const canDelete = hasSelection && element.classList.contains("editor-layer");
+        const textCapable = hasSelection && this.isTextElement(element);
+        const shapeCapable = hasSelection && element.classList.contains("shape-layer");
+
+        this.controls.selectionName.textContent = hasSelection ? this.getSelectionLabel(element) : "未选中元素";
+        this.controls.text.disabled = !textCapable;
+        this.controls.image.disabled = false;
+        this.controls.shape.disabled = !shapeCapable;
+        this.controls.fontFamily.disabled = !textCapable;
+        this.controls.fontSize.disabled = !textCapable;
+        this.controls.color.disabled = !hasSelection;
+        this.controls.bg.disabled = !hasSelection;
+        this.controls.opacity.disabled = !hasSelection;
+        this.controls.x.disabled = !hasSelection;
+        this.controls.y.disabled = !hasSelection;
+        this.controls.width.disabled = !hasSelection;
+        this.controls.height.disabled = !hasSelection;
+        this.controls.bringForward.disabled = !hasSelection;
+        this.controls.sendBackward.disabled = !hasSelection;
+        this.controls.anim.disabled = !hasSelection;
+        this.controls.order.disabled = !hasSelection || !this.usesCustomMotion(element);
+        this.controls.delay.disabled = !hasSelection || !this.usesCustomMotion(element);
+        this.controls.duration.disabled = !hasSelection || !this.usesCustomMotion(element);
+        this.controls.previewMotion.disabled = !hasSelection;
+        this.controls.restoreMotion.disabled = !hasSelection || !this.hasStoredOriginalMotion(element);
+        this.controls.delete.disabled = !canDelete;
+        this.controls.image.disabled = false;
+        this.controls.imagePick.disabled = false;
+        this.controls.imagePick.textContent = canUseImage ? "替换图片" : "选择图片";
+        this.controls.imageName.textContent = canUseImage ? "将替换选中图片" : "未选择图片";
+
+        if (!hasSelection) {
+          this.controls.text.value = "";
+          this.controls.image.value = "";
+          this.controls.shape.value = "rect";
+          ["fontFamily", "fontSize", "color", "bg", "opacity", "x", "y", "width", "height", "anim", "order", "delay", "duration"].forEach((name) => {
+            this.controls[name].value = "";
+          });
+          this.controls.motionStatus.textContent = "未选中元素";
+          return;
+        }
+
+        const computed = window.getComputedStyle(element);
+        const box = this.getStageBox(element);
+        this.controls.text.value = textCapable ? element.innerText : "";
+        this.controls.shape.value = shapeCapable ? (element.dataset.shape || "rect") : "rect";
+        this.controls.fontFamily.value = textCapable ? this.matchFontFamilyValue(computed.fontFamily) : "";
+        this.controls.fontSize.value = Math.round(Number.parseFloat(computed.fontSize)) || "";
+        this.controls.color.value = this.toHex(computed.color);
+        this.controls.bg.value = this.toHex(computed.backgroundColor);
+        this.controls.opacity.value = Math.round((Number.parseFloat(computed.opacity) || 1) * 100);
+        this.controls.x.value = Math.round(box.x);
+        this.controls.y.value = Math.round(box.y);
+        this.controls.width.value = Math.round(box.width);
+        this.controls.height.value = Math.round(box.height);
+        this.controls.anim.value = this.getMotionSelectValue(element);
+        this.controls.order.value = element.dataset.editOrder || "";
+        this.controls.delay.value = Number.parseInt(element.dataset.editDelay || "0", 10);
+        this.controls.duration.value = Number.parseInt(element.dataset.editDuration || "640", 10);
+        this.controls.order.disabled = !this.usesCustomMotion(element);
+        this.controls.delay.disabled = !this.usesCustomMotion(element);
+        this.controls.duration.disabled = !this.usesCustomMotion(element);
+        this.controls.restoreMotion.disabled = !this.hasStoredOriginalMotion(element);
+        this.controls.motionStatus.textContent = this.getMotionStatus(element);
+        this.controls.image.value = "";
+      }
+
+      focusTextEditor() {
+        const section = this.controls.text.closest(".inspector-section");
+        if (section) {
+          section.scrollIntoView({ block: "nearest" });
+          section.classList.add("edit-attention");
+          window.clearTimeout(this.textFocusTimer);
+          this.textFocusTimer = window.setTimeout(() => section.classList.remove("edit-attention"), 900);
+        }
+        this.controls.text.focus({ preventScroll: true });
+        this.controls.text.select();
+      }
+
+      applyInspectorValue(name) {
+        const element = this.selected;
+        if (!element) return;
+        if (name === "text") {
+          element.innerText = this.controls.text.value;
+        }
+        if (name === "shape" && element.classList.contains("shape-layer")) {
+          this.applyShape(element, this.controls.shape.value);
+        }
+        if (name === "fontFamily" && this.isTextElement(element)) {
+          const value = this.controls.fontFamily.value;
+          if (value) {
+            element.style.fontFamily = value;
+          } else {
+            element.style.removeProperty("font-family");
+          }
+        }
+        if (name === "fontSize") element.style.fontSize = `${this.controls.fontSize.value}px`;
+        if (name === "color") element.style.color = this.controls.color.value;
+        if (name === "bg") element.style.backgroundColor = this.controls.bg.value;
+        if (name === "opacity") element.style.opacity = String((Number(this.controls.opacity.value) || 0) / 100);
+        if (["x", "y", "width", "height"].includes(name)) {
+          const box = this.getStageBox(element);
+          const numberOrFallback = (value, fallback) => {
+            if (value === "") return fallback;
+            const number = Number(value);
+            return Number.isFinite(number) ? number : fallback;
+          };
+          const x = numberOrFallback(this.controls.x.value, box.x);
+          const y = numberOrFallback(this.controls.y.value, box.y);
+          const width = Math.max(10, numberOrFallback(this.controls.width.value, box.width));
+          const height = Math.max(10, numberOrFallback(this.controls.height.value, box.height));
+          this.setStagePosition(element, x, y, width, height);
+        }
+        if (name === "anim") this.applyAnimation(element, this.controls.anim.value, true);
+        if (name === "order") {
+          if (!this.usesCustomMotion(element)) return;
+          const order = this.setMotionOrder(element, this.controls.order.value, true);
+          this.controls.order.value = order;
+          this.scheduleMotionPreview();
+        }
+        if (name === "delay") {
+          if (!this.usesCustomMotion(element)) return;
+          element.dataset.editDelay = String(Math.max(0, Number(this.controls.delay.value) || 0));
+          element.style.setProperty("--edit-delay", `${element.dataset.editDelay}ms`);
+          this.scheduleMotionPreview();
+        }
+        if (name === "duration") {
+          if (!this.usesCustomMotion(element)) return;
+          element.dataset.editDuration = String(Math.max(100, Number(this.controls.duration.value) || 640));
+          element.style.setProperty("--edit-duration", `${element.dataset.editDuration}ms`);
+          this.scheduleMotionPreview();
+        }
+        this.updateFrame();
+        this.updateInspector();
+        this.save(false);
+      }
+
+      getSelectionLabel(element) {
+        if (this.isImageElement(element)) return "图片";
+        if (element.classList.contains("shape-layer")) return `形状：${this.shapeLabel(element.dataset.shape || "rect")}`;
+        if (element.classList.contains("text-layer")) return "文字层";
+        if (this.isTextElement(element)) return `文字：${element.tagName.toLowerCase()}`;
+        if (element.matches("[data-editable-box], [data-editor-kind='box']")) return `视觉块：${element.tagName.toLowerCase()}`;
+        return element.tagName.toLowerCase();
+      }
+
+      isImageElement(element) {
+        return Boolean(element && (element.tagName === "IMG" || element.classList.contains("image-layer") || element.matches("[data-editable-media], [data-editor-kind='media']") || element.querySelector?.("img")));
+      }
+
+      isTextElement(element) {
+        return element && element.matches("[data-editable], [data-editor-kind='text'], .text-layer");
+      }
+
+      matchFontFamilyValue(value) {
+        const normalized = (value || "").toLowerCase();
+        const presets = [
+          { value: "var(--font-body)", tokens: ["hanken grotesk"] },
+          { value: "var(--font-display-cjk)", tokens: ["noto serif sc"] },
+          { value: "var(--font-display)", tokens: ["newsreader"] },
+          { value: "var(--font-mono)", tokens: ["dm mono", "ui-monospace"] }
+        ];
+        const match = presets.find((preset) => preset.tokens.some((token) => normalized.includes(token)));
+        return match ? match.value : "";
+      }
+
+      openImagePicker() {
+        this.controls.image.disabled = false;
+        this.controls.image.click();
+      }
+
+      toggleShapeMenu() {
+        const willOpen = this.controls.shapeMenu.hidden;
+        this.controls.shapeMenu.hidden = !willOpen;
+        this.controls.addShape.setAttribute("aria-expanded", String(willOpen));
+      }
+
+      closeShapeMenu() {
+        this.controls.shapeMenu.hidden = true;
+        this.controls.addShape.setAttribute("aria-expanded", "false");
+      }
+
+      activeSlide() {
+        return this.presentation.slides[this.presentation.currentSlide];
+      }
+
+      nextInsertPoint(width = 320, height = 180) {
+        const slide = this.activeSlide().getBoundingClientRect();
+        const panel = document.querySelector(".editor-panel").getBoundingClientRect();
+        const rail = document.querySelector(".editor-slides").getBoundingClientRect();
+        const compactEditor = window.innerWidth <= 960;
+        const visibleLeft = compactEditor ? slide.left : Math.max(slide.left, rail.right + 18);
+        const visibleRight = compactEditor ? slide.right : Math.min(slide.right, panel.left - 18);
+        const visibleTop = compactEditor ? Math.max(slide.top, rail.bottom + 16) : Math.max(slide.top, 92);
+        const visibleBottom = compactEditor ? Math.min(slide.bottom, panel.top - 16) : Math.min(slide.bottom, window.innerHeight - 22);
+        const scale = slide.width / 1920;
+        if (visibleRight > visibleLeft + 40 && visibleBottom > visibleTop + 40) {
+          return {
+            x: Math.max(0, Math.min(1920 - width, ((visibleLeft + visibleRight) / 2 - slide.left) / scale - width / 2)),
+            y: Math.max(0, Math.min(1080 - height, ((visibleTop + visibleBottom) / 2 - slide.top) / scale - height / 2))
+          };
+        }
+        return {
+          x: Math.max(0, Math.min(1920 - width, this.lastInsert.x)),
+          y: Math.max(0, Math.min(1080 - height, this.lastInsert.y))
+        };
+      }
+
+      stagePointFromClient(clientX, clientY) {
+        const rect = this.stage.getBoundingClientRect();
+        const scale = rect.width / 1920;
+        return {
+          x: (clientX - rect.left) / scale,
+          y: (clientY - rect.top) / scale,
+          scale
+        };
+      }
+
+      getStageBox(element) {
+        const stageRect = this.stage.getBoundingClientRect();
+        const rect = element.getBoundingClientRect();
+        const scale = stageRect.width / 1920;
+        return {
+          x: (rect.left - stageRect.left) / scale,
+          y: (rect.top - stageRect.top) / scale,
+          width: rect.width / scale,
+          height: rect.height / scale
+        };
+      }
+
+      clampStageBox(box, keepVisible = 24) {
+        const width = Math.max(10, Math.min(1920, box.width || 10));
+        const height = Math.max(10, Math.min(1080, box.height || 10));
+        const visibleX = Math.min(keepVisible, width);
+        const visibleY = Math.min(keepVisible, height);
+        return {
+          x: Math.max(-width + visibleX, Math.min(1920 - visibleX, box.x)),
+          y: Math.max(-height + visibleY, Math.min(1080 - visibleY, box.y)),
+          width,
+          height
+        };
+      }
+
+      clampInsertPoint(x, y, width, height) {
+        const box = this.clampStageBox({ x, y, width, height }, Math.min(24, width, height));
+        return { x: box.x, y: box.y };
+      }
+
+      rememberBaseTransform(element) {
+        if (element.classList.contains("edit-moved")) return;
+        const computed = getComputedStyle(element);
+        const inlineTransform = element.style.transform && element.style.transform.trim();
+        const motionTransform = element.matches(`.reveal, .reveal-left, .reveal-scale, ${this.editorMotionClasses().map((className) => `.${className}`).join(", ")}`) || computed.animationName !== "none";
+        const computedTransform = motionTransform ? "" : computed.transform;
+        const baseTransform = inlineTransform && inlineTransform !== "none"
+          ? inlineTransform
+          : computedTransform && computedTransform !== "none"
+            ? computedTransform
+            : "";
+        if (baseTransform) {
+          element.style.setProperty("--edit-base-transform", baseTransform);
+        } else {
+          element.style.removeProperty("--edit-base-transform");
+        }
+      }
+
+      setStagePosition(element, x, y, width, height) {
+        if (!element.classList.contains("editor-layer")) {
+          this.rememberBaseTransform(element);
+          const safe = this.clampStageBox({ x, y, width, height });
+          const box = this.getStageBox(element);
+          const dx = Math.round(safe.x - box.x);
+          const dy = Math.round(safe.y - box.y);
+          const scaleX = safe.width > 0 && box.width > 0 ? safe.width / box.width : 1;
+          const scaleY = safe.height > 0 && box.height > 0 ? safe.height / box.height : 1;
+          if (dx || dy) {
+            const currentX = Number.parseFloat(element.style.getPropertyValue("--edit-x")) || 0;
+            const currentY = Number.parseFloat(element.style.getPropertyValue("--edit-y")) || 0;
+            element.classList.add("edit-moved");
+            element.style.setProperty("--edit-x", `${Math.round(currentX + dx)}px`);
+            element.style.setProperty("--edit-y", `${Math.round(currentY + dy)}px`);
+          }
+          if (Math.abs(scaleX - 1) > 0.01 || Math.abs(scaleY - 1) > 0.01) {
+            const currentScaleX = Number.parseFloat(element.style.getPropertyValue("--edit-scale-x")) || 1;
+            const currentScaleY = Number.parseFloat(element.style.getPropertyValue("--edit-scale-y")) || 1;
+            element.classList.add("edit-moved");
+            element.style.setProperty("--edit-scale-x", `${Math.max(0.05, currentScaleX * scaleX).toFixed(3)}`);
+            element.style.setProperty("--edit-scale-y", `${Math.max(0.05, currentScaleY * scaleY).toFixed(3)}`);
+          }
+          return;
+        }
+        const slide = element.closest(".slide");
+        if (!slide) return;
+        const slideBox = slide.getBoundingClientRect();
+        const parent = element.offsetParent || slide;
+        const parentBox = parent.getBoundingClientRect();
+        const scale = slideBox.width / 1920;
+        const left = (parentBox.left - slideBox.left) / scale;
+        const top = (parentBox.top - slideBox.top) / scale;
+        const safeWidth = Math.min(1920, Math.max(10, width));
+        const safeHeight = Math.min(1080, Math.max(10, height));
+        const safeX = Math.max(0, Math.min(1920 - safeWidth, x));
+        const safeY = Math.max(0, Math.min(1080 - safeHeight, y));
+        element.style.position = "absolute";
+        element.style.left = `${Math.round(safeX - left)}px`;
+        element.style.top = `${Math.round(safeY - top)}px`;
+        element.style.width = `${Math.round(safeWidth)}px`;
+        element.style.height = `${Math.round(safeHeight)}px`;
+        element.style.margin = "0";
+        element.classList.remove("edit-moved");
+        element.style.removeProperty("--edit-x");
+        element.style.removeProperty("--edit-y");
+        element.style.removeProperty("--edit-scale");
+        element.style.removeProperty("--edit-scale-x");
+        element.style.removeProperty("--edit-scale-y");
+        element.style.removeProperty("--edit-base-transform");
+      }
+
+      updateFrame() {
+        if (!this.selected || !this.isActive || !this.selected.closest(".slide")) {
+          this.frame.classList.remove("active");
+          return;
+        }
+        const box = this.getStageBox(this.selected);
+        this.frame.style.left = `${box.x}px`;
+        this.frame.style.top = `${box.y}px`;
+        this.frame.style.width = `${box.width}px`;
+        this.frame.style.height = `${box.height}px`;
+        this.frame.classList.add("active");
+      }
+
+      stopMotionFrameTracking() {
+        if (!this.motionFrameRaf) return;
+        window.cancelAnimationFrame(this.motionFrameRaf);
+        this.motionFrameRaf = null;
+      }
+
+      trackFrameDuringMotion(element, totalMs) {
+        this.stopMotionFrameTracking();
+        if (!element || !this.isActive || this.selected !== element) return;
+        const endAt = performance.now() + Math.max(160, totalMs);
+        const tick = () => {
+          if (!this.isActive || this.selected !== element || !element.isConnected) {
+            this.motionFrameRaf = null;
+            this.updateFrame();
+            return;
+          }
+          this.updateFrame();
+          if (performance.now() < endAt) {
+            this.motionFrameRaf = window.requestAnimationFrame(tick);
+          } else {
+            this.motionFrameRaf = null;
+            this.updateFrame();
+          }
+        };
+        this.motionFrameRaf = window.requestAnimationFrame(tick);
+      }
+
+      cssTimeListToMs(value) {
+        return String(value || "0s").split(",").map((item) => {
+          const time = item.trim();
+          const number = Number.parseFloat(time);
+          if (!Number.isFinite(number)) return 0;
+          return time.endsWith("ms") ? number : number * 1000;
+        });
+      }
+
+      motionFrameTrackDuration(element, fallback = 900) {
+        const computed = window.getComputedStyle(element);
+        const durations = [
+          ...this.cssTimeListToMs(computed.transitionDuration),
+          ...this.cssTimeListToMs(computed.animationDuration)
+        ];
+        const delays = [
+          ...this.cssTimeListToMs(computed.transitionDelay),
+          ...this.cssTimeListToMs(computed.animationDelay)
+        ];
+        const max = durations.reduce((total, duration, index) => {
+          const delay = delays[index % Math.max(1, delays.length)] || 0;
+          return Math.max(total, duration + delay);
+        }, 0);
+        return Math.max(fallback, max + 160);
+      }
+
+      getSnapTargets(element) {
+        const active = this.activeSlide();
+        const targets = {
+          x: [
+            { value: 0, bias: -6 },
+            { value: 960, bias: -8 },
+            { value: 1920, bias: -6 }
+          ],
+          y: [
+            { value: 0, bias: -6 },
+            { value: 540, bias: -8 },
+            { value: 1080, bias: -6 }
+          ]
+        };
+        this.getEditableElements().forEach((candidate) => {
+          if (candidate === element || candidate.closest(".slide") !== active) return;
+          if (element.contains(candidate) || candidate.contains(element)) return;
+          if (candidate.closest(".editor-frame") || candidate.closest(".editor-guide")) return;
+          const box = this.getStageBox(candidate);
+          if (box.width <= 0 || box.height <= 0) return;
+          const bias = this.getSnapTargetBias(candidate);
+          targets.x.push(
+            { value: box.x, bias },
+            { value: box.x + box.width / 2, bias },
+            { value: box.x + box.width, bias }
+          );
+          targets.y.push(
+            { value: box.y, bias },
+            { value: box.y + box.height / 2, bias },
+            { value: box.y + box.height, bias }
+          );
+        });
+        return targets;
+      }
+
+      getSnapTargetBias(element) {
+        if (this.isNestedSnapTarget(element)) return 4;
+        if (element.matches("[data-editable-media], [data-editable-box], [data-editor-kind='media'], [data-editor-kind='box'], .editor-layer")) return 0;
+        return 1;
+      }
+
+      isNestedSnapTarget(element) {
+        const parentEditable = element.parentElement?.closest("[data-editable], [data-editable-media], [data-editable-box], [data-editor-kind], .editor-layer");
+        return Boolean(parentEditable && parentEditable !== element && this.stage.contains(parentEditable));
+      }
+
+      snapBox(box, mode) {
+        const next = { ...box };
+        const targets = this.getSnapTargets(this.selected);
+        const guides = { x: null, y: null };
+        const threshold = this.snapThreshold;
+        const best = {
+          x: { score: Infinity, delta: 0, guide: null },
+          y: { score: Infinity, delta: 0, guide: null }
+        };
+
+        const testAxis = (axis, sources) => {
+          targets[axis].forEach((target) => {
+            sources.forEach((source) => {
+              const distance = Math.abs(source.value - target.value);
+              const score = distance + target.bias;
+              if (distance <= threshold && score < best[axis].score) {
+                best[axis] = { score, delta: target.value - source.value, guide: target.value };
+              }
+            });
+          });
+        };
+
+        if (mode === "move") {
+          testAxis("x", [
+            { value: next.x },
+            { value: next.x + next.width / 2 },
+            { value: next.x + next.width }
+          ]);
+          testAxis("y", [
+            { value: next.y },
+            { value: next.y + next.height / 2 },
+            { value: next.y + next.height }
+          ]);
+          if (best.x.guide !== null) {
+            next.x += best.x.delta;
+            guides.x = best.x.guide;
+          }
+          if (best.y.guide !== null) {
+            next.y += best.y.delta;
+            guides.y = best.y.guide;
+          }
+        } else {
+          testAxis("x", [{ value: next.x + next.width }]);
+          testAxis("y", [{ value: next.y + next.height }]);
+          if (best.x.guide !== null) {
+            next.width = Math.max(24, next.width + best.x.delta);
+            guides.x = best.x.guide;
+          }
+          if (best.y.guide !== null) {
+            next.height = Math.max(24, next.height + best.y.delta);
+            guides.y = best.y.guide;
+          }
+        }
+
+        return { box: next, guides };
+      }
+
+      showGuides(guides) {
+        if (guides.x !== null) {
+          this.guideV.style.left = `${Math.round(guides.x)}px`;
+          this.guideV.classList.add("active");
+        } else {
+          this.guideV.classList.remove("active");
+        }
+        if (guides.y !== null) {
+          this.guideH.style.top = `${Math.round(guides.y)}px`;
+          this.guideH.classList.add("active");
+        } else {
+          this.guideH.classList.remove("active");
+        }
+      }
+
+      hideGuides() {
+        this.guideV.classList.remove("active");
+        this.guideH.classList.remove("active");
+      }
+
+      startPointerAction(event, mode) {
+        if (!this.selected) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const box = this.getStageBox(this.selected);
+        const point = this.stagePointFromClient(event.clientX, event.clientY);
+        this.dragState = {
+          mode,
+          startX: point.x,
+          startY: point.y,
+          box
+        };
+        if (event.target.setPointerCapture && event.pointerId !== undefined) {
+          event.target.setPointerCapture(event.pointerId);
+        }
+      }
+
+      handlePointerMove(event) {
+        if (!this.dragState || !this.selected) return;
+        if (event.pointerType === "mouse" && event.buttons === 0) {
+          this.finishPointerAction();
+          return;
+        }
+        const point = this.stagePointFromClient(event.clientX, event.clientY);
+        const dx = point.x - this.dragState.startX;
+        const dy = point.y - this.dragState.startY;
+        const next = { ...this.dragState.box };
+        if (this.dragState.mode === "move") {
+          next.x += dx;
+          next.y += dy;
+        } else {
+          next.width = Math.max(24, next.width + dx);
+          next.height = Math.max(24, next.height + dy);
+        }
+        const snapped = this.snapBox(next, this.dragState.mode);
+        const safe = this.clampStageBox(snapped.box);
+        this.setStagePosition(this.selected, safe.x, safe.y, safe.width, safe.height);
+        this.showGuides(snapped.guides);
+        this.updateFrame();
+        this.updateInspector();
+      }
+
+      finishPointerAction() {
+        if (!this.dragState) return;
+        this.dragState = null;
+        this.hideGuides();
+        this.save(false, true);
+      }
+
+      addText() {
+        const layer = document.createElement("div");
+        const point = this.nextInsertPoint(460, 110);
+        layer.className = "editor-layer text-layer editor-anim-rise";
+        layer.dataset.editable = "";
+        layer.dataset.editId = `layer-${Date.now()}`;
+        layer.dataset.editAnim = "rise";
+        layer.dataset.editDelay = "0";
+        layer.dataset.editDuration = "640";
+        layer.style.left = `${Math.round(point.x)}px`;
+        layer.style.top = `${Math.round(point.y)}px`;
+        layer.style.setProperty("--edit-delay", "0ms");
+        layer.style.setProperty("--edit-duration", "640ms");
+        layer.textContent = "双击编辑文字";
+        this.activeSlide().appendChild(layer);
+        this.bindElement(layer);
+        this.select(layer);
+        this.save();
+      }
+
+      addShape(shape = "rect") {
+        const layer = document.createElement("div");
+        const point = this.nextInsertPoint(280, 180);
+        layer.className = "editor-layer shape-layer editor-anim-scale";
+        layer.dataset.editId = `shape-${Date.now()}`;
+        layer.dataset.editAnim = "scale";
+        layer.dataset.editDelay = "0";
+        layer.dataset.editDuration = "640";
+        this.applyShape(layer, shape);
+        layer.style.left = `${Math.round(point.x)}px`;
+        layer.style.top = `${Math.round(point.y)}px`;
+        layer.style.setProperty("--edit-delay", "0ms");
+        layer.style.setProperty("--edit-duration", "640ms");
+        this.activeSlide().appendChild(layer);
+        this.bindElement(layer);
+        this.select(layer);
+        this.save();
+      }
+
+      addImage(dataUrl, x = this.lastInsert.x, y = this.lastInsert.y) {
+        const point = arguments.length > 1 ? this.clampInsertPoint(x, y, 520, 320) : this.nextInsertPoint(520, 320);
+        const wrapper = document.createElement("div");
+        wrapper.className = "editor-layer image-layer editor-anim-scale";
+        wrapper.dataset.editId = `image-${Date.now()}`;
+        wrapper.dataset.editAnim = "scale";
+        wrapper.dataset.editDelay = "0";
+        wrapper.dataset.editDuration = "640";
+        wrapper.style.left = `${Math.round(point.x)}px`;
+        wrapper.style.top = `${Math.round(point.y)}px`;
+        wrapper.style.setProperty("--edit-delay", "0ms");
+        wrapper.style.setProperty("--edit-duration", "640ms");
+        const image = document.createElement("img");
+        image.src = dataUrl;
+        image.alt = "用户添加的图片";
+        wrapper.appendChild(image);
+        this.activeSlide().appendChild(wrapper);
+        this.bindElement(wrapper);
+        this.select(wrapper);
+        this.lastInsert = point;
+        this.save();
+      }
+
+      applyShape(element, value) {
+        element.dataset.shape = value || "rect";
+        if (element.dataset.shape === "line") {
+          element.style.height = `${Math.max(8, Number.parseInt(element.style.height || "14", 10) || 14)}px`;
+        }
+        if (!element.style.backgroundColor) element.style.backgroundColor = "rgba(31, 43, 224, 0.16)";
+        this.updateInspector();
+        this.updateFrame();
+      }
+
+      shapeLabel(value) {
+        return {
+          rect: "矩形",
+          roundRect: "圆角矩形",
+          circle: "圆形",
+          triangle: "三角形",
+          line: "直线",
+          arrow: "箭头"
+        }[value] || "矩形";
+      }
+
+      handleFileInput(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        this.controls.imageName.textContent = file.name;
+        this.readImageFile(file, (dataUrl) => {
+          if (this.selected && this.isImageElement(this.selected)) {
+            this.replaceImage(this.selected, dataUrl);
+          } else {
+            this.addImage(dataUrl);
+          }
+          this.controls.image.value = "";
+          this.updateInspector();
+        });
+      }
+
+      handleDrag(event) {
+        if (!this.isActive) return;
+        const hasImage = Array.from(event.dataTransfer?.items || []).some((item) => item.type.startsWith("image/"));
+        if (!hasImage) return;
+        event.preventDefault();
+        document.body.classList.add("dragging-file");
+        this.controls.dropZone.classList.add("dragging");
+      }
+
+      clearDrag(event) {
+        if (event.type === "drop") return;
+        document.body.classList.remove("dragging-file");
+        this.controls.dropZone.classList.remove("dragging");
+      }
+
+      handleDrop(event) {
+        if (!this.isActive) return;
+        const file = Array.from(event.dataTransfer?.files || []).find((item) => item.type.startsWith("image/"));
+        if (!file) return;
+        event.preventDefault();
+        document.body.classList.remove("dragging-file");
+        this.controls.dropZone.classList.remove("dragging");
+        const isDropZone = Boolean(event.target.closest(".drop-zone"));
+        const isStageDrop = Boolean(event.target.closest(".deck-stage"));
+        if (!isDropZone && !isStageDrop) {
+          this.toastMessage("把图片拖到画布或图片区来添加");
+          return;
+        }
+        const rawPoint = this.stagePointFromClient(event.clientX, event.clientY);
+        const point = this.clampInsertPoint(rawPoint.x, rawPoint.y, 520, 320);
+        this.lastInsert = { x: point.x, y: point.y };
+        const target = this.getEditableTarget(event.target);
+        this.readImageFile(file, (dataUrl) => {
+          if (target && this.isImageElement(target)) {
+            this.replaceImage(target, dataUrl);
+            this.select(target);
+          } else if (this.selected && this.isImageElement(this.selected) && event.target.closest(".drop-zone")) {
+            this.replaceImage(this.selected, dataUrl);
+          } else {
+            this.addImage(dataUrl, point.x, point.y);
+          }
+        });
+      }
+
+      readImageFile(file, callback) {
+        const reader = new FileReader();
+        reader.addEventListener("load", () => callback(reader.result));
+        reader.readAsDataURL(file);
+      }
+
+      replaceImage(element, dataUrl) {
+        const image = element.tagName === "IMG" ? element : element.querySelector("img");
+        if (image) {
+          image.src = dataUrl;
+          image.dataset.inlineImage = "true";
+        } else {
+          element.style.backgroundImage = `url("${dataUrl}")`;
+          element.style.backgroundSize = "cover";
+          element.style.backgroundPosition = "center";
+          element.style.backgroundRepeat = "no-repeat";
+          element.dataset.inlineImage = "true";
+        }
+        this.save();
+        this.updateInspector();
+        this.toastMessage("图片已替换");
+      }
+
+      motionClasses() {
+        return ["reveal", "reveal-left", "reveal-scale"];
+      }
+
+      editorMotionClasses() {
+        return ["editor-anim-none", "editor-anim-fade", "editor-anim-rise", "editor-anim-drop", "editor-anim-left", "editor-anim-right", "editor-anim-scale", "editor-anim-zoom", "editor-anim-pop", "editor-anim-rotate", "editor-anim-blur", "editor-anim-flip"];
+      }
+
+      ensureOriginalMotion(element) {
+        if (!element || element.dataset.originalMotionClasses !== undefined) return;
+        element.dataset.originalMotionClasses = this.motionClasses().filter((className) => element.classList.contains(className)).join(" ");
+      }
+
+      hasStoredOriginalMotion(element) {
+        return Boolean(element && element.dataset.originalMotionClasses !== undefined);
+      }
+
+      originalMotionValue(element) {
+        const classes = (element?.dataset.originalMotionClasses || "").split(/\s+/).filter(Boolean);
+        if (classes.includes("reveal-left")) return "left";
+        if (classes.includes("reveal-scale")) return "scale";
+        if (classes.includes("reveal")) return "rise";
+        return "";
+      }
+
+      currentMotionValue(element) {
+        if (!element) return "";
+        const custom = element.dataset.editAnim;
+        if (custom) return custom;
+        if (element.classList.contains("editor-anim-none")) return "none";
+        if (element.classList.contains("editor-anim-fade")) return "fade";
+        if (element.classList.contains("editor-anim-rise")) return "rise";
+        if (element.classList.contains("editor-anim-drop")) return "drop";
+        if (element.classList.contains("editor-anim-left")) return "left";
+        if (element.classList.contains("editor-anim-right")) return "right";
+        if (element.classList.contains("editor-anim-scale")) return "scale";
+        if (element.classList.contains("editor-anim-zoom")) return "zoom";
+        if (element.classList.contains("editor-anim-pop")) return "pop";
+        if (element.classList.contains("editor-anim-rotate")) return "rotate";
+        if (element.classList.contains("editor-anim-blur")) return "blur";
+        if (element.classList.contains("editor-anim-flip")) return "flip";
+        if (element.classList.contains("reveal-left")) return "left";
+        if (element.classList.contains("reveal-scale")) return "scale";
+        if (element.classList.contains("reveal")) return "rise";
+        return "";
+      }
+
+      getMotionSelectValue(element) {
+        return element?.dataset.editAnim || "";
+      }
+
+      usesCustomMotion(element) {
+        return Boolean(element && element.dataset.editAnim && element.dataset.editAnim !== "none");
+      }
+
+      motionLabel(value) {
+        return {
+          none: "无动效",
+          fade: "淡入",
+          rise: "上浮入场",
+          drop: "下落入场",
+          left: "左侧滑入",
+          right: "右侧滑入",
+          scale: "缩放入场",
+          zoom: "缩小落定",
+          pop: "弹出入场",
+          rotate: "旋入",
+          blur: "模糊显现",
+          flip: "翻转入场"
+        }[value] || "无原始动效";
+      }
+
+      getMotionStatus(element) {
+        const custom = element.dataset.editAnim;
+        if (custom) {
+          if (custom === "none") return "自定义：无动效";
+          const order = element.dataset.editOrder ? `，本页第 ${element.dataset.editOrder} 个出现` : "";
+          return `自定义：${this.motionLabel(custom)}${order}，延迟 ${element.dataset.editDelay || 0}ms，时长 ${element.dataset.editDuration || 640}ms`;
+        }
+        return `原始：${this.motionLabel(this.currentMotionValue(element))}`;
+      }
+
+      motionDelayForOrder(order) {
+        return Math.max(0, (Math.max(1, order) - 1) * 180);
+      }
+
+      normalizeMotionOrder(value, fallback = 1) {
+        const number = Number.parseInt(value, 10);
+        return Number.isFinite(number) ? Math.max(1, number) : Math.max(1, fallback);
+      }
+
+      nextMotionOrder(element) {
+        const slide = element?.closest(".slide");
+        if (!slide) return 1;
+        const orders = Array.from(slide.querySelectorAll("[data-edit-anim]"))
+          .filter((node) => node !== element && node.dataset.editAnim && node.dataset.editAnim !== "none")
+          .map((node) => this.normalizeMotionOrder(node.dataset.editOrder, 0));
+        return orders.length ? Math.max(...orders) + 1 : 1;
+      }
+
+      setMotionOrder(element, value, updateDelay = false) {
+        const order = this.normalizeMotionOrder(value, this.nextMotionOrder(element));
+        element.dataset.editOrder = String(order);
+        element.style.setProperty("--edit-order", String(order));
+        if (updateDelay) {
+          const delay = this.motionDelayForOrder(order);
+          element.dataset.editDelay = String(delay);
+          element.style.setProperty("--edit-delay", `${delay}ms`);
+          this.controls.delay.value = delay;
+        }
+        return order;
+      }
+
+      applyAnimation(element, value, preview = false) {
+        if (!element) return;
+        this.ensureOriginalMotion(element);
+        this.editorMotionClasses().forEach((className) => {
+          element.classList.remove(className);
+        });
+        this.motionClasses().forEach((className) => element.classList.remove(className));
+
+        if (!value) {
+          this.restoreOriginalMotion(element, false);
+          if (preview) this.previewMotion(element);
+          return;
+        }
+
+        element.dataset.editAnim = value;
+        if (value === "none") {
+          element.classList.add("editor-anim-none");
+          delete element.dataset.editOrder;
+          delete element.dataset.editDelay;
+          delete element.dataset.editDuration;
+          element.style.removeProperty("--edit-order");
+          element.style.removeProperty("--edit-delay");
+          element.style.removeProperty("--edit-duration");
+          this.toastMessage("已关闭选中元素动效");
+          return;
+        }
+
+        const hasSavedDelay = element.dataset.editDelay !== undefined;
+        const order = this.setMotionOrder(element, element.dataset.editOrder || this.nextMotionOrder(element), false);
+        const delay = hasSavedDelay
+          ? Math.max(0, Number(element.dataset.editDelay) || 0)
+          : this.motionDelayForOrder(order);
+        const duration = Math.max(100, Number(this.controls.duration.value) || Number(element.dataset.editDuration) || 640);
+        element.dataset.editDelay = String(delay);
+        element.dataset.editDuration = String(duration);
+        element.classList.add(`editor-anim-${value}`);
+        element.style.setProperty("--edit-delay", `${delay}ms`);
+        element.style.setProperty("--edit-duration", `${duration}ms`);
+        if (preview) this.previewMotion(element);
+      }
+
+      restoreOriginalMotion(element, shouldSave = true) {
+        if (!element) return;
+        const original = (element.dataset.originalMotionClasses || "").split(/\s+/).filter(Boolean);
+        this.editorMotionClasses().forEach((className) => element.classList.remove(className));
+        this.motionClasses().forEach((className) => element.classList.remove(className));
+        original.forEach((className) => element.classList.add(className));
+        delete element.dataset.editAnim;
+        delete element.dataset.editOrder;
+        delete element.dataset.editDelay;
+        delete element.dataset.editDuration;
+        delete element.dataset.originalMotionClasses;
+        element.style.removeProperty("--edit-order");
+        element.style.removeProperty("--edit-delay");
+        element.style.removeProperty("--edit-duration");
+        this.updateInspector();
+        if (shouldSave) {
+          this.save();
+          this.previewMotion(element);
+        }
+      }
+
+      scheduleMotionPreview() {
+        window.clearTimeout(this.motionPreviewTimer);
+        this.motionPreviewTimer = window.setTimeout(() => this.previewMotion(), 180);
+      }
+
+      previewMotion(element = this.selected) {
+        if (!element) return;
+        const value = this.currentMotionValue(element);
+        if (!value || value === "none") {
+          this.toastMessage("当前元素没有可预览的入场动效");
+          return;
+        }
+        const previewClass = `editor-anim-${value}`;
+        const hadClass = element.classList.contains(previewClass);
+        const duration = Math.max(100, Number(element.dataset.editDuration) || Number(this.controls.duration.value) || 640);
+        const delay = Math.max(0, Number(element.dataset.editDelay) || Number(this.controls.delay.value) || 0);
+        element.style.setProperty("--edit-delay", `${delay}ms`);
+        element.style.setProperty("--edit-duration", `${duration}ms`);
+        element.classList.remove("editor-motion-preview");
+        void element.offsetWidth;
+        element.classList.add(previewClass, "editor-motion-preview");
+        this.trackFrameDuringMotion(element, delay + duration + 160);
+        window.clearTimeout(this.previewCleanupTimer);
+        this.previewCleanupTimer = window.setTimeout(() => {
+          element.classList.remove("editor-motion-preview");
+          if (!hadClass && !element.dataset.editAnim) element.classList.remove(previewClass);
+        }, delay + duration + 120);
+      }
+
+      replayActiveSlideMotion(showToast = true) {
+        const slide = this.presentation.slides[this.presentation.currentSlide];
+        if (!slide) return;
+        slide.querySelectorAll(".editor-motion-preview").forEach((node) => node.classList.remove("editor-motion-preview"));
+        slide.classList.remove("visible");
+        void slide.offsetWidth;
+        slide.classList.add("visible");
+        if (this.selected && this.selected.closest(".slide") === slide) {
+          this.trackFrameDuringMotion(this.selected, this.motionFrameTrackDuration(this.selected));
+        }
+        if (showToast) this.toastMessage("已重播本页动效");
+      }
+
+      bumpZIndex(delta) {
+        if (!this.selected) return;
+        const current = Number.parseInt(window.getComputedStyle(this.selected).zIndex, 10);
+        const next = Number.isFinite(current) ? current + delta : 20 + delta;
+        this.selected.style.zIndex = String(Math.max(1, next));
+        this.save();
+      }
+
+      deleteSelected() {
+        if (!this.selected || !this.selected.classList.contains("editor-layer")) return;
+        this.selected.remove();
+        this.clearSelection();
+        this.save();
+      }
+
+      cleanEditorArtifacts(root) {
+        root.querySelectorAll("#editorFrame, #editorToast, #editorGuideV, #editorGuideH, .editor-guide, .editor-shell").forEach((node) => node.remove());
+        root.querySelectorAll(".editor-selected").forEach((node) => node.classList.remove("editor-selected"));
+        root.querySelectorAll(".editor-motion-preview").forEach((node) => {
+          node.classList.remove("editor-motion-preview");
+          if (!node.dataset.editAnim) this.editorMotionClasses().forEach((className) => node.classList.remove(className));
+        });
+        root.querySelectorAll("[contenteditable]").forEach((node) => node.removeAttribute("contenteditable"));
+        root.querySelectorAll("[data-editor-bound]").forEach((node) => delete node.dataset.editorBound);
+        root.querySelectorAll("[data-editor-auto], [data-editor-kind]").forEach((node) => {
+          delete node.dataset.editorAuto;
+          delete node.dataset.editorKind;
+        });
+      }
+
+      serialize() {
+        const items = {};
+        this.getEditableElements().forEach((element) => {
+          const key = element.dataset.editId;
+          if (!key) return;
+          items[key] = {
+            html: element.innerHTML,
+            text: element.innerText,
+            attrs: {
+              class: element.getAttribute("class") || "",
+              style: element.getAttribute("style") || "",
+              src: element.getAttribute("src") || "",
+              alt: element.getAttribute("alt") || "",
+              shape: element.dataset.shape || "",
+              editAnim: element.dataset.editAnim || "",
+              editOrder: element.dataset.editOrder || "",
+              editDelay: element.dataset.editDelay || "",
+              editDuration: element.dataset.editDuration || ""
+            }
+          };
+        });
+        const stageClone = this.stage.cloneNode(true);
+        this.cleanEditorArtifacts(stageClone);
+        return { stage: stageClone.innerHTML, items };
+      }
+
+      save(showToast = true, recordHistory = true) {
+        const data = this.serialize();
+        localStorage.setItem(this.storageKey, JSON.stringify(data));
+        if (recordHistory) this.pushHistory(data);
+        if (showToast) this.toastMessage("已自动保存，可点“保存到本地”下载 HTML");
+      }
+
+      restore() {
+        const raw = this.readStoredDraft();
+        if (!raw) return;
+        try {
+          const data = JSON.parse(raw);
+          if (data.stage) this.restoreSnapshot(data);
+          localStorage.setItem(this.storageKey, raw);
+        } catch (error) {
+          localStorage.removeItem(this.storageKey);
+        }
+      }
+
+      readStoredDraft() {
+        const current = localStorage.getItem(this.storageKey);
+        if (current) return current;
+        for (const key of this.legacyStorageKeys) {
+          const legacy = localStorage.getItem(key);
+          if (legacy) return legacy;
+        }
+        return "";
+      }
+
+      resetDraft() {
+        localStorage.removeItem(this.storageKey);
+        this.legacyStorageKeys.forEach((key) => localStorage.removeItem(key));
+        this.toastMessage("本地编辑已清除，刷新后回到原始版本");
+      }
+
+      pushHistory(data = this.serialize()) {
+        if (this.isRestoringHistory) return;
+        const snapshot = JSON.stringify(data);
+        if (this.undoStack[this.historyIndex] === snapshot) {
+          this.updateUndoButton();
+          return;
+        }
+        if (this.historyIndex < this.undoStack.length - 1) {
+          this.undoStack = this.undoStack.slice(0, this.historyIndex + 1);
+        }
+        this.undoStack.push(snapshot);
+        if (this.undoStack.length > this.historyLimit) this.undoStack.shift();
+        this.historyIndex = this.undoStack.length - 1;
+        this.updateUndoButton();
+      }
+
+      undo() {
+        if (this.historyIndex <= 0) return;
+        this.historyIndex -= 1;
+        const snapshot = this.undoStack[this.historyIndex];
+        this.isRestoringHistory = true;
+        try {
+          this.restoreSnapshot(JSON.parse(snapshot));
+          localStorage.setItem(this.storageKey, snapshot);
+        } finally {
+          this.isRestoringHistory = false;
+          this.updateUndoButton();
+        }
+        this.toastMessage("已撤回");
+      }
+
+      updateUndoButton() {
+        this.controls.undo.disabled = this.historyIndex <= 0;
+      }
+
+      restoreSnapshot(data) {
+        this.stage.innerHTML = data.stage;
+        this.cleanEditorArtifacts(this.stage);
+        this.attachFrame();
+        this.selected = null;
+        this.presentation.slides = Array.from(this.stage.querySelectorAll(".slide"));
+        this.presentation.injectChrome();
+        this.prepareEditableElements();
+        this.prepareEditableIds();
+        this.bindEditableEvents();
+        const page = Number.parseInt(window.location.hash.replace("#", ""), 10);
+        this.presentation.showSlide(Number.isFinite(page) ? page - 1 : this.presentation.currentSlide);
+        this.renderSlideRail();
+        this.updateInspector();
+      }
+
+      cleanCloneForExport(clone) {
+        clone.querySelectorAll("[data-generated-chrome]").forEach((node) => node.remove());
+        clone.querySelectorAll(".editor-selected").forEach((node) => node.classList.remove("editor-selected"));
+        clone.querySelectorAll("[contenteditable]").forEach((node) => node.removeAttribute("contenteditable"));
+        clone.querySelectorAll("[data-editor-bound], [data-edit-id], [data-inline-image], [data-original-motion-classes]").forEach((node) => {
+          delete node.dataset.editorBound;
+          delete node.dataset.editId;
+          delete node.dataset.inlineImage;
+          delete node.dataset.originalMotionClasses;
+        });
+        clone.querySelectorAll("[data-editor-auto], [data-editor-kind]").forEach((node) => {
+          delete node.dataset.editorAuto;
+          delete node.dataset.editorKind;
+        });
+        clone.querySelectorAll(".editor-motion-preview").forEach((node) => {
+          node.classList.remove("editor-motion-preview");
+          if (!node.dataset.editAnim) this.editorMotionClasses().forEach((className) => node.classList.remove(className));
+        });
+        clone.querySelectorAll(".edit-toggle").forEach((node) => {
+          node.classList.remove("active", "show");
+        });
+        clone.querySelectorAll("#editorFrame, #editorGuideV, #editorGuideH, .editor-guide").forEach((node) => node.classList.remove("active"));
+        clone.querySelectorAll("#editorToast").forEach((node) => {
+          node.classList.remove("show");
+          node.textContent = "";
+        });
+        const body = clone.querySelector("body");
+        if (body) body.classList.remove("editing", "dragging-file");
+      }
+
+      exportHtml() {
+        this.save(false, false);
+        const clone = document.documentElement.cloneNode(true);
+        this.cleanCloneForExport(clone);
+        const html = "<!doctype html>\n" + clone.outerHTML;
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "index.html";
+        link.click();
+        URL.revokeObjectURL(link.href);
+        this.toastMessage("已保存到本地 HTML");
+      }
+
+      toHex(value) {
+        if (!value || value === "transparent" || value === "rgba(0, 0, 0, 0)") return "#ffffff";
+        const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (!match) return value.startsWith("#") ? value : "#111111";
+        return [1, 2, 3].map((index) => Number(match[index]).toString(16).padStart(2, "0")).join("").replace(/^/, "#");
+      }
+
+      toastMessage(message) {
+        this.toast.textContent = message;
+        this.toast.classList.add("show");
+        window.clearTimeout(this.toastTimer);
+        this.toastTimer = window.setTimeout(() => this.toast.classList.remove("show"), 1400);
+      }
+    }
+
+    /* ===========================================
+       BOOTSTRAP
+       Start presentation and editor after DOM is ready.
+       =========================================== */
+    const startDeck = () => {
+      const initialPage = Number.parseInt(window.location.hash.replace("#", ""), 10);
+      window.presentation = new SlidePresentation();
+      window.editor = new DeckEditor(window.presentation);
+      if (Number.isFinite(initialPage)) {
+        window.presentation.showSlide(initialPage - 1);
+      }
+    };
+
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", startDeck);
+    } else {
+      startDeck();
+    }
+  </script>
+</body>
+</html>

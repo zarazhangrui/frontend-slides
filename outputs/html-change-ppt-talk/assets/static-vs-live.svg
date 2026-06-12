@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Static slides compared with live HTML stage">
+  <defs>
+    <pattern id="grid2" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0H0v34" fill="none" stroke="#1f2be0" stroke-opacity=".12" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0l10 5-10 5z" fill="#1f2be0"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="1000" fill="#f0ebde"/>
+  <rect width="1600" height="1000" fill="url(#grid2)"/>
+  <rect x="94" y="130" width="538" height="682" fill="#f0ebde" stroke="#1f2be0" stroke-width="5"/>
+  <path d="M142 192h442M142 258h296M142 324h368" stroke="#1f2be0" stroke-width="18"/>
+  <rect x="144" y="414" width="390" height="230" fill="none" stroke="#1f2be0" stroke-width="4"/>
+  <path d="M172 610l126-96 86 56 70-86 52 126" fill="none" stroke="#1f2be0" stroke-width="7"/>
+  <path d="M144 700h390M144 744h298" stroke="#1f2be0" stroke-width="13" opacity=".42"/>
+  <g opacity=".35">
+    <path d="M94 110l538 722M632 110L94 832" stroke="#1f2be0" stroke-width="3"/>
+  </g>
+  <path d="M690 470h188" stroke="#1f2be0" stroke-width="8" marker-end="url(#arrow)"/>
+  <g transform="translate(910 110)">
+    <rect x="0" y="0" width="580" height="710" fill="#f0ebde" stroke="#1f2be0" stroke-width="5"/>
+    <rect x="0" y="0" width="580" height="70" fill="#1f2be0"/>
+    <circle cx="40" cy="36" r="10" fill="#f0ebde"/><circle cx="74" cy="36" r="10" fill="#f0ebde"/><circle cx="108" cy="36" r="10" fill="#f0ebde"/>
+    <rect x="48" y="126" width="190" height="472" fill="#1f2be0"/>
+    <path d="M276 146h206M276 206h152M276 266h230M276 326h180M276 456h230M276 516h130" stroke="#1f2be0" stroke-width="15"/>
+    <rect x="276" y="612" width="78" height="32" fill="#1f2be0"/>
+    <rect x="376" y="612" width="78" height="32" fill="#1f2be0" opacity=".38"/>
+    <path d="M38 666h504" stroke="#1f2be0" stroke-width="4"/>
+  </g>
+  <g transform="translate(1180 780)" opacity=".95">
+    <path d="M0 0h260M0 42h180M0 84h220" stroke="#1f2be0" stroke-width="12"/>
+  </g>
+</svg>

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Browser window becoming a live presentation stage">
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0v32" fill="none" stroke="#1f2be0" stroke-opacity=".13" stroke-width="1"/>
+    </pattern>
+    <pattern id="scan" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M1 0v10" stroke="#1f2be0" stroke-width="2"/>
+    </pattern>
+    <clipPath id="screenClip">
+      <rect x="300" y="170" width="980" height="560"/>
+    </clipPath>
+  </defs>
+  <rect width="1600" height="1000" fill="#f0ebde"/>
+  <rect width="1600" height="1000" fill="url(#grid)"/>
+  <path d="M210 860C352 691 513 620 694 647c223 34 352-25 518-180 112-105 210-149 294-132" fill="none" stroke="#1f2be0" stroke-opacity=".18" stroke-width="2"/>
+  <g transform="translate(104 62)" opacity=".82">
+    <rect x="0" y="0" width="118" height="760" fill="url(#scan)"/>
+    <rect x="122" y="80" width="90" height="620" fill="url(#scan)"/>
+    <rect x="216" y="180" width="54" height="410" fill="url(#scan)"/>
+  </g>
+  <g>
+    <rect x="248" y="116" width="1082" height="666" fill="#f0ebde" stroke="#1f2be0" stroke-width="5"/>
+    <rect x="248" y="116" width="1082" height="68" fill="#1f2be0"/>
+    <circle cx="292" cy="150" r="11" fill="#f0ebde"/>
+    <circle cx="328" cy="150" r="11" fill="#f0ebde"/>
+    <circle cx="364" cy="150" r="11" fill="#f0ebde"/>
+    <rect x="420" y="135" width="680" height="30" fill="#f0ebde"/>
+    <rect x="300" y="224" width="328" height="476" fill="#1f2be0"/>
+    <path d="M348 292h180M348 338h224M348 384h150M348 430h250M348 522h190M348 568h120" stroke="#f0ebde" stroke-width="10" stroke-linecap="square"/>
+    <rect x="690" y="224" width="558" height="330" fill="#f0ebde" stroke="#1f2be0" stroke-width="4"/>
+    <rect x="722" y="256" width="144" height="260" fill="#1f2be0"/>
+    <path d="M908 285h250M908 335h200M908 385h276M908 435h168" stroke="#1f2be0" stroke-width="12"/>
+    <path d="M720 605h522" stroke="#1f2be0" stroke-width="4"/>
+    <rect x="720" y="642" width="112" height="34" fill="#1f2be0"/>
+    <rect x="860" y="642" width="112" height="34" fill="#1f2be0" opacity=".38"/>
+    <rect x="1000" y="642" width="112" height="34" fill="#1f2be0" opacity=".2"/>
+  </g>
+  <g clip-path="url(#screenClip)" opacity=".48">
+    <path d="M730 753L438 934M880 753L760 934M1030 753l120 181" stroke="#1f2be0" stroke-width="6"/>
+    <path d="M616 727h380" stroke="#1f2be0" stroke-width="10"/>
+  </g>
+  <g transform="translate(1230 252)">
+    <rect width="160" height="160" fill="#f0ebde" stroke="#1f2be0" stroke-width="4"/>
+    <g fill="#1f2be0">
+      <rect x="16" y="16" width="16" height="16"/><rect x="32" y="16" width="16" height="16"/><rect x="64" y="16" width="16" height="16"/><rect x="112" y="16" width="16" height="16"/>
+      <rect x="16" y="48" width="16" height="16"/><rect x="80" y="48" width="16" height="16"/><rect x="128" y="48" width="16" height="16"/>
+      <rect x="48" y="80" width="16" height="16"/><rect x="64" y="80" width="16" height="16"/><rect x="112" y="80" width="16" height="16"/>
+      <rect x="16" y="112" width="16" height="16"/><rect x="80" y="112" width="16" height="16"/><rect x="96" y="112" width="16" height="16"/><rect x="128" y="112" width="16" height="16"/>
+      <rect x="48" y="128" width="16" height="16"/><rect x="112" y="128" width="16" height="16"/>
+    </g>
+  </g>
+  <path d="M246 820h1086" stroke="#1f2be0" stroke-width="5"/>
+  <path d="M1390 170v590" stroke="#1f2be0" stroke-width="4" stroke-dasharray="22 18"/>
+</svg>

@@ -1663,6 +1663,57 @@
       margin-top: 10px;
     }
 
+    .reset-action-group {
+      position: relative;
+      min-width: 0;
+    }
+
+    .reset-action-group #resetBtn {
+      width: 100%;
+      padding-right: 36px;
+    }
+
+    .reset-help-button {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      z-index: 1;
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      padding: 0;
+      border: 1px solid rgba(17, 17, 17, 0.3);
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.045);
+      color: rgba(17, 17, 17, 0.56);
+      font: 700 11px/1 var(--font-body);
+      transform: translateY(-50%);
+      cursor: help;
+    }
+
+    .reset-help-button:hover,
+    .reset-help-button:focus-visible {
+      border-color: rgba(17, 17, 17, 0.48);
+      background: rgba(17, 17, 17, 0.08);
+      color: rgba(17, 17, 17, 0.78);
+      outline: none;
+    }
+
+    .editor-confirm-message {
+      margin: 0;
+      color: rgba(17, 17, 17, 0.72);
+      font: 500 14px/1.65 var(--font-body);
+    }
+
+    .editor-confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
     .editor-toast {
       position: fixed;
       left: 50%;
@@ -2615,7 +2666,7 @@
       <div class="shape-picker-wrap">
         <button class="editor-button" id="addShapeBtn" type="button" aria-haspopup="menu" aria-expanded="false">添加形状</button>
       </div>
-      <button class="editor-button primary" id="saveBtn" type="button">保存到本地</button>
+      <button class="editor-button primary" id="saveBtn" type="button">保存</button>
       <button class="editor-button danger" id="exitEditBtn" type="button">退出编辑</button>
     </div>
     <div class="editor-help-modal" id="editorHelp" role="dialog" aria-modal="true" aria-labelledby="editorHelpTitle" hidden>
@@ -2646,9 +2697,46 @@
             <ul>
               <li>Motion 区可以设置入场方式、出现顺序、延迟和时长，并支持预览当前元素或重播本页。</li>
               <li>撤回用 ↶ 或 Cmd/Ctrl+Z；重做用 ↷ 或 Cmd/Ctrl+Shift+Z。</li>
-              <li>保存到本地会下载当前 index.html，并清理选框、临时检测标记和编辑器界面。</li>
+              <li>保存会优先覆盖你授权的 index.html；浏览器不支持覆盖写入时，会退回为下载当前 HTML。</li>
             </ul>
           </section>
+        </div>
+      </div>
+    </div>
+    <div class="editor-help-modal" id="resetHelp" role="dialog" aria-modal="true" aria-labelledby="resetHelpTitle" hidden>
+      <div class="editor-help-card">
+        <div class="editor-help-header">
+          <h2 class="editor-help-title" id="resetHelpTitle">重置编辑说明</h2>
+          <button class="editor-help-close" id="resetHelpCloseBtn" type="button" aria-label="关闭">×</button>
+        </div>
+        <div class="editor-help-body">
+          <section class="editor-help-section">
+            <h3>它会清除什么</h3>
+            <p>重置编辑只清除当前浏览器为这份 HTML 自动保存的本地草稿，也就是 localStorage 里的编辑记录和旧版草稿记录。</p>
+          </section>
+          <section class="editor-help-section">
+            <h3>它不会清除什么</h3>
+            <p>重置本身不会删除或改写任何 HTML 文件，包括你刚保存或覆盖过的 index.html；它只动当前浏览器里的草稿记录。</p>
+          </section>
+          <section class="editor-help-section">
+            <h3>和保存的关系</h3>
+            <p>“保存”会把当前画面写入你授权的 HTML 文件；如果浏览器不支持覆盖写入，就下载新的 index.html。“重置编辑”只是清掉当前浏览器的自动草稿。刷新后页面会重新读取 HTML 文件本身，不再叠加草稿；如果这个文件之前已经被覆盖保存过，刷新后看到的仍然是已保存后的内容。如果刷新前又点保存，保存的仍然是当前屏幕上的内容。</p>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div class="editor-help-modal" id="editorConfirm" role="dialog" aria-modal="true" aria-labelledby="editorConfirmTitle" hidden>
+      <div class="editor-help-card">
+        <div class="editor-help-header">
+          <h2 class="editor-help-title" id="editorConfirmTitle">确认操作</h2>
+          <button class="editor-help-close" id="editorConfirmCloseBtn" type="button" aria-label="关闭">×</button>
+        </div>
+        <div class="editor-help-body">
+          <p class="editor-confirm-message" id="editorConfirmMessage"></p>
+          <div class="editor-confirm-actions">
+            <button class="editor-button" id="editorConfirmCancelBtn" type="button">取消</button>
+            <button class="editor-button danger" id="editorConfirmOkBtn" type="button">确认</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2762,7 +2850,10 @@
       <section class="inspector-section">
         <div class="inspector-actions">
           <button class="editor-button danger" id="deleteBtn" type="button" disabled>删除</button>
-          <button class="editor-button" id="resetBtn" type="button">重置编辑</button>
+          <div class="reset-action-group">
+            <button class="editor-button" id="resetBtn" type="button">重置编辑</button>
+            <button class="reset-help-button" id="resetHelpBtn" type="button" title="重置编辑说明" aria-label="重置编辑说明">?</button>
+          </div>
         </div>
       </section>
     </aside>
@@ -2934,6 +3025,8 @@
         this.lastInsert = { x: 720, y: 300 };
         this.snapThreshold = 12;
         this.motionFrameRaf = null;
+        this.pendingConfirm = null;
+        this.fileHandle = null;
         this.toggle = document.getElementById("editToggle");
         this.hotzone = document.querySelector(".edit-hotzone");
         this.stage = document.getElementById("deckStage");
@@ -2949,6 +3042,15 @@
           help: document.getElementById("helpBtn"),
           helpModal: document.getElementById("editorHelp"),
           helpClose: document.getElementById("helpCloseBtn"),
+          resetHelp: document.getElementById("resetHelpBtn"),
+          resetHelpModal: document.getElementById("resetHelp"),
+          resetHelpClose: document.getElementById("resetHelpCloseBtn"),
+          confirmModal: document.getElementById("editorConfirm"),
+          confirmTitle: document.getElementById("editorConfirmTitle"),
+          confirmMessage: document.getElementById("editorConfirmMessage"),
+          confirmClose: document.getElementById("editorConfirmCloseBtn"),
+          confirmCancel: document.getElementById("editorConfirmCancelBtn"),
+          confirmOk: document.getElementById("editorConfirmOkBtn"),
           undo: document.getElementById("undoBtn"),
           redo: document.getElementById("redoBtn"),
           addText: document.getElementById("addTextBtn"),
@@ -3156,6 +3258,17 @@
         this.controls.helpModal.addEventListener("click", (event) => {
           if (event.target === this.controls.helpModal) this.closeHelp();
         });
+        this.controls.resetHelp.addEventListener("click", () => this.openResetHelp());
+        this.controls.resetHelpClose.addEventListener("click", () => this.closeResetHelp());
+        this.controls.resetHelpModal.addEventListener("click", (event) => {
+          if (event.target === this.controls.resetHelpModal) this.closeResetHelp();
+        });
+        this.controls.confirmClose.addEventListener("click", () => this.closeConfirm());
+        this.controls.confirmCancel.addEventListener("click", () => this.closeConfirm());
+        this.controls.confirmModal.addEventListener("click", (event) => {
+          if (event.target === this.controls.confirmModal) this.closeConfirm();
+        });
+        this.controls.confirmOk.addEventListener("click", () => this.runConfirmedAction());
         this.toggle.addEventListener("click", () => this.toggleEditMode());
         this.hotzone.addEventListener("mouseenter", () => this.showButtons());
         this.hotzone.addEventListener("mouseleave", () => this.scheduleHide());
@@ -3179,9 +3292,9 @@
         });
         this.controls.save.addEventListener("click", () => this.exportHtml());
         this.controls.exit.addEventListener("click", () => this.toggleEditMode(false));
-        this.controls.reset.addEventListener("click", () => this.resetDraft());
+        this.controls.reset.addEventListener("click", () => this.confirmResetDraft());
         this.controls.image.addEventListener("change", (event) => this.handleFileInput(event));
-        this.controls.delete.addEventListener("click", () => this.deleteSelected());
+        this.controls.delete.addEventListener("click", () => this.confirmDeleteSelected());
         this.controls.bringForward.addEventListener("click", () => this.bumpZIndex(1));
         this.controls.sendBackward.addEventListener("click", () => this.bumpZIndex(-1));
         this.controls.previewMotion.addEventListener("click", () => this.previewMotion());
@@ -3277,6 +3390,16 @@
       }
 
       handleKeydown(event) {
+        if (event.key === "Escape" && !this.controls.confirmModal.hidden) {
+          event.preventDefault();
+          this.closeConfirm();
+          return;
+        }
+        if (event.key === "Escape" && !this.controls.resetHelpModal.hidden) {
+          event.preventDefault();
+          this.closeResetHelp();
+          return;
+        }
         if (event.key === "Escape" && !this.controls.helpModal.hidden) {
           event.preventDefault();
           this.closeHelp();
@@ -3308,7 +3431,7 @@
         if (!this.isActive || this.isFormTarget(event.target)) return;
         if (event.key === "Delete" || event.key === "Backspace") {
           event.preventDefault();
-          this.deleteSelected();
+          this.confirmDeleteSelected();
         }
         if (this.selected && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
           event.preventDefault();
@@ -3328,6 +3451,34 @@
 
       closeHelp() {
         this.controls.helpModal.hidden = true;
+      }
+
+      openResetHelp() {
+        this.controls.resetHelpModal.hidden = false;
+      }
+
+      closeResetHelp() {
+        this.controls.resetHelpModal.hidden = true;
+      }
+
+      openConfirm({ title, message, okText, action }) {
+        this.pendingConfirm = action;
+        this.controls.confirmTitle.textContent = title;
+        this.controls.confirmMessage.textContent = message;
+        this.controls.confirmOk.textContent = okText;
+        this.controls.confirmModal.hidden = false;
+        this.controls.confirmCancel.focus({ preventScroll: true });
+      }
+
+      closeConfirm() {
+        this.pendingConfirm = null;
+        this.controls.confirmModal.hidden = true;
+      }
+
+      runConfirmedAction() {
+        const action = this.pendingConfirm;
+        this.closeConfirm();
+        if (typeof action === "function") action();
       }
 
       isFormTarget(target) {
@@ -4371,6 +4522,16 @@
         this.save();
       }
 
+      confirmDeleteSelected() {
+        if (!this.selected || !this.selected.classList.contains("editor-layer")) return;
+        this.openConfirm({
+          title: "确认删除",
+          message: "删除后会从当前页面移除这个新增图层，并写入自动草稿。你仍然可以立刻用撤回恢复。",
+          okText: "删除",
+          action: () => this.deleteSelected()
+        });
+      }
+
       deleteSelected() {
         if (!this.selected || !this.selected.classList.contains("editor-layer")) return;
         this.selected.remove();
@@ -4423,7 +4584,7 @@
         const data = this.serialize();
         localStorage.setItem(this.storageKey, JSON.stringify(data));
         if (recordHistory) this.pushHistory(data);
-        if (showToast) this.toastMessage("已自动保存，可点“保存到本地”下载 HTML");
+        if (showToast) this.toastMessage("已自动保存，可点“保存”写入 HTML");
       }
 
       restore() {
@@ -4451,7 +4612,16 @@
       resetDraft() {
         localStorage.removeItem(this.storageKey);
         this.legacyStorageKeys.forEach((key) => localStorage.removeItem(key));
-        this.toastMessage("本地编辑已清除，刷新后回到原始版本");
+        this.toastMessage("本地草稿已清除，刷新后读取 HTML 文件本身");
+      }
+
+      confirmResetDraft() {
+        this.openConfirm({
+          title: "确认重置编辑",
+          message: "这只会清除当前浏览器里的自动保存草稿和旧版草稿记录，不会删除或改写 HTML 文件。刷新后会重新读取文件本身；如果文件已经被覆盖保存过，看到的仍然是保存后的内容。",
+          okText: "重置",
+          action: () => this.resetDraft()
+        });
       }
 
       pushHistory(data = this.serialize()) {
@@ -4554,18 +4724,59 @@
         if (body) body.classList.remove("editing", "dragging-file");
       }
 
-      exportHtml() {
-        this.save(false, false);
+      buildExportHtml() {
         const clone = document.documentElement.cloneNode(true);
         this.cleanCloneForExport(clone);
-        const html = "<!doctype html>\n" + clone.outerHTML;
+        return "<!doctype html>\n" + clone.outerHTML;
+      }
+
+      async exportHtml() {
+        this.save(false, false);
+        const html = this.buildExportHtml();
+        if (this.canWriteFile()) {
+          try {
+            await this.writeHtmlFile(html);
+            this.toastMessage("已覆盖保存 HTML");
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              this.toastMessage("已取消保存");
+              return;
+            }
+          }
+        }
+        this.downloadHtml(html);
+        this.toastMessage("已下载 HTML");
+      }
+
+      canWriteFile() {
+        return window.isSecureContext && typeof window.showSaveFilePicker === "function";
+      }
+
+      async writeHtmlFile(html) {
+        if (!this.fileHandle) {
+          this.fileHandle = await window.showSaveFilePicker({
+            suggestedName: "index.html",
+            types: [
+              {
+                description: "HTML 文件",
+                accept: { "text/html": [".html"] }
+              }
+            ]
+          });
+        }
+        const writable = await this.fileHandle.createWritable();
+        await writable.write(html);
+        await writable.close();
+      }
+
+      downloadHtml(html) {
         const blob = new Blob([html], { type: "text/html;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = "index.html";
         link.click();
         URL.revokeObjectURL(link.href);
-        this.toastMessage("已保存到本地 HTML");
       }
 
       toHex(value) {

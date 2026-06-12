@@ -256,7 +256,9 @@ The post-draft editor is a general `frontend-slides` feature, not a one-off enha
 - Treat `data-editable`, `data-editable-media`, and `data-editable-box` only as optional hints or overrides. They may improve accuracy, but the editor must still work on reasonable HTML that has no editor-specific attributes.
 - Keep editor-generated detection markers temporary. Save/export must remove editor chrome, selection outlines, snapping guides, temporary handles, `contenteditable`, and auto-detection attributes so the resulting HTML remains clean and portable.
 - Derive `localStorage` keys from the current file identity, for example `frontend-slides:${location.pathname}:${document.title}:visual-edits:v1`; never use a deck-specific key such as `<project-name>-visual-edits`.
-- Editing controls should be usable across decks: press `E` to enter, use a left slide rail and right inspector, edit selected text in the inspector, drag/drop or choose images, add text, choose a shape after clicking Add Shape, edit font/color/layout/motion, delete user-added layers, and use a single visible Save button that downloads the current HTML.
+- Editing controls should be usable across decks: press `E` to enter, use a left slide rail and right inspector, edit selected text in the inspector, drag/drop or choose images, add text, choose a shape after clicking Add Shape, edit font/color/layout/motion, delete user-added layers, and use a single visible Save button that overwrites the user-authorized HTML file when the browser allows File System Access, with clean `index.html` download as fallback.
+- Place a small grey circled help button inside the Reset Editing button. Its explanation must state that reset only clears the current browser's localStorage draft and legacy draft keys, does not delete downloaded/saved HTML files, and after reload the page reads the HTML file itself without applying the browser draft.
+- Require second confirmation for sensitive/destructive editor actions such as deleting a user-added layer or resetting local edits.
 - Font editing should stay lightweight by default: expose a font-family selector that reuses the deck's existing CSS font variables or already-loaded font stacks. Do not embed font files, base64 fonts, or add new font CDNs unless the user explicitly requests custom font import.
 - Include paired history controls: icon-only undo/redo buttons plus Command/Ctrl+Z and Command/Ctrl+Shift+Z, backed by a multi-step history stack.
 - Include layout snapping guides for dragging/resizing: snap to stage edges/center, other editable objects, media, shapes, and fine-grained text/code lines. Nested text targets should be recognized with lower priority so they help alignment without overpowering major layout targets.
@@ -287,7 +289,7 @@ When converting PowerPoint files:
    - Transport/use: compress the whole project folder; after unzipping, open `index.html`
    - Navigation: Arrow keys, Space, swipe/tap if enabled
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
-   - Visual editing is available: hover top-left or press E, open the editor feature guide, select text/media/shape, edit text in the right panel, drag images in, use undo/redo/snapping, and click Save to download the updated `index.html`
+   - Visual editing is available: hover top-left or press E, open the editor feature guide, select text/media/shape, edit text in the right panel, drag images in, use undo/redo/snapping, and click Save to overwrite an authorized HTML file or download the updated `index.html` as fallback
    - Offer the natural post-draft actions: ask for revisions, edit text directly in the browser, or export/share
 
 ---

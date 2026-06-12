@@ -16,7 +16,7 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 - **Visual Style Discovery** — Can't articulate design preferences? No problem. Pick from generated visual previews.
 - **PPT Conversion** — Convert existing PowerPoint files to web, preserving all images and content.
 - **Portable Project Output** — Finished decks live in a project-named folder with root `index.html` and local `assets/`, so you can zip, send, unzip, and open directly.
-- **Visual Deck Editor** — Generated decks include a lightweight editor for text, media, shapes, font choices, image replacement, undo, snapping guides, and one-click save.
+- **Visual Deck Editor** — Generated decks include a lightweight editor for text, media, shapes, font choices, image replacement, undo/redo, a built-in guide, snapping guides, and one-click save.
 - **Anti-AI-Slop** — Curated distinctive styles that avoid generic AI aesthetics (bye-bye, purple gradients on white).
 - **Bold Template Pack** — Optional design-forward templates from `beautiful-html-templates`, loaded progressively so safe presets still work as the default fallback.
 - **Production Quality** — Accessible, fixed 16:9, well-commented code you can customize.
@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 
 - **Folder-first delivery** — New decks are packaged as a portable folder, with `index.html` at the root and referenced media under `assets/`.
 - **HTML-adaptive editing** — The editor infers editable text, images, media, SVG/canvas elements, and shape-like boxes from ordinary slide HTML instead of requiring deck-specific attributes.
-- **More practical editing controls** — The editor now documents right-panel text editing, drag-and-drop image replacement, shape insertion through a menu, multi-step undo with Command/Ctrl+Z, snapping guides, lightweight font selection, and a single Save action.
+- **More practical editing controls** — The editor now documents right-panel text editing, drag-and-drop image replacement, shape insertion through a menu, multi-step undo/redo with keyboard shortcuts, snapping guides, lightweight font selection, and a single Save action.
 - **Cleaner saved output** — Save/export should remove editor chrome, temporary detection markers, selection UI, and other editing-only state so the deck remains portable.
 
 ## Installation

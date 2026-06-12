@@ -170,7 +170,7 @@ Every presentation must include:
 
 4. **Visual Deck Editor** (included by default after draft generation):
    - Edit toggle button (hidden by default, revealed via hover hotzone or `E` key)
-   - HTML-adaptive object detection, auto-save to localStorage, undo, snapping, image replacement, and save/download
+   - HTML-adaptive object detection, auto-save to localStorage, undo/redo, snapping, image replacement, feature guide, and save/download
    - See "Visual Deck Editor Implementation" section below
 
 ## Visual Deck Editor Implementation
@@ -185,7 +185,7 @@ The editor must understand ordinary slide HTML instead of requiring every editab
 
 `data-editable`, `data-editable-media`, and `data-editable-box` are optional hints only. Use them to improve accuracy when helpful, but never make the editor depend on those attributes. Temporary markers created by detection, such as `data-editor-kind` or `data-editor-auto`, must be removed from saved/exported HTML.
 
-Minimum editor controls: left slide rail, right inspector, text editing in the inspector, drag/drop image replacement, choose-file image replacement, add text, add shape through a shape menu, font/color/layout/motion controls, multi-step undo with Command/Ctrl+Z, snapping guides, and one visible Save button that downloads the current `index.html`.
+Minimum editor controls: top feature-guide button, icon-only undo/redo buttons, left slide rail, right inspector, text editing in the inspector, drag/drop image replacement, choose-file image replacement, add text, add shape through a shape menu, font/color/layout/motion controls, multi-step undo/redo with Command/Ctrl+Z and Command/Ctrl+Shift+Z, snapping guides, and one visible Save button that downloads the current `index.html`.
 
 Font editing should be lightweight by default. The font selector should reuse existing deck CSS variables such as `--font-display`, `--font-body`, and `--font-mono`, or already-loaded font stacks. Do not embed font files, base64 fonts, or add new font CDN links unless the user explicitly asks for custom font import.
 

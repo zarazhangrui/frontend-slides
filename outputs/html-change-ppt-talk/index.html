@@ -1412,6 +1412,16 @@
       white-space: nowrap;
     }
 
+    .editor-icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      min-width: 36px;
+      padding: 0;
+      font-size: 19px;
+      line-height: 1;
+    }
+
     .shape-picker-wrap {
       position: relative;
       flex: 0 0 auto;
@@ -1674,6 +1684,99 @@
     .editor-toast.show {
       opacity: 1;
       transform: translate(-50%, 0);
+    }
+
+    .editor-help-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10045;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(17, 17, 17, 0.36);
+      pointer-events: auto;
+    }
+
+    .editor-help-modal[hidden] {
+      display: none;
+    }
+
+    .editor-help-card {
+      width: min(720px, calc(100vw - 32px));
+      max-height: min(720px, calc(100vh - 48px));
+      overflow: auto;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 28px 80px rgba(17, 17, 17, 0.28);
+    }
+
+    .editor-help-header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+    }
+
+    .editor-help-title {
+      margin: 0;
+      color: #111111;
+      font: 760 22px/1.2 var(--font-body);
+      letter-spacing: 0;
+    }
+
+    .editor-help-close {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111111;
+      font: 700 20px/1 var(--font-body);
+    }
+
+    .editor-help-body {
+      display: grid;
+      gap: 16px;
+      padding: 18px 20px 20px;
+      color: rgba(17, 17, 17, 0.78);
+      font: 500 14px/1.55 var(--font-body);
+    }
+
+    .editor-help-section {
+      display: grid;
+      gap: 7px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(17, 17, 17, 0.10);
+    }
+
+    .editor-help-section:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .editor-help-section h3 {
+      margin: 0;
+      color: #111111;
+      font: 750 15px/1.25 var(--font-body);
+      letter-spacing: 0;
+    }
+
+    .editor-help-section p,
+    .editor-help-section ul {
+      margin: 0;
+    }
+
+    .editor-help-section ul {
+      padding-left: 1.2em;
+    }
+
+    .editor-help-section li + li {
+      margin-top: 4px;
     }
 
     .editor-layer {
@@ -2504,7 +2607,9 @@
   <button class="edit-toggle" id="editToggle" title="Edit mode (E)" aria-label="Toggle edit mode">E</button>
   <div class="editor-shell" id="editorShell" aria-label="演示编辑器">
     <div class="editor-toolbar" role="toolbar" aria-label="编辑工具">
-      <button class="editor-button" id="undoBtn" type="button" disabled>撤回</button>
+      <button class="editor-button" id="helpBtn" type="button">编辑器功能介绍</button>
+      <button class="editor-button editor-icon-button" id="undoBtn" type="button" title="撤回 (Cmd/Ctrl+Z)" aria-label="撤回" disabled>↶</button>
+      <button class="editor-button editor-icon-button" id="redoBtn" type="button" title="重做 (Cmd/Ctrl+Shift+Z)" aria-label="重做" disabled>↷</button>
       <button class="editor-button" id="addTextBtn" type="button">添加文字框</button>
       <button class="editor-button" id="addImageBtn" type="button">添加图片</button>
       <div class="shape-picker-wrap">
@@ -2512,6 +2617,40 @@
       </div>
       <button class="editor-button primary" id="saveBtn" type="button">保存到本地</button>
       <button class="editor-button danger" id="exitEditBtn" type="button">退出编辑</button>
+    </div>
+    <div class="editor-help-modal" id="editorHelp" role="dialog" aria-modal="true" aria-labelledby="editorHelpTitle" hidden>
+      <div class="editor-help-card">
+        <div class="editor-help-header">
+          <h2 class="editor-help-title" id="editorHelpTitle">编辑器使用介绍</h2>
+          <button class="editor-help-close" id="helpCloseBtn" type="button" aria-label="关闭">×</button>
+        </div>
+        <div class="editor-help-body">
+          <section class="editor-help-section">
+            <h3>打开和选择</h3>
+            <p>按 E 或点左上角按钮进入编辑。点选画面里的文字、图片、背景图或视觉块后，右侧面板会显示可编辑属性。</p>
+          </section>
+          <section class="editor-help-section">
+            <h3>内容和图片</h3>
+            <ul>
+              <li>文字在右侧 Content 区修改，双击文字会自动聚焦到文字输入框。</li>
+              <li>拖入图片到画面可新增图片；选中图片后拖入或选择文件会替换它。</li>
+              <li>未标记的普通 HTML 也会自动识别常见文本、图片、背景图、SVG/canvas 和有边框/背景的视觉块。</li>
+            </ul>
+          </section>
+          <section class="editor-help-section">
+            <h3>布局和样式</h3>
+            <p>拖动选框移动元素，拖右下角改变尺寸；右侧 Layout 可以精确输入位置和大小。拖动时会出现对齐参考线，方便和画面中心或其他元素吸附。</p>
+          </section>
+          <section class="editor-help-section">
+            <h3>动效和保存</h3>
+            <ul>
+              <li>Motion 区可以设置入场方式、出现顺序、延迟和时长，并支持预览当前元素或重播本页。</li>
+              <li>撤回用 ↶ 或 Cmd/Ctrl+Z；重做用 ↷ 或 Cmd/Ctrl+Shift+Z。</li>
+              <li>保存到本地会下载当前 index.html，并清理选框、临时检测标记和编辑器界面。</li>
+            </ul>
+          </section>
+        </div>
+      </div>
     </div>
     <div class="shape-menu" id="shapeMenu" role="menu" hidden>
       <button class="shape-choice" type="button" data-shape-choice="rect">矩形</button>
@@ -2807,7 +2946,11 @@
         this.attachFrame();
         this.controls = {
           slideRail: document.getElementById("slideRail"),
+          help: document.getElementById("helpBtn"),
+          helpModal: document.getElementById("editorHelp"),
+          helpClose: document.getElementById("helpCloseBtn"),
           undo: document.getElementById("undoBtn"),
+          redo: document.getElementById("redoBtn"),
           addText: document.getElementById("addTextBtn"),
           addImage: document.getElementById("addImageBtn"),
           addShape: document.getElementById("addShapeBtn"),
@@ -2902,7 +3045,7 @@
       shouldIgnoreEditorCandidate(element) {
         if (element.closest(".editor-shell, .editor-frame, .editor-guide")) return true;
         if (element.closest("[data-generated-chrome]")) return true;
-        if (element.matches("script, style, template, meta, link, br, defs, clipPath, mask, pattern, linearGradient, radialGradient, stop")) return true;
+        if (element.matches("script, style, template, meta, link, br, wbr, defs, clipPath, mask, pattern, linearGradient, radialGradient, stop, source, track")) return true;
         if (element.matches(".deck-progress, .deck-count, .deck-controls, .edit-hotzone, .edit-toggle")) return true;
         return false;
       }
@@ -2919,15 +3062,21 @@
       }
 
       inferEditorKind(element) {
-        if (element.matches("img, picture, video, canvas, svg") || this.isBackgroundMediaCandidate(element)) return "media";
+        if (element.matches(this.mediaSelector()) || this.isBackgroundMediaCandidate(element) || this.isMediaWrapperCandidate(element)) return "media";
         if (this.isTextCandidate(element)) return "text";
         if (this.isVisualBoxCandidate(element)) return "box";
         return "";
       }
 
+      mediaSelector() {
+        return "img, picture, video, canvas, svg, iframe, object, embed";
+      }
+
       isTextCandidate(element) {
         if (!this.hasVisibleText(element)) return false;
-        if (element.querySelector("img, picture, video, canvas, svg")) return false;
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 2 || rect.height < 2) return false;
+        if (element.querySelector(this.mediaSelector())) return false;
         const textTags = "h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,caption,td,th,button,a,label,span,small,strong,em,b,i,code,pre";
         if (element.matches(textTags)) return !this.hasTextBlockChild(element);
         return this.hasDirectText(element) && !this.hasTextBlockChild(element);
@@ -2952,13 +3101,14 @@
         const rect = element.getBoundingClientRect();
         if (rect.width < 24 || rect.height < 18) return false;
         if (rect.width > 1700 && rect.height > 850) return false;
-        if (element.matches("main, article, nav, ul, ol, table, tbody, thead, tr, section.slide")) return false;
+        if (element.matches("main, article, nav, header, footer, form, ul, ol, table, tbody, thead, tr, section.slide")) return false;
         if (this.isBroadLayoutContainer(element)) return false;
         const style = getComputedStyle(element);
         const borderWidth = ["Top", "Right", "Bottom", "Left"].some((side) => Number.parseFloat(style[`border${side}Width`]) > 0);
         const hasBackground = style.backgroundImage !== "none" || !["rgba(0, 0, 0, 0)", "transparent"].includes(style.backgroundColor);
         const hasShape = style.clipPath !== "none" || style.boxShadow !== "none";
-        return borderWidth || hasBackground || hasShape;
+        const hasMedia = Boolean(element.querySelector(this.mediaSelector()));
+        return borderWidth || hasBackground || hasShape || hasMedia;
       }
 
       hasCssBackgroundImage(element) {
@@ -2970,8 +3120,18 @@
         if (!this.hasCssBackgroundImage(element)) return false;
         const rect = element.getBoundingClientRect();
         if (rect.width < 96 || rect.height < 72) return false;
-        if (element.matches("main, article, nav, section.slide")) return false;
+        if (element.matches("main, article, nav, header, footer, section.slide")) return false;
         return !this.isBroadLayoutContainer(element);
+      }
+
+      isMediaWrapperCandidate(element) {
+        if (element.matches("main, article, nav, header, footer, ul, ol, table, section.slide")) return false;
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 96 || rect.height < 72) return false;
+        if (rect.width > 1700 && rect.height > 850) return false;
+        if (this.isBroadLayoutContainer(element)) return false;
+        const media = Array.from(element.querySelectorAll(this.mediaSelector())).filter((node) => !this.shouldIgnoreEditorCandidate(node));
+        return media.length === 1;
       }
 
       isBroadLayoutContainer(element) {
@@ -2991,6 +3151,11 @@
       }
 
       bindControls() {
+        this.controls.help.addEventListener("click", () => this.openHelp());
+        this.controls.helpClose.addEventListener("click", () => this.closeHelp());
+        this.controls.helpModal.addEventListener("click", (event) => {
+          if (event.target === this.controls.helpModal) this.closeHelp();
+        });
         this.toggle.addEventListener("click", () => this.toggleEditMode());
         this.hotzone.addEventListener("mouseenter", () => this.showButtons());
         this.hotzone.addEventListener("mouseleave", () => this.scheduleHide());
@@ -2999,6 +3164,7 @@
         this.toggle.addEventListener("mouseleave", () => this.scheduleHide());
 
         this.controls.undo.addEventListener("click", () => this.undo());
+        this.controls.redo.addEventListener("click", () => this.redo());
         this.controls.addText.addEventListener("click", () => this.addText());
         this.controls.addImage.addEventListener("click", () => {
           this.openImagePicker();
@@ -3111,6 +3277,21 @@
       }
 
       handleKeydown(event) {
+        if (event.key === "Escape" && !this.controls.helpModal.hidden) {
+          event.preventDefault();
+          this.closeHelp();
+          return;
+        }
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && this.isActive && event.shiftKey) {
+          event.preventDefault();
+          this.redo();
+          return;
+        }
+        if ((event.ctrlKey && !event.metaKey) && event.key.toLowerCase() === "y" && this.isActive) {
+          event.preventDefault();
+          this.redo();
+          return;
+        }
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && this.isActive && !event.shiftKey) {
           event.preventDefault();
           this.undo();
@@ -3139,6 +3320,14 @@
           this.updateInspector();
           this.save(false, true);
         }
+      }
+
+      openHelp() {
+        this.controls.helpModal.hidden = false;
+      }
+
+      closeHelp() {
+        this.controls.helpModal.hidden = true;
       }
 
       isFormTarget(target) {
@@ -3196,8 +3385,20 @@
         if (!element || element.classList.contains("editor-layer")) return element;
         if (element.dataset.editorAuto !== "true") return element;
         const explicitParent = element.parentElement?.closest("[data-editable], [data-editable-media], [data-editable-box], .editor-layer");
-        if (!explicitParent || !this.stage.contains(explicitParent)) return element;
-        return explicitParent.closest(".slide") === element.closest(".slide") ? explicitParent : element;
+        if (explicitParent && this.stage.contains(explicitParent) && explicitParent.closest(".slide") === element.closest(".slide")) {
+          return explicitParent;
+        }
+        const mediaParent = element.parentElement?.closest("[data-editor-auto='true'][data-editor-kind='media']");
+        if (
+          mediaParent &&
+          mediaParent !== element &&
+          this.stage.contains(mediaParent) &&
+          mediaParent.closest(".slide") === element.closest(".slide") &&
+          this.isMediaWrapperCandidate(mediaParent)
+        ) {
+          return mediaParent;
+        }
+        return element;
       }
 
       select(element) {
@@ -4257,7 +4458,7 @@
         if (this.isRestoringHistory) return;
         const snapshot = JSON.stringify(data);
         if (this.undoStack[this.historyIndex] === snapshot) {
-          this.updateUndoButton();
+          this.updateHistoryButtons();
           return;
         }
         if (this.historyIndex < this.undoStack.length - 1) {
@@ -4266,7 +4467,7 @@
         this.undoStack.push(snapshot);
         if (this.undoStack.length > this.historyLimit) this.undoStack.shift();
         this.historyIndex = this.undoStack.length - 1;
-        this.updateUndoButton();
+        this.updateHistoryButtons();
       }
 
       undo() {
@@ -4279,13 +4480,29 @@
           localStorage.setItem(this.storageKey, snapshot);
         } finally {
           this.isRestoringHistory = false;
-          this.updateUndoButton();
+          this.updateHistoryButtons();
         }
         this.toastMessage("已撤回");
       }
 
-      updateUndoButton() {
+      redo() {
+        if (this.historyIndex >= this.undoStack.length - 1) return;
+        this.historyIndex += 1;
+        const snapshot = this.undoStack[this.historyIndex];
+        this.isRestoringHistory = true;
+        try {
+          this.restoreSnapshot(JSON.parse(snapshot));
+          localStorage.setItem(this.storageKey, snapshot);
+        } finally {
+          this.isRestoringHistory = false;
+          this.updateHistoryButtons();
+        }
+        this.toastMessage("已重做");
+      }
+
+      updateHistoryButtons() {
         this.controls.undo.disabled = this.historyIndex <= 0;
+        this.controls.redo.disabled = this.historyIndex >= this.undoStack.length - 1;
       }
 
       restoreSnapshot(data) {
@@ -4324,6 +4541,9 @@
         });
         clone.querySelectorAll(".edit-toggle").forEach((node) => {
           node.classList.remove("active", "show");
+        });
+        clone.querySelectorAll(".editor-help-modal").forEach((node) => {
+          node.hidden = true;
         });
         clone.querySelectorAll("#editorFrame, #editorGuideV, #editorGuideH, .editor-guide").forEach((node) => node.classList.remove("active"));
         clone.querySelectorAll("#editorToast").forEach((node) => {

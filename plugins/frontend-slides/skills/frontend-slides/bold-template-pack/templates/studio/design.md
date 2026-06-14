@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Studio
-description: A "Boring Studios" agency presentation system — type-as-graphic-mass in the spirit of contemporary design-studio decks (Pentagram, Anti, Order). The entire system runs on Barlow at weight 900 uppercase, with type so heavy at display scale that it stops being type and starts being a shape. The palette is binary plus one: near-black field (#1C1C1C), acid yellow type (#F5D200), and the same yellow as a full slide background. IBM Plex Mono carries every footer metadata, slide counter, and three-column lockup. No drop shadows, no rounded corners, no accent colors — the headline IS the design, and the only chromatic decision per slide is dark-yellow-on-near-black or near-black-on-acid-yellow.
+description: "A \"Boring Studios\" agency presentation system — type-as-graphic-mass in the spirit of contemporary design-studio decks (Pentagram, Anti, Order). The entire system runs on Barlow at weight 900 uppercase, with type so heavy at display scale that it stops being type and starts being a shape. The palette is binary plus one: near-black field (#1C1C1C), acid yellow type (#F5D200), and the same yellow as a full slide background. IBM Plex Mono carries every footer metadata, slide counter, and three-column lockup. No drop shadows, no rounded corners, no accent colors — the headline IS the design, and the only chromatic decision per slide is dark-yellow-on-near-black or near-black-on-acid-yellow."
 
 colors:
   near-black: "#1C1C1C"

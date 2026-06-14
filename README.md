@@ -512,7 +512,7 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a workflow
 | ------------------------- | ------------------------------ | ------------------------- |
 | `SKILL.md`                | Core workflow and rules        | Always (skill invocation) |
 | `STYLE_PRESETS.md`        | 12 curated visual presets      | Phase 2 (style selection) |
-| `bold-template-pack/selection-index.json` | Compact bold template metadata | Phase 2 (candidate selection) |
+| `bold-template-pack/selection-index.json` | Compact bold template metadata for candidate selection | Phase 2 (style selection) |
 | `bold-template-pack/templates/*/preview.md` | Tiny style cards for shortlisted bold previews | Phase 2 after shortlisting |
 | `bold-template-pack/templates/*/design.md` | Full design system for the selected bold template | Phase 3 after user selection |
 | `viewport-base.css`       | Mandatory fixed-stage CSS      | Phase 3 (generation)      |

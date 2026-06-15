@@ -170,14 +170,35 @@ Every presentation must include:
 
 4. **Visual Deck Editor** (included by default after draft generation):
    - Edit toggle button (hidden by default, revealed via hover hotzone or `E` key)
-   - HTML-adaptive object detection, auto-save to localStorage, undo, snapping, image replacement, and save/download
+   - HTML-adaptive object detection, auto-save to localStorage, undo, snapping, image replacement, and overwrite-first save with download fallback
+   - Use the fixed runtime in `visual-editor/editor-runtime.css` and `visual-editor/editor-runtime.js`; do not generate a new editor implementation per deck
    - See "Visual Deck Editor Implementation" section below
 
 ## Visual Deck Editor Implementation
 
 The visual deck editor is a lightweight post-draft affordance. Do not ask the user whether they want it during the pre-generation Q&A. Include it by default unless the user explicitly asks for a locked/export-only presentation or no editing controls.
 
-Project boundary: this editor is being incubated as a portable deck-editor runtime inside Frontend Slides. Keep the implementation deck-neutral and compatible with the contract in `visual-editor/README.md`; do not bake in a specific generated deck, project name, or fork-only assumption.
+Project boundary: the editor is a fixed portable deck-editor runtime inside Frontend Slides. Keep the implementation deck-neutral and compatible with the contract in `visual-editor/README.md`; do not bake in a specific generated deck, project name, or fork-only assumption.
+
+Generated output folders must include a local copy of:
+
+```text
+visual-editor/editor-runtime.css
+visual-editor/editor-runtime.js
+```
+
+The generated `index.html` must load and mount that runtime instead of inlining or regenerating editor CSS/JS:
+
+```html
+<link rel="stylesheet" href="visual-editor/editor-runtime.css">
+<script src="visual-editor/editor-runtime.js"></script>
+<script>
+  window.presentation = new SlidePresentation();
+  window.editor = window.FrontendSlidesEditor.mount({ presentation: window.presentation });
+</script>
+```
+
+If the deck has its own presentation controller, expose `window.presentation` with `slides`, `currentSlide`, `showSlide(index)`, and preferably `scaleStage()`. The runtime provides a fallback adapter, but generated decks should expose those methods explicitly for predictable editing layout.
 
 The editor must understand ordinary slide HTML instead of requiring every editable object to be pre-marked. At startup, scan the fixed-stage deck (`#deckStage` / `.deck-stage`, `.slide`) and infer editable objects from the rendered DOM:
 
@@ -187,7 +208,7 @@ The editor must understand ordinary slide HTML instead of requiring every editab
 
 `data-editable`, `data-editable-media`, and `data-editable-box` are optional hints only. Use them to improve accuracy when helpful, but never make the editor depend on those attributes. Temporary markers created by detection, such as `data-editor-kind` or `data-editor-auto`, must be removed from saved/exported HTML.
 
-Minimum editor controls: left slide rail, right inspector, text editing in the inspector, drag/drop image replacement, choose-file image replacement, add text, add shape through a shape menu, font/color/layout/motion controls, multi-step undo with Command/Ctrl+Z, snapping guides, and one visible Save button that downloads the current `index.html`.
+Minimum editor controls: left slide rail, right inspector, text editing in the inspector, drag/drop image replacement, choose-file image replacement, add text, add shape through a shape menu, font/color/layout/motion controls, multi-step undo with Command/Ctrl+Z, snapping guides, and one visible Save button. Save must be overwrite-first through the File System Access API when the browser supports it, with HTML download fallback.
 
 Font editing should be lightweight by default. The font selector should reuse existing deck CSS variables such as `--font-display`, `--font-body`, and `--font-mono`, or already-loaded font stacks. Do not embed font files, base64 fonts, or add new font CDN links unless the user explicitly asks for custom font import.
 

@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 逐渐替代 PPT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           THEME TOKENS
+           Edit these variables to change the deck look.
+           =========================================== */
+        :root {
+            --stage-bg: #090907;
+            --slide-bg: #111111;
+            --ink: #111111;
+            --ink-2: #1a1a18;
+            --cream: #f0ece5;
+            --cream-2: #bdb7aa;
+            --cream-3: #777267;
+            --orange: #e85d26;
+            --orange-2: #ff7a36;
+            --cyan: #46d9eb;
+            --magenta: #e954d4;
+            --green: #9eea75;
+            --line: #2b2b27;
+            --line-on-orange: rgba(17, 17, 17, 0.2);
+            --font-display: "Barlow", "Noto Sans SC", sans-serif;
+            --font-body: "Barlow", "Noto Sans SC", sans-serif;
+            --font-mono: "IBM Plex Mono", "Noto Sans SC", monospace;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-hard: cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        /* ===========================================
+           RESET
+           Keeps the slide stage predictable.
+           =========================================== */
+        * {
+            box-sizing: border-box;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        /* ===========================================
+           FIXED 16:9 STAGE: MANDATORY BASE STYLES
+           Include this ENTIRE file in every presentation.
+           Slides are authored at 1920×1080 and scaled as a whole.
+           =========================================== */
+
+        /* 1. Lock the browser viewport */
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--stage-bg, #000);
+        }
+
+        /* 2. Full-window deck viewport */
+        .deck-viewport {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: var(--stage-bg, #000);
+        }
+
+        /* 3. Fixed 16:9 design canvas.
+           JavaScript sets transform: translate(...) scale(...). */
+        .deck-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            transform-origin: 0 0;
+            background: var(--slide-bg, #fff);
+        }
+
+        /* 4. Slides stack inside the fixed stage.
+           Content must be laid out at 1920×1080, not reflowed per device. */
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            display: block;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            background: var(--slide-bg, #fff);
+        }
+
+        .slide.active,
+        .slide.visible {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 1;
+        }
+
+        /* 5. Keep media inside authored slide bounds */
+        img,
+        video,
+        canvas,
+        svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* 6. Presentation chrome stays outside the slide design system */
+        .deck-controls {
+            position: fixed;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        /* 7. Print one fixed-size slide per page */
+        @media print {
+            html,
+            body {
+                width: 1920px;
+                height: auto;
+                overflow: visible;
+                background: #fff;
+            }
+
+            .deck-viewport {
+                position: static;
+                overflow: visible;
+                background: #fff;
+            }
+
+            .deck-stage {
+                position: static;
+                width: auto;
+                height: auto;
+                transform: none !important;
+                background: none;
+            }
+
+            .slide {
+                position: relative;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                width: 1920px;
+                height: 1080px;
+                break-after: page;
+                page-break-after: always;
+            }
+
+            .slide:last-child {
+                break-after: auto;
+                page-break-after: auto;
+            }
+
+            .deck-controls {
+                display: none !important;
+            }
+        }
+
+        /* 8. Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+        }
+
+        /* ===========================================
+           SLIDE FOUNDATION
+           These classes create a PPT-like stage with web motion.
+           =========================================== */
+        body {
+            font-family: var(--font-body);
+            color: var(--cream);
+        }
+
+        .slide {
+            padding: 74px 86px;
+            color: var(--cream);
+            isolation: isolate;
+        }
+
+        .slide.dark {
+            background:
+                radial-gradient(circle at 78% 22%, rgba(70, 217, 235, 0.16), transparent 28%),
+                radial-gradient(circle at 18% 86%, rgba(232, 93, 38, 0.16), transparent 30%),
+                linear-gradient(145deg, #111111 0%, #0c0c0a 100%);
+        }
+
+        .slide.orange {
+            background:
+                radial-gradient(circle at 78% 28%, rgba(255, 201, 129, 0.24), transparent 26%),
+                linear-gradient(135deg, #e85d26 0%, #c64218 100%);
+            color: var(--ink);
+        }
+
+        .slide::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -3;
+            background-image:
+                linear-gradient(rgba(240, 236, 229, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(240, 236, 229, 0.035) 1px, transparent 1px);
+            background-size: 96px 96px;
+            opacity: 0.72;
+            transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -8px), 0);
+        }
+
+        .orange::before {
+            background-image:
+                linear-gradient(rgba(17, 17, 17, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(17, 17, 17, 0.07) 1px, transparent 1px);
+            opacity: 0.58;
+        }
+
+        .slide::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            background: linear-gradient(90deg, transparent 0%, rgba(232, 93, 38, 0.1) 48%, transparent 100%);
+            transform: translateX(-120%);
+            opacity: 0;
+        }
+
+        .slide.visible::after {
+            animation: scan 1.1s var(--ease-hard) 0.15s both;
+        }
+
+        .chrome {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            top: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            color: var(--cream-3);
+            font-family: var(--font-mono);
+            font-size: 17px;
+            letter-spacing: 0;
+            z-index: 5;
+        }
+
+        .orange .chrome {
+            color: rgba(17, 17, 17, 0.58);
+            border-bottom-color: var(--line-on-orange);
+        }
+
+        .foot {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            bottom: 42px;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            color: var(--cream-3);
+            font-family: var(--font-mono);
+            font-size: 16px;
+            letter-spacing: 0;
+            z-index: 5;
+        }
+
+        .orange .foot {
+            color: rgba(17, 17, 17, 0.55);
+            border-top-color: var(--line-on-orange);
+        }
+
+        .kicker {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--orange);
+            letter-spacing: 0;
+            margin-bottom: 22px;
+        }
+
+        .orange .kicker {
+            color: rgba(17, 17, 17, 0.76);
+        }
+
+        .mega {
+            font-family: var(--font-display);
+            font-size: 178px;
+            font-weight: 900;
+            line-height: 0.9;
+            letter-spacing: 0;
+        }
+
+        .title-xl {
+            font-family: var(--font-display);
+            font-size: 132px;
+            font-weight: 900;
+            line-height: 0.93;
+            letter-spacing: 0;
+        }
+
+        .title-lg {
+            font-family: var(--font-display);
+            font-size: 104px;
+            font-weight: 900;
+            line-height: 0.98;
+            letter-spacing: 0;
+        }
+
+        .lead {
+            font-size: 38px;
+            font-weight: 500;
+            line-height: 1.28;
+            color: var(--cream-2);
+        }
+
+        .orange .lead {
+            color: rgba(17, 17, 17, 0.76);
+        }
+
+        .body-copy {
+            font-size: 30px;
+            line-height: 1.45;
+            color: var(--cream-2);
+        }
+
+        .orange .body-copy {
+            color: rgba(17, 17, 17, 0.74);
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+            letter-spacing: 0;
+        }
+
+        .accent {
+            color: var(--orange);
+        }
+
+        .cyan {
+            color: var(--cyan);
+        }
+
+        .orange .accent {
+            color: var(--ink);
+        }
+
+        .rule {
+            width: 136px;
+            height: 5px;
+            background: var(--orange);
+            margin: 32px 0;
+        }
+
+        .orange .rule {
+            background: var(--ink);
+        }
+
+        .two-col {
+            position: absolute;
+            inset: 150px 86px 112px 86px;
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 64px;
+            align-items: center;
+        }
+
+        .three-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.035);
+            padding: 34px;
+        }
+
+        .orange .panel {
+            border-color: var(--line-on-orange);
+            background: rgba(17, 17, 17, 0.065);
+        }
+
+        .panel h3 {
+            font-size: 42px;
+            line-height: 1.08;
+            margin-bottom: 16px;
+            font-weight: 800;
+        }
+
+        .panel p {
+            font-size: 27px;
+            line-height: 1.36;
+            color: var(--cream-2);
+        }
+
+        .orange .panel p {
+            color: rgba(17, 17, 17, 0.7);
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--orange);
+            color: var(--orange);
+            padding: 9px 14px;
+            font-family: var(--font-mono);
+            font-size: 17px;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+
+        .orange .tag {
+            color: var(--ink);
+            border-color: rgba(17, 17, 17, 0.35);
+        }
+
+        .asset {
+            position: absolute;
+            z-index: 2;
+            filter: drop-shadow(0 24px 44px rgba(0, 0, 0, 0.42));
+            transform: translate3d(calc(var(--px, 0) * 22px), calc(var(--py, 0) * 18px), 0);
+        }
+
+        .media-frame {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: #050504;
+        }
+
+        .media-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .media-frame::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(232, 93, 38, 0.2), transparent 38%),
+                linear-gradient(0deg, rgba(0, 0, 0, 0.72), transparent 46%);
+            pointer-events: none;
+        }
+
+        .shot-label {
+            position: absolute;
+            left: 26px;
+            bottom: 24px;
+            z-index: 2;
+            color: var(--cream);
+            font-family: var(--font-mono);
+            font-size: 18px;
+            letter-spacing: 0;
+        }
+
+        .mini-slide {
+            position: relative;
+            width: 280px;
+            height: 158px;
+            border: 2px solid rgba(17, 17, 17, 0.34);
+            background: rgba(240, 236, 229, 0.72);
+            padding: 20px;
+        }
+
+        .mini-slide::before {
+            content: "";
+            display: block;
+            width: 78px;
+            height: 18px;
+            background: var(--orange);
+            margin-bottom: 20px;
+        }
+
+        .mini-slide::after {
+            content: "";
+            display: block;
+            width: 184px;
+            height: 12px;
+            background: rgba(17, 17, 17, 0.28);
+            box-shadow: 0 24px 0 rgba(17, 17, 17, 0.18), 0 48px 0 rgba(17, 17, 17, 0.12);
+        }
+
+        .shape-line {
+            position: absolute;
+            height: 2px;
+            background: var(--orange);
+            transform-origin: left center;
+            z-index: 1;
+        }
+
+        .html-code {
+            border-left: 3px solid var(--orange);
+            padding-left: 26px;
+            color: var(--cream-2);
+            font-family: var(--font-mono);
+            font-size: 27px;
+            line-height: 1.55;
+        }
+
+        .orange .html-code {
+            color: rgba(17, 17, 17, 0.74);
+            border-left-color: var(--ink);
+        }
+
+        .callout {
+            position: absolute;
+            z-index: 6;
+            min-width: 210px;
+            border: 1px solid rgba(240, 236, 229, 0.18);
+            background: rgba(17, 17, 17, 0.72);
+            padding: 18px 20px;
+            color: var(--cream);
+            font-family: var(--font-mono);
+            font-size: 17px;
+            line-height: 1.25;
+        }
+
+        .orange .callout {
+            color: var(--ink);
+            background: rgba(240, 236, 229, 0.48);
+            border-color: rgba(17, 17, 17, 0.22);
+        }
+
+        .callout b {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--orange);
+            font-size: 24px;
+        }
+
+        .orange .callout b {
+            color: var(--ink);
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .metric {
+            border-top: 2px solid var(--orange);
+            padding-top: 15px;
+        }
+
+        .metric b {
+            display: block;
+            font-size: 48px;
+            line-height: 1;
+            color: var(--orange);
+            font-weight: 900;
+        }
+
+        .metric span {
+            display: block;
+            margin-top: 10px;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            color: var(--cream-3);
+            line-height: 1.25;
+        }
+
+        .orange .metric {
+            border-top-color: var(--ink);
+        }
+
+        .orange .metric b,
+        .orange .metric span {
+            color: var(--ink);
+        }
+
+        .thumbnail-rail {
+            position: absolute;
+            display: flex;
+            gap: 14px;
+            z-index: 6;
+        }
+
+        .thumb-card {
+            width: 116px;
+            height: 66px;
+            border: 1px solid rgba(240, 236, 229, 0.24);
+            background:
+                linear-gradient(90deg, var(--orange) 0 34%, transparent 34%),
+                linear-gradient(rgba(240, 236, 229, 0.24) 0 0) 48px 18px / 48px 6px no-repeat,
+                linear-gradient(rgba(240, 236, 229, 0.14) 0 0) 48px 34px / 38px 5px no-repeat,
+                rgba(240, 236, 229, 0.04);
+        }
+
+        .orange .thumb-card {
+            border-color: rgba(17, 17, 17, 0.24);
+            background:
+                linear-gradient(90deg, var(--ink) 0 34%, transparent 34%),
+                linear-gradient(rgba(17, 17, 17, 0.35) 0 0) 48px 18px / 48px 6px no-repeat,
+                linear-gradient(rgba(17, 17, 17, 0.2) 0 0) 48px 34px / 38px 5px no-repeat,
+                rgba(240, 236, 229, 0.25);
+        }
+
+        .wire-card {
+            position: absolute;
+            z-index: 5;
+            border: 1px solid rgba(240, 236, 229, 0.2);
+            background: rgba(240, 236, 229, 0.035);
+            padding: 18px;
+        }
+
+        .wire-card::before {
+            content: "";
+            display: block;
+            width: 76px;
+            height: 8px;
+            background: var(--orange);
+            margin-bottom: 18px;
+        }
+
+        .wire-card::after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 8px;
+            background: rgba(240, 236, 229, 0.2);
+            box-shadow: 0 18px 0 rgba(240, 236, 229, 0.14), 0 36px 0 rgba(240, 236, 229, 0.1);
+        }
+
+        .orange .wire-card {
+            border-color: rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.28);
+        }
+
+        .orange .wire-card::before {
+            background: var(--ink);
+        }
+
+        .orange .wire-card::after {
+            background: rgba(17, 17, 17, 0.32);
+            box-shadow: 0 18px 0 rgba(17, 17, 17, 0.2), 0 36px 0 rgba(17, 17, 17, 0.13);
+        }
+
+        .chart-spark {
+            position: absolute;
+            z-index: 5;
+            width: 280px;
+            height: 132px;
+            border: 1px solid rgba(240, 236, 229, 0.18);
+            background: rgba(17, 17, 17, 0.45);
+            overflow: hidden;
+        }
+
+        .chart-spark i {
+            position: absolute;
+            bottom: 18px;
+            width: 28px;
+            background: var(--orange);
+        }
+
+        .chart-spark i:nth-child(1) { left: 28px; height: 34px; opacity: 0.42; }
+        .chart-spark i:nth-child(2) { left: 72px; height: 62px; opacity: 0.58; }
+        .chart-spark i:nth-child(3) { left: 116px; height: 46px; opacity: 0.74; }
+        .chart-spark i:nth-child(4) { left: 160px; height: 82px; }
+        .chart-spark i:nth-child(5) { left: 204px; height: 58px; background: var(--cyan); }
+
+        /* ===========================================
+           ENTRANCE AND AMBIENT MOTION
+           Slide elements reveal in a presenter-friendly sequence.
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(34px);
+            transition:
+                opacity 0.62s var(--ease),
+                transform 0.62s var(--ease),
+                filter 0.62s var(--ease);
+            transition-delay: var(--d, 0s);
+            filter: blur(8px);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-70px);
+            transition:
+                opacity 0.68s var(--ease),
+                transform 0.68s var(--ease);
+            transition-delay: var(--d, 0s);
+        }
+
+        .slide.visible .reveal-left {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.86);
+            transition:
+                opacity 0.74s var(--ease),
+                transform 0.74s var(--ease);
+            transition-delay: var(--d, 0s);
+        }
+
+        .slide.visible .reveal-scale {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .float-soft {
+            animation: floatSoft 5.2s ease-in-out infinite alternate;
+        }
+
+        .float-hard {
+            animation: floatHard 4.8s ease-in-out infinite alternate;
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 3.2s ease-in-out infinite;
+        }
+
+        .dash {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--orange), transparent);
+            opacity: 0.85;
+            transform-origin: left center;
+            animation: dashMove 2.4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                opacity: 0;
+                transform: translateX(-120%);
+            }
+            18% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(120%);
+            }
+        }
+
+        @keyframes floatSoft {
+            from {
+                translate: 0 0;
+            }
+            to {
+                translate: 0 -18px;
+            }
+        }
+
+        @keyframes floatHard {
+            from {
+                translate: 0 0;
+                rotate: -1deg;
+            }
+            to {
+                translate: 8px -24px;
+                rotate: 1deg;
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%,
+            100% {
+                filter: drop-shadow(0 24px 44px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 0 rgba(232, 93, 38, 0));
+            }
+            50% {
+                filter: drop-shadow(0 24px 44px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 34px rgba(232, 93, 38, 0.5));
+            }
+        }
+
+        @keyframes dashMove {
+            from {
+                background-position: 0 0;
+            }
+            to {
+                background-position: 220px 0;
+            }
+        }
+
+        /* ===========================================
+           SLIDE-SPECIFIC COMPOSITION
+           Each slide is still a PPT-like full screen.
+           =========================================== */
+        .s1 .title-stack {
+            position: absolute;
+            left: 90px;
+            top: 110px;
+            width: 980px;
+            z-index: 4;
+        }
+
+        .s1 .lead {
+            width: 790px;
+            margin-top: 30px;
+            color: rgba(17, 17, 17, 0.78);
+        }
+
+        .s1 .browser-asset {
+            width: 770px;
+            right: 70px;
+            bottom: 72px;
+        }
+
+        .s1 .ppt-asset {
+            width: 420px;
+            right: 650px;
+            bottom: 86px;
+            opacity: 0.92;
+        }
+
+        .s1 .carousel-asset {
+            width: 560px;
+            left: 76px;
+            bottom: 86px;
+        }
+
+        .s1 .callout-a {
+            right: 142px;
+            top: 108px;
+        }
+
+        .s1 .callout-b {
+            right: 598px;
+            top: 198px;
+        }
+
+        .s1 .dash-a {
+            left: 1010px;
+            top: 578px;
+            width: 520px;
+            rotate: -14deg;
+        }
+
+        .s1 .rail-a {
+            left: 92px;
+            top: 50px;
+        }
+
+        .s2 .copy {
+            align-self: start;
+            padding-top: 38px;
+        }
+
+        .s2 .media-frame {
+            width: 814px;
+            height: 594px;
+        }
+
+        .s2 .chart-pack {
+            width: 400px;
+            right: 24px;
+            bottom: 118px;
+        }
+
+        .s2 .wire-a {
+            left: 814px;
+            top: 216px;
+            width: 210px;
+            height: 122px;
+        }
+
+        .s2 .wire-b {
+            right: 108px;
+            top: 206px;
+            width: 236px;
+            height: 136px;
+        }
+
+        .s2 .point-list {
+            margin-top: 42px;
+            display: grid;
+            gap: 20px;
+            font-size: 34px;
+            line-height: 1.22;
+        }
+
+        .s2 .point-list span::before {
+            content: "/";
+            color: var(--orange);
+            font-family: var(--font-mono);
+            margin-right: 16px;
+        }
+
+        .s3 .deck-strip {
+            position: absolute;
+            left: 92px;
+            bottom: 150px;
+            display: flex;
+            gap: 24px;
+        }
+
+        .s3 .deck-strip .mini-slide:nth-child(2) {
+            transform: translateY(-40px);
+        }
+
+        .s3 .deck-strip .mini-slide:nth-child(3) {
+            transform: translateY(26px);
+        }
+
+        .s3 .carousel-asset {
+            width: 620px;
+            left: 780px;
+            bottom: 110px;
+        }
+
+        .s3 .stack-asset {
+            width: 540px;
+            right: 100px;
+            bottom: 130px;
+        }
+
+        .s3 .claim {
+            position: absolute;
+            left: 90px;
+            top: 124px;
+            width: 1140px;
+        }
+
+        .s4 .browser-asset {
+            width: 680px;
+            left: 110px;
+            top: 250px;
+        }
+
+        .s4 .editor-controls {
+            width: 520px;
+            left: 280px;
+            top: 475px;
+        }
+
+        .s4 .checklist {
+            position: absolute;
+            right: 116px;
+            top: 190px;
+            width: 780px;
+            display: grid;
+            gap: 22px;
+        }
+
+        .s4 .check {
+            display: grid;
+            grid-template-columns: 76px 1fr;
+            align-items: center;
+            min-height: 84px;
+            border-bottom: 1px solid var(--line);
+            font-size: 38px;
+            font-weight: 800;
+        }
+
+        .s4 .check b {
+            color: var(--orange);
+            font-family: var(--font-mono);
+            font-size: 32px;
+        }
+
+        .s5 .compare {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            top: 176px;
+            bottom: 130px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1px solid var(--line);
+        }
+
+        .s5 .side {
+            position: relative;
+            padding: 52px;
+            overflow: hidden;
+        }
+
+        .s5 .side + .side {
+            border-left: 1px solid var(--line);
+        }
+
+        .s5 .side h2 {
+            font-size: 88px;
+            line-height: 0.98;
+            font-weight: 900;
+            margin-bottom: 22px;
+        }
+
+        .s5 .side p {
+            width: 560px;
+            font-size: 32px;
+            line-height: 1.34;
+            color: var(--cream-2);
+        }
+
+        .s5 .side img {
+            position: absolute;
+            right: 22px;
+            bottom: -36px;
+            width: 520px;
+        }
+
+        .s5 .html-side img {
+            width: 600px;
+            right: -20px;
+        }
+
+        .s5 .chart-pack {
+            width: 320px;
+            left: 585px;
+            bottom: 46px;
+        }
+
+        .s5 .export-kit {
+            width: 260px;
+            right: 442px;
+            bottom: 42px;
+            opacity: 0.9;
+        }
+
+        .s6 .motion-asset {
+            width: 840px;
+            right: 34px;
+            top: 250px;
+        }
+
+        .s6 .idea-stack {
+            position: absolute;
+            left: 92px;
+            top: 170px;
+            width: 790px;
+        }
+
+        .s6 .idea-stack .title-lg {
+            margin-bottom: 42px;
+        }
+
+        .s6 .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .s6 .tag {
+            font-size: 21px;
+            padding: 12px 18px;
+        }
+
+        .s6 .chart-a {
+            left: 920px;
+            top: 170px;
+        }
+
+        .s6 .wire-a {
+            right: 160px;
+            bottom: 152px;
+            width: 300px;
+            height: 160px;
+        }
+
+        .s7 .layer-lab {
+            position: absolute;
+            inset: 142px 86px 116px 86px;
+        }
+
+        .s7 .object-browser {
+            width: 520px;
+            left: 86px;
+            top: 345px;
+        }
+
+        .s7 .object-stack {
+            width: 430px;
+            left: 330px;
+            top: 585px;
+            opacity: 0.94;
+        }
+
+        .s7 .object-layers {
+            width: 610px;
+            left: 750px;
+            top: 340px;
+        }
+
+        .s7 .object-motion {
+            width: 690px;
+            right: 82px;
+            bottom: 120px;
+        }
+
+        .s7 .editor-controls {
+            width: 410px;
+            left: 126px;
+            top: 172px;
+            opacity: 0.9;
+        }
+
+        .s7 .caption-block {
+            position: absolute;
+            right: 112px;
+            top: 156px;
+            width: 620px;
+            z-index: 4;
+        }
+
+        .s8 .devices-asset {
+            width: 820px;
+            right: 80px;
+            top: 248px;
+        }
+
+        .s8 .export-kit {
+            width: 390px;
+            right: 448px;
+            bottom: 118px;
+        }
+
+        .s8 .route {
+            position: absolute;
+            left: 110px;
+            top: 212px;
+            width: 690px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .s8 .route-item {
+            display: grid;
+            grid-template-columns: 116px 1fr;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 22px;
+        }
+
+        .s8 .route-item b {
+            font-family: var(--font-mono);
+            color: var(--orange);
+            font-size: 30px;
+        }
+
+        .s8 .route-item span {
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .s9 .flow {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            bottom: 150px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .s9 .step {
+            min-height: 230px;
+            padding: 30px;
+            border: 1px solid var(--line-on-orange);
+            background: rgba(17, 17, 17, 0.075);
+        }
+
+        .s9 .step b {
+            font-family: var(--font-mono);
+            font-size: 23px;
+            color: rgba(17, 17, 17, 0.56);
+        }
+
+        .s9 .step h3 {
+            margin-top: 36px;
+            font-size: 40px;
+            line-height: 1.08;
+            font-weight: 900;
+        }
+
+        .s9 .scene {
+            position: absolute;
+            right: 88px;
+            top: 136px;
+            width: 694px;
+            height: 374px;
+            border: 1px solid var(--line-on-orange);
+            overflow: hidden;
+        }
+
+        .s9 .scene img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .s9 .editor-controls {
+            width: 330px;
+            right: 742px;
+            top: 226px;
+        }
+
+        .s9 .chart-pack {
+            width: 300px;
+            right: 90px;
+            bottom: 156px;
+        }
+
+        .s10 .final-stack {
+            position: absolute;
+            left: 92px;
+            top: 132px;
+            width: 1100px;
+            z-index: 5;
+        }
+
+        .s10 .final-stack .lead {
+            width: 910px;
+            margin-top: 34px;
+        }
+
+        .s10 .browser-asset {
+            width: 600px;
+            right: 62px;
+            bottom: 136px;
+        }
+
+        .s10 .motion-asset {
+            width: 820px;
+            right: 300px;
+            bottom: 52px;
+            opacity: 0.7;
+        }
+
+        .s10 .ppt-asset {
+            width: 300px;
+            right: 90px;
+            top: 142px;
+            opacity: 0.72;
+        }
+
+        .s10 .carousel-asset {
+            width: 460px;
+            right: 546px;
+            top: 72px;
+            opacity: 0.82;
+        }
+
+        .s10 .export-kit {
+            width: 330px;
+            right: 74px;
+            top: 372px;
+        }
+
+        /* ===========================================
+           V2 INTEGRATED PPT SYSTEM
+           Generated images are treated as purposeful slide objects.
+           =========================================== */
+        .v2-hero {
+            position: absolute;
+            left: 92px;
+            top: 122px;
+            z-index: 5;
+        }
+
+        .v2-title {
+            font-size: 122px;
+            line-height: 0.94;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .v2-title.large {
+            font-size: 152px;
+            line-height: 0.88;
+        }
+
+        .v2-lead {
+            width: 760px;
+            margin-top: 28px;
+            font-size: 35px;
+            line-height: 1.3;
+            font-weight: 500;
+            color: var(--cream-2);
+        }
+
+        .orange .v2-lead {
+            color: rgba(17, 17, 17, 0.72);
+        }
+
+        .v2-board {
+            position: absolute;
+            border: 1px solid var(--line);
+            background: rgba(240, 236, 229, 0.035);
+            overflow: hidden;
+        }
+
+        .orange .v2-board {
+            border-color: rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.24);
+        }
+
+        .v2-board::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(240, 236, 229, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(240, 236, 229, 0.035) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+
+        .orange .v2-board::before {
+            background-image:
+                linear-gradient(rgba(17, 17, 17, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(17, 17, 17, 0.06) 1px, transparent 1px);
+        }
+
+        .v2-img {
+            position: absolute;
+            z-index: 3;
+            filter: drop-shadow(0 28px 46px rgba(0, 0, 0, 0.38));
+        }
+
+        .v2-label {
+            position: absolute;
+            z-index: 6;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 48px;
+            padding: 12px 16px;
+            border: 1px solid rgba(240, 236, 229, 0.18);
+            background: rgba(17, 17, 17, 0.76);
+            color: var(--cream);
+            font-family: var(--font-mono);
+            font-size: 18px;
+            line-height: 1.2;
+        }
+
+        .orange .v2-label {
+            border-color: rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.46);
+            color: var(--ink);
+        }
+
+        .v2-label b {
+            color: var(--orange);
+            font-size: 24px;
+        }
+
+        .orange .v2-label b {
+            color: var(--ink);
+        }
+
+        .v2-rail {
+            position: absolute;
+            z-index: 6;
+            display: flex;
+            gap: 14px;
+            padding: 14px;
+            border: 1px solid rgba(17, 17, 17, 0.2);
+            background: rgba(240, 236, 229, 0.22);
+        }
+
+        .v2-thumb {
+            width: 132px;
+            height: 74px;
+            border: 1px solid rgba(17, 17, 17, 0.32);
+            background:
+                linear-gradient(90deg, var(--ink) 0 28%, transparent 28%),
+                linear-gradient(rgba(17, 17, 17, 0.32) 0 0) 48px 20px / 58px 7px no-repeat,
+                linear-gradient(rgba(17, 17, 17, 0.18) 0 0) 48px 38px / 42px 6px no-repeat,
+                rgba(240, 236, 229, 0.76);
+        }
+
+        .v2-thumb.active {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 2px rgba(70, 217, 235, 0.42);
+        }
+
+        .v2-card-grid {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            bottom: 126px;
+            display: grid;
+            gap: 22px;
+        }
+
+        .v2-card-grid.cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .v2-card-grid.cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .v2-card {
+            min-height: 210px;
+            border: 1px solid var(--line);
+            background: rgba(240, 236, 229, 0.035);
+            padding: 28px;
+        }
+
+        .orange .v2-card {
+            border-color: rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.26);
+        }
+
+        .v2-card b {
+            display: block;
+            color: var(--orange);
+            font-family: var(--font-mono);
+            font-size: 21px;
+            margin-bottom: 34px;
+        }
+
+        .orange .v2-card b {
+            color: rgba(17, 17, 17, 0.6);
+        }
+
+        .v2-card h3 {
+            font-size: 42px;
+            line-height: 1.05;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .v2-card p {
+            margin-top: 14px;
+            font-size: 25px;
+            line-height: 1.35;
+            color: var(--cream-2);
+        }
+
+        .orange .v2-card p {
+            color: rgba(17, 17, 17, 0.68);
+        }
+
+        .v2-split {
+            position: absolute;
+            inset: 150px 86px 118px 86px;
+            display: grid;
+            grid-template-columns: 0.92fr 1.08fr;
+            gap: 58px;
+            align-items: stretch;
+        }
+
+        .v2-split > .v2-board {
+            position: relative;
+            inset: auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        .v2-panel {
+            position: relative;
+            border: 1px solid var(--line);
+            background: rgba(240, 236, 229, 0.035);
+            overflow: hidden;
+            padding: 42px;
+        }
+
+        .orange .v2-panel {
+            border-color: rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.26);
+        }
+
+        .v2-panel-title {
+            font-size: 76px;
+            line-height: 0.98;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .v2-panel-copy {
+            width: 560px;
+            font-size: 30px;
+            line-height: 1.34;
+            color: var(--cream-2);
+        }
+
+        .orange .v2-panel-copy {
+            color: rgba(17, 17, 17, 0.72);
+        }
+
+        .v2-list {
+            display: grid;
+            gap: 18px;
+            margin-top: 34px;
+        }
+
+        .v2-list div {
+            display: grid;
+            grid-template-columns: 82px 1fr;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 15px;
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .orange .v2-list div {
+            border-bottom-color: rgba(17, 17, 17, 0.2);
+        }
+
+        .v2-list b {
+            font-family: var(--font-mono);
+            color: var(--orange);
+            font-size: 27px;
+        }
+
+        .orange .v2-list b {
+            color: rgba(17, 17, 17, 0.62);
+        }
+
+        .v2-stage-shot {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .v2-stage-shot-cover::after,
+        .v2-panel.media::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.68), transparent 58%);
+            pointer-events: none;
+        }
+
+        .v2-code {
+            font-family: var(--font-mono);
+            font-size: 24px;
+            line-height: 1.55;
+            color: var(--cream-2);
+            border-left: 3px solid var(--orange);
+            padding-left: 22px;
+        }
+
+        .orange .v2-code {
+            color: rgba(17, 17, 17, 0.72);
+            border-left-color: var(--ink);
+        }
+
+        .v2-matrix {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            bottom: 128px;
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1fr;
+            border: 1px solid var(--line);
+        }
+
+        .v2-matrix .cell {
+            min-height: 154px;
+            padding: 24px;
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .v2-matrix .cell:nth-child(3n) {
+            border-right: 0;
+        }
+
+        .v2-matrix .cell:nth-last-child(-n + 3) {
+            border-bottom: 0;
+        }
+
+        .v2-matrix b {
+            display: block;
+            font-family: var(--font-mono);
+            color: var(--orange);
+            font-size: 18px;
+            margin-bottom: 14px;
+        }
+
+        .v2-matrix span {
+            font-size: 31px;
+            line-height: 1.18;
+            font-weight: 800;
+        }
+
+        .v2-flow {
+            position: absolute;
+            left: 88px;
+            right: 88px;
+            bottom: 138px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .v2-flow .step {
+            min-height: 246px;
+            border: 1px solid rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.28);
+            padding: 28px;
+        }
+
+        .v2-flow b {
+            font-family: var(--font-mono);
+            font-size: 20px;
+            color: rgba(17, 17, 17, 0.55);
+        }
+
+        .v2-flow h3 {
+            margin-top: 42px;
+            font-size: 42px;
+            line-height: 1.05;
+            font-weight: 900;
+        }
+
+        .v2-artboard {
+            position: absolute;
+            left: 86px;
+            right: 86px;
+            top: 168px;
+            bottom: 120px;
+            border: 1px solid var(--line);
+            background: rgba(240, 236, 229, 0.035);
+        }
+
+        .v2-lane {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--line);
+        }
+
+        .v2-lane:nth-child(1) { top: 25%; }
+        .v2-lane:nth-child(2) { top: 50%; }
+        .v2-lane:nth-child(3) { top: 75%; }
+
+        .v2-chip {
+            position: absolute;
+            z-index: 4;
+            border: 1px solid rgba(240, 236, 229, 0.18);
+            background: rgba(17, 17, 17, 0.76);
+            color: var(--cream);
+            padding: 12px 15px;
+            font-family: var(--font-mono);
+            font-size: 17px;
+        }
+
+        .orange .v2-chip {
+            border-color: rgba(17, 17, 17, 0.22);
+            background: rgba(240, 236, 229, 0.5);
+            color: var(--ink);
+        }
+
+        .v2-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, var(--orange), var(--cyan));
+            transform-origin: left center;
+            z-index: 2;
+        }
+
+        .p1 .visual {
+            right: 82px;
+            top: 128px;
+            width: 780px;
+            height: 616px;
+        }
+
+        .p1 .browser { width: 620px; right: 30px; bottom: 42px; }
+        .p1 .stack { width: 318px; left: 48px; bottom: 70px; }
+        .p1 .motion { width: 560px; left: 106px; top: 130px; opacity: 0.72; }
+        .p1 .carousel { width: 526px; left: 100px; bottom: 98px; }
+
+        .p2 .carousel { width: 760px; right: 80px; top: 210px; }
+        .p2 .rail { right: 134px; bottom: 172px; }
+
+        .p3 .chart-pack { width: 548px; right: 110px; top: 226px; }
+        .p3 .browser { width: 372px; right: 462px; bottom: 126px; opacity: 0.95; }
+
+        .p4 .browser { width: 704px; right: 130px; top: 250px; }
+        .p4 .motion { width: 600px; right: 198px; bottom: 118px; opacity: 0.64; }
+
+        .p5 .ppt { width: 500px; right: 20px; bottom: 10px; }
+        .p5 .html { width: 585px; right: -10px; bottom: -18px; }
+
+        .p6 .browser { width: 336px; left: 80px; bottom: 82px; }
+        .p6 .html { width: 462px; left: 360px; top: 286px; }
+        .p6 .motion { width: 540px; right: 54px; top: 132px; opacity: 0.82; }
+        .p6 .chart { width: 338px; left: 96px; top: 248px; }
+
+        .p6 .v2-title {
+            font-size: 76px;
+            line-height: 1.02;
+        }
+
+        .p6 .v2-lead {
+            width: 650px;
+            font-size: 27px;
+        }
+
+        .p6 .v2-artboard {
+            left: 760px;
+            right: 86px;
+            top: 168px;
+            bottom: 124px;
+        }
+
+        .p7 .editor { width: 700px; left: 128px; top: 270px; }
+        .p7 .browser { width: 420px; left: 426px; bottom: 110px; opacity: 0.88; }
+
+        .p8 .devices { width: 740px; right: 110px; top: 204px; }
+        .p8 .export { width: 300px; right: 746px; top: 426px; }
+
+        .p9 .scene {
+            position: absolute;
+            right: 90px;
+            top: 132px;
+            width: 690px;
+            height: 394px;
+            border: 1px solid rgba(17, 17, 17, 0.22);
+            overflow: hidden;
+        }
+
+        .p9 .scene img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .p9 .export { width: 316px; right: 120px; bottom: 184px; }
+
+        .p10 .browser { width: 520px; right: 90px; bottom: 118px; }
+        .p10 .carousel { width: 450px; right: 580px; top: 104px; opacity: 0.84; }
+        .p10 .motion { width: 740px; right: 278px; bottom: 54px; opacity: 0.62; }
+
+        /* ===========================================
+           PRESENTATION CHROME
+           Compact controls outside the fixed stage.
+           =========================================== */
+        .deck-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 12px;
+            border: 1px solid rgba(240, 236, 229, 0.18);
+            background: rgba(8, 8, 7, 0.72);
+            color: var(--cream);
+            backdrop-filter: blur(12px);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            left: auto;
+            right: 8px;
+            bottom: 8px;
+            transform: none;
+            scale: 0.82;
+            transform-origin: right bottom;
+            opacity: 0.08;
+            transition: opacity 0.2s ease;
+        }
+
+        .deck-controls:hover {
+            opacity: 0.96;
+        }
+
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid rgba(240, 236, 229, 0.2);
+            background: rgba(240, 236, 229, 0.05);
+            color: var(--cream);
+            cursor: pointer;
+        }
+
+        .progress {
+            width: 180px;
+            height: 3px;
+            background: rgba(240, 236, 229, 0.16);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 10%;
+            background: linear-gradient(90deg, var(--orange), var(--cyan));
+            transition: width 0.35s var(--ease);
+        }
+
+    </style>
+    <link rel="stylesheet" href="visual-editor/editor-runtime.css">
+</head>
+<body>
+    <div class="deck-viewport">
+        <main class="deck-stage" id="deckStage" aria-label="HTML 逐渐替代 PPT 演示">
+            <section class="slide orange p1 active" data-title="封面">
+                <div class="v2-hero">
+                    <div class="kicker reveal">FROM SLIDES TO RUNTIME</div>
+                    <h1 class="v2-title large reveal" style="--d:0.08s">HTML<br>逐渐替代 PPT</h1>
+                    <p class="v2-lead reveal" style="--d:0.2s">不是把页面截图塞进浏览器，而是把 PPT 的演示秩序升级成可以运行的 Web 舞台。</p>
+                </div>
+                <div class="v2-board visual reveal-scale" style="--d:0.18s">
+                    <img class="v2-img motion float-soft" src="assets/object-motion-trail.png" alt="动效路径素材">
+                    <img class="v2-img stack float-soft" src="assets/object-ppt-stack.png" alt="旧幻灯片堆叠素材">
+                    <img class="v2-img browser float-hard pulse-glow" src="assets/object-browser-stage.png" alt="HTML 浏览器舞台素材">
+                    <div class="v2-label reveal-left" style="left:54px;top:50px;--d:0.34s"><b>01</b>PPT 页感</div>
+                    <div class="v2-label reveal-left" style="right:54px;bottom:54px;--d:0.42s"><b>02</b>Web 运行</div>
+                </div>
+                <img class="v2-img carousel reveal-scale" style="--d:0.3s" src="assets/object-slide-carousel.png" alt="演示缩略页素材">
+                <div class="foot"><span>html-replaces-ppt</span><span>01 / 10</span></div>
+            </section>
+
+            <section class="slide dark p2" data-title="PPT 的标准">
+                <div class="chrome"><span>01 / 先继承</span><span>What PPT got right</span></div>
+                <div class="v2-hero" style="width:760px;">
+                    <div class="kicker reveal">PRESENTATION CONTRACT</div>
+                    <h2 class="v2-title reveal" style="--d:0.08s">PPT 的核心不是软件，是演示秩序</h2>
+                    <p class="v2-lead reveal" style="--d:0.18s">一页一个观点、固定画幅、可控翻页、强层级。这些必须先保留，HTML 才谈得上替代。</p>
+                </div>
+                <img class="v2-img carousel reveal-scale float-soft" style="--d:0.2s" src="assets/object-slide-carousel.png" alt="PPT 式缩略页轮播素材">
+                <div class="v2-rail rail reveal" style="--d:0.34s">
+                    <div class="v2-thumb active"></div>
+                    <div class="v2-thumb"></div>
+                    <div class="v2-thumb"></div>
+                    <div class="v2-thumb"></div>
+                </div>
+                <div class="v2-card-grid cols-4">
+                    <div class="v2-card reveal" style="--d:0.18s"><b>01</b><h3>16:9</h3><p>投影、录屏、导出都稳定。</p></div>
+                    <div class="v2-card reveal" style="--d:0.26s"><b>02</b><h3>页级叙事</h3><p>每一页只推进一个判断。</p></div>
+                    <div class="v2-card reveal" style="--d:0.34s"><b>03</b><h3>翻页节奏</h3><p>方向键和空格就是控制器。</p></div>
+                    <div class="v2-card reveal" style="--d:0.42s"><b>04</b><h3>现场可讲</h3><p>观众看到的仍是演示文稿。</p></div>
+                </div>
+                <div class="foot"><span>keep the deck grammar</span><span>02 / 10</span></div>
+            </section>
+
+            <section class="slide dark p3" data-title="替代条件">
+                <div class="chrome"><span>02 / 标准</span><span>Replacement criteria</span></div>
+                <div class="v2-hero" style="width:760px;">
+                    <div class="kicker reveal">WHEN HTML BECOMES A DECK</div>
+                    <h2 class="v2-title reveal" style="--d:0.08s">替代不是“更炫”，而是更完整</h2>
+                    <p class="v2-lead reveal" style="--d:0.18s">只要播放、编辑、素材、输出四件事都闭环，HTML 就不再只是网页。</p>
+                </div>
+                <img class="v2-img chart-pack reveal-scale float-soft" style="--d:0.2s" src="assets/object-chart-pack.png" alt="图表与内容组件素材">
+                <img class="v2-img browser reveal-scale float-hard" style="--d:0.34s" src="assets/object-browser-stage.png" alt="浏览器舞台素材">
+                <div class="v2-card-grid cols-4">
+                    <div class="v2-card reveal" style="--d:0.18s"><b>PLAY</b><h3>像 PPT 一样播放</h3><p>固定画幅、翻页、进度、触控。</p></div>
+                    <div class="v2-card reveal" style="--d:0.26s"><b>EDIT</b><h3>像设计稿一样改</h3><p>文字、图片、位置、动效都可调。</p></div>
+                    <div class="v2-card reveal" style="--d:0.34s"><b>MEDIA</b><h3>像网页一样承载</h3><p>图表、视频、代码、交互都原生。</p></div>
+                    <div class="v2-card reveal" style="--d:0.42s"><b>SHIP</b><h3>像链接一样分发</h3><p>本地文件夹、PDF、URL 都可用。</p></div>
+                </div>
+                <div class="foot"><span>play / edit / media / ship</span><span>03 / 10</span></div>
+            </section>
+
+            <section class="slide orange p4" data-title="运行时舞台">
+                <div class="v2-split">
+                    <div>
+                        <div class="kicker reveal">WEB-NATIVE STAGE</div>
+                        <h2 class="v2-title reveal" style="--d:0.08s">PPT 是文件，<br>HTML 是运行时</h2>
+                        <p class="v2-lead reveal" style="--d:0.18s">同样是一页页讲，但底层从“静态对象”变成“浏览器渲染”：布局、动画、媒体、交互都可以按场景运行。</p>
+                        <div class="v2-list reveal" style="--d:0.3s">
+                            <div><b>01</b><span>CSS 控制版式</span></div>
+                            <div><b>02</b><span>JS 控制播放</span></div>
+                            <div><b>03</b><span>素材分层进入</span></div>
+                        </div>
+                    </div>
+                    <div class="v2-board reveal-scale" style="--d:0.2s">
+                        <img class="v2-img browser float-hard pulse-glow" src="assets/object-browser-stage.png" alt="浏览器演示舞台素材">
+                        <img class="v2-img motion float-soft" src="assets/object-motion-trail.png" alt="动效路径素材">
+                        <div class="v2-chip" style="left:54px;top:54px;">fixed 1920 × 1080</div>
+                        <div class="v2-chip" style="right:54px;bottom:54px;">keyboard / touch / export</div>
+                    </div>
+                </div>
+                <div class="foot"><span>runtime is the new presentation container</span><span>04 / 10</span></div>
+            </section>
+
+            <section class="slide dark p5" data-title="前后对比">
+                <div class="chrome"><span>03 / 对比</span><span>PPT file vs HTML runtime</span></div>
+                <div class="v2-split">
+                    <div class="v2-panel reveal-left">
+                        <div class="tag">PPT FILE</div>
+                        <h2 class="v2-panel-title">封闭交付</h2>
+                        <p class="v2-panel-copy">适合把内容装进一个文件，但素材、动效和编辑能力大多被锁进软件生态。</p>
+                        <div class="v2-list">
+                            <div><b>LIMIT</b><span>媒体能力有限</span></div>
+                            <div><b>LIMIT</b><span>协作依赖软件</span></div>
+                        </div>
+                        <img class="v2-img ppt float-soft" src="assets/object-ppt-stack.png" alt="PPT 文件堆叠素材">
+                    </div>
+                    <div class="v2-panel reveal-left" style="--d:0.16s">
+                        <div class="tag">HTML RUNTIME</div>
+                        <h2 class="v2-panel-title"><span class="accent">开放运行</span></h2>
+                        <p class="v2-panel-copy">演示仍然是一页页播放，但每一页都可以承载真实 Web 能力。</p>
+                        <div class="v2-list">
+                            <div><b>GAIN</b><span>素材和组件分层</span></div>
+                            <div><b>GAIN</b><span>本地或 URL 分发</span></div>
+                        </div>
+                        <img class="v2-img html float-hard" src="assets/object-html-layers.png" alt="HTML 分层素材">
+                    </div>
+                </div>
+                <div class="foot"><span>replacement starts when the behavior is better</span><span>05 / 10</span></div>
+            </section>
+
+            <section class="slide dark p6" data-title="素材分层">
+                <div class="chrome"><span>04 / 设计方式</span><span>Image objects, not page screenshots</span></div>
+                <div class="v2-hero" style="width:700px;top:112px;">
+                    <div class="kicker reveal">DESIGN THE LAYERS</div>
+                    <h2 class="v2-title reveal" style="--d:0.08s">图片不负责整页，<br>图片只负责质感</h2>
+                    <p class="v2-lead reveal" style="--d:0.18s">页面结构、标题、标注、动效都由 HTML 负责；生成图只作为可移动的舞台道具。</p>
+                </div>
+                <div class="v2-artboard reveal-scale" style="--d:0.16s">
+                    <div class="v2-lane"></div>
+                    <div class="v2-lane"></div>
+                    <div class="v2-lane"></div>
+                    <img class="v2-img browser float-soft" src="assets/object-browser-stage.png" alt="浏览器道具素材">
+                    <img class="v2-img html float-hard" src="assets/object-html-layers.png" alt="HTML 分层道具">
+                    <img class="v2-img chart float-soft" src="assets/object-chart-pack.png" alt="图表组件道具">
+                    <img class="v2-img motion" src="assets/object-motion-trail.png" alt="动效路径道具">
+                    <div class="v2-chip" style="left:52px;top:178px;">01 / generated object</div>
+                    <div class="v2-chip" style="left:462px;top:246px;">02 / html layout</div>
+                    <div class="v2-chip" style="right:48px;top:104px;">03 / css motion</div>
+                    <div class="v2-line" style="left:336px;top:438px;width:560px;rotate:-9deg;"></div>
+                </div>
+                <div class="foot"><span>asset role is explicit</span><span>06 / 10</span></div>
+            </section>
+
+            <section class="slide dark p7" data-title="浏览器编辑">
+                <div class="chrome"><span>05 / 编辑</span><span>PPT-like control, browser-native editing</span></div>
+                <div class="v2-split">
+                    <div class="v2-board reveal-scale" style="--d:0.12s">
+                        <img class="v2-img editor float-soft" src="assets/object-editor-controls.png" alt="可视化编辑器控件素材">
+                        <img class="v2-img browser float-hard" src="assets/object-browser-stage.png" alt="浏览器舞台素材">
+                        <div class="v2-chip" style="left:54px;top:54px;">select / drag / replace image</div>
+                    </div>
+                    <div>
+                        <div class="kicker reveal">EDIT AFTER PRESENTING</div>
+                        <h2 class="v2-title reveal" style="--d:0.08s">替代 PPT，必须能改</h2>
+                        <p class="v2-lead reveal" style="--d:0.18s">按 E 进入编辑：选中文本、替换图片、拖动素材、撤销、保存。它不是截图，是可操作的 DOM。</p>
+                        <div class="v2-list reveal" style="--d:0.3s">
+                            <div><b>E</b><span>打开编辑模式</span></div>
+                            <div><b>⌘Z</b><span>撤销修改</span></div>
+                            <div><b>SAVE</b><span>下载干净 HTML</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="foot"><span>present first, edit directly</span><span>07 / 10</span></div>
+            </section>
+
+            <section class="slide dark p8" data-title="多出口">
+                <div class="chrome"><span>06 / 输出</span><span>One deck, many surfaces</span></div>
+                <div class="v2-hero" style="width:760px;">
+                    <div class="kicker reveal">DISTRIBUTION</div>
+                    <h2 class="v2-title reveal" style="--d:0.08s">一套演示，<br>不止一个出口</h2>
+                    <p class="v2-lead reveal" style="--d:0.18s">PPT 的强项是“带走文件”；HTML 的强项是同时可以带走文件、导出 PDF、发链接、上大屏。</p>
+                </div>
+                <img class="v2-img devices reveal-scale float-soft" style="--d:0.22s" src="assets/object-devices.png" alt="多设备播放素材">
+                <img class="v2-img export reveal-scale float-hard" style="--d:0.34s" src="assets/object-export-kit.png" alt="导出分享素材">
+                <div class="v2-matrix reveal" style="--d:0.28s">
+                    <div class="cell"><b>LOCAL</b><span>打开 index.html</span></div>
+                    <div class="cell"><b>SCREEN</b><span>浏览器投影</span></div>
+                    <div class="cell"><b>PDF</b><span>静态归档</span></div>
+                    <div class="cell"><b>URL</b><span>部署成链接</span></div>
+                    <div class="cell"><b>FOLDER</b><span>素材一起携带</span></div>
+                    <div class="cell"><b>MOBILE</b><span>设备自适应观看</span></div>
+                </div>
+                <div class="foot"><span>local / projector / pdf / url</span><span>08 / 10</span></div>
+            </section>
+
+            <section class="slide orange p9" data-title="工作流">
+                <div class="v2-hero" style="width:830px;top:120px;">
+                    <div class="kicker reveal">PPT-LIKE WORKFLOW</div>
+                    <h2 class="v2-title reveal" style="--d:0.08s">做法仍然像做 PPT，只是底座换成 Web</h2>
+                    <p class="v2-lead reveal" style="--d:0.18s">从大纲到页面，从页面到编辑，再到导出和发布，用户感知上仍是一套演示文稿流程。</p>
+                </div>
+                <div class="scene reveal-scale" style="--d:0.22s">
+                    <img src="assets/scene-control-room.png" alt="HTML 演示控制台场景">
+                </div>
+                <img class="v2-img export reveal-scale float-soft" style="--d:0.34s" src="assets/object-export-kit.png" alt="导出工作流素材">
+                <div class="v2-flow">
+                    <div class="step reveal" style="--d:0.18s"><b>STEP 01</b><h3>写主题和大纲</h3></div>
+                    <div class="step reveal" style="--d:0.26s"><b>STEP 02</b><h3>生成 PPT 式页面</h3></div>
+                    <div class="step reveal" style="--d:0.34s"><b>STEP 03</b><h3>浏览器里直接改</h3></div>
+                    <div class="step reveal" style="--d:0.42s"><b>STEP 04</b><h3>导出或发布链接</h3></div>
+                </div>
+                <div class="foot"><span>draft / edit / present / share</span><span>09 / 10</span></div>
+            </section>
+
+            <section class="slide dark p10" data-title="结论">
+                <div class="v2-hero" style="width:1060px;">
+                    <div class="kicker reveal">THE TAKEAWAY</div>
+                    <h2 class="v2-title reveal" style="--d:0.08s">保留 PPT 的手感，<br>换成 Web 的底座</h2>
+                    <p class="v2-lead reveal" style="--d:0.2s">当 HTML 稳定做到翻页、版式、动效、编辑、导出和分享，它就不再只是网页，而是下一代演示文稿。</p>
+                    <div class="rule reveal" style="--d:0.3s"></div>
+                    <p class="v2-code reveal" style="--d:0.38s">&lt;deck&gt; one idea per slide<br>&lt;motion&gt; controlled by code<br>&lt;share&gt; open anywhere</p>
+                </div>
+                <img class="v2-img carousel reveal-scale float-soft" style="--d:0.2s" src="assets/object-slide-carousel.png" alt="演示缩略页素材">
+                <img class="v2-img motion reveal-scale" style="--d:0.32s" src="assets/object-motion-trail.png" alt="动效路径素材">
+                <img class="v2-img browser reveal-scale float-hard pulse-glow" style="--d:0.42s" src="assets/object-browser-stage.png" alt="浏览器舞台素材">
+                <div class="v2-label reveal-left" style="right:86px;top:118px;--d:0.54s"><b>NEXT</b>像 PPT 一样带走，像网页一样运行</div>
+                <div class="foot"><span>html gradually replaces ppt</span><span>10 / 10</span></div>
+            </section>
+        </main>
+    </div>
+
+    <nav class="deck-controls" aria-label="演示控制">
+        <button class="control-btn" id="prevBtn" aria-label="上一页">‹</button>
+        <span id="slideCounter">01 / 10</span>
+        <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+        <button class="control-btn" id="nextBtn" aria-label="下一页">›</button>
+    </nav>
+
+    <script src="visual-editor/editor-runtime.js"></script>
+
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           Handles scaling, navigation, touch, wheel, and progress.
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.stage = document.getElementById("deckStage");
+                this.slides = Array.from(document.querySelectorAll(".slide"));
+                this.currentSlide = 0;
+                this.lastWheelAt = 0;
+                this.scale = 1;
+                this.setupStageScale();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupWheelNav();
+                this.setupButtons();
+                this.setupParallax();
+                this.showSlide(0);
+            }
+
+            refreshSlides() {
+                this.slides = Array.from(document.querySelectorAll(".slide"));
+                this.currentSlide = Math.min(this.currentSlide, this.slides.length - 1);
+                this.showSlide(this.currentSlide);
+            }
+
+            setupStageScale() {
+                const scale = () => {
+                    const editing = document.body.classList.contains("editing") || document.body.classList.contains("editor-on");
+                    const compactEditor = editing && window.innerWidth <= 960;
+                    const editorInsets = editing
+                        ? compactEditor
+                            ? { left: 12, right: 12, top: 150, bottom: 260 }
+                            : { left: 252, right: 354, top: 78, bottom: 20 }
+                        : { left: 0, right: 0, top: 0, bottom: 0 };
+                    const availableWidth = Math.max(320, window.innerWidth - editorInsets.left - editorInsets.right);
+                    const availableHeight = Math.max(240, window.innerHeight - editorInsets.top - editorInsets.bottom);
+                    const factor = Math.min(availableWidth / 1920, availableHeight / 1080);
+                    const x = editorInsets.left + (availableWidth - 1920 * factor) / 2;
+                    const y = editorInsets.top + (availableHeight - 1080 * factor) / 2;
+                    this.scale = factor;
+                    this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+                    this.stage.dataset.scale = String(factor);
+                    this.stage.dataset.offsetX = String(x);
+                    this.stage.dataset.offsetY = String(y);
+                };
+                this.scaleStage = scale;
+                this.scaleStage();
+                window.addEventListener("resize", this.scaleStage);
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener("keydown", (event) => {
+                    const editingField = event.target.matches("input, textarea, select") || event.target.isContentEditable;
+                    if (editingField || document.body.classList.contains("editing") || document.body.classList.contains("editor-on")) return;
+                    if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+                        event.preventDefault();
+                        this.next();
+                    }
+                    if (["ArrowLeft", "PageUp", "Backspace"].includes(event.key)) {
+                        event.preventDefault();
+                        this.prev();
+                    }
+                    if (event.key === "Home") this.showSlide(0);
+                    if (event.key === "End") this.showSlide(this.slides.length - 1);
+                });
+            }
+
+            setupTouchNav() {
+                let startX = 0;
+                let startY = 0;
+                this.stage.addEventListener("touchstart", (event) => {
+                    startX = event.changedTouches[0].clientX;
+                    startY = event.changedTouches[0].clientY;
+                }, { passive: true });
+                this.stage.addEventListener("touchend", (event) => {
+                    const dx = event.changedTouches[0].clientX - startX;
+                    const dy = event.changedTouches[0].clientY - startY;
+                    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
+                        dx < 0 ? this.next() : this.prev();
+                    }
+                }, { passive: true });
+            }
+
+            setupWheelNav() {
+                window.addEventListener("wheel", (event) => {
+                    if (document.body.classList.contains("editing") || document.body.classList.contains("editor-on")) return;
+                    const now = Date.now();
+                    if (now - this.lastWheelAt < 650) return;
+                    if (Math.abs(event.deltaY) < 20) return;
+                    this.lastWheelAt = now;
+                    event.deltaY > 0 ? this.next() : this.prev();
+                }, { passive: true });
+            }
+
+            setupButtons() {
+                document.getElementById("prevBtn").addEventListener("click", () => this.prev());
+                document.getElementById("nextBtn").addEventListener("click", () => this.next());
+            }
+
+            setupParallax() {
+                this.stage.addEventListener("pointermove", (event) => {
+                    const rect = this.stage.getBoundingClientRect();
+                    const px = ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3);
+                    const py = ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3);
+                    this.stage.style.setProperty("--px", px);
+                    this.stage.style.setProperty("--py", py);
+                });
+            }
+
+            showSlide(index) {
+                this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+                this.slides.forEach((slide, i) => {
+                    slide.classList.toggle("active", i === this.currentSlide);
+                    slide.classList.toggle("visible", i === this.currentSlide);
+                });
+                const current = this.currentSlide + 1;
+                const total = this.slides.length;
+                document.getElementById("slideCounter").textContent = `${String(current).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+                document.getElementById("progressBar").style.width = `${(current / total) * 100}%`;
+                document.dispatchEvent(new CustomEvent("slidechange", { detail: { index: this.currentSlide } }));
+            }
+
+            next() {
+                this.showSlide(this.currentSlide + 1);
+            }
+
+            prev() {
+                this.showSlide(this.currentSlide - 1);
+            }
+        }
+
+        window.presentation = new SlidePresentation();
+        window.editor = window.FrontendSlidesEditor.mount({ presentation: window.presentation });
+    </script>
+</body>
+</html>

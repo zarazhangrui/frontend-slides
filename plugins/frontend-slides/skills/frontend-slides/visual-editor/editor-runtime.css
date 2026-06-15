@@ -1,0 +1,1123 @@
+/* Frontend Slides Visual Deck Editor runtime. Source baseline: 1ba9bf0. */
+/* ===========================================
+       PPT-LIKE EDITING CONTROLS
+       Visual editing layer for text, media, layout, and motion.
+       =========================================== */
+    .edit-hotzone {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 82px;
+      height: 82px;
+      z-index: 10000;
+    }
+
+    .edit-toggle {
+      position: fixed;
+      top: 18px;
+      width: 42px;
+      height: 42px;
+      border: 1.5px solid var(--ink, #111111);
+      background: var(--paper, #f8f6ef);
+      color: var(--ink, #111111);
+      font: 500 18px/1 var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+      z-index: 10001;
+    }
+
+    .edit-toggle {
+      left: 18px;
+    }
+
+    .editor-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 10010;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      color: #111111;
+      font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      transition: opacity 180ms ease, visibility 180ms ease;
+    }
+
+    body.editing .editor-shell {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .editor-toolbar,
+    .editor-slides,
+    .editor-panel {
+      pointer-events: auto;
+      border: 1px solid rgba(17, 17, 17, 0.16);
+      border-radius: 8px;
+      background: rgba(248, 246, 239, 0.94);
+      box-shadow: 0 18px 50px rgba(17, 17, 17, 0.16);
+      backdrop-filter: blur(14px);
+    }
+
+    .editor-toolbar {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      align-items: center;
+      max-width: calc(100vw - 28px);
+      overflow-x: auto;
+      padding: 8px;
+      transform: translateX(-50%);
+    }
+
+    .editor-slides {
+      position: fixed;
+      top: 76px;
+      bottom: 18px;
+      left: 14px;
+      width: 224px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .editor-panel {
+      position: fixed;
+      top: 76px;
+      right: 14px;
+      bottom: 18px;
+      width: 326px;
+      padding: 14px;
+      overflow: auto;
+    }
+
+    .editor-title {
+      margin: 0 0 10px;
+      color: rgba(17, 17, 17, 0.58);
+      font: 600 11px/1 var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .editor-button,
+    .toolbar-select,
+    .slide-chip {
+      min-height: 34px;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111111;
+      font: 600 13px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      letter-spacing: 0;
+    }
+
+    .editor-button {
+      flex: 0 0 auto;
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    .editor-icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      min-width: 36px;
+      padding: 0;
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .shape-picker-wrap {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .shape-menu {
+      position: fixed;
+      top: 64px;
+      left: 50%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 184px;
+      padding: 8px;
+      border: 1px solid rgba(17, 17, 17, 0.16);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 18px 44px rgba(17, 17, 17, 0.18);
+      pointer-events: auto;
+      transform: translateX(-50%);
+      z-index: 10040;
+    }
+
+    .shape-menu[hidden] {
+      display: none;
+    }
+
+    .shape-choice {
+      height: 32px;
+      border: 1px solid rgba(17, 17, 17, 0.16);
+      border-radius: 6px;
+      background: #f7f7f5;
+      color: #111111;
+      font: 600 12px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      pointer-events: auto;
+    }
+
+    .toolbar-select {
+      flex: 0 0 auto;
+      width: 128px;
+      padding: 0 32px 0 10px;
+      white-space: nowrap;
+    }
+
+    .editor-button.primary {
+      background: var(--ink, #111111);
+      color: #ffffff;
+      border-color: var(--ink, #111111);
+    }
+
+    .editor-button.danger {
+      color: #b42318;
+    }
+
+    .editor-button:disabled,
+    .editor-field:disabled,
+    .editor-select:disabled,
+    .editor-textarea:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .slide-rail-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .slide-chip {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 8px;
+      width: 100%;
+      min-height: 52px;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .slide-chip.active {
+      border-color: var(--ink, #111111);
+      background: rgba(31, 43, 224, 0.10);
+    }
+
+    .slide-chip-num {
+      display: grid;
+      place-items: center;
+      height: 34px;
+      border-radius: 4px;
+      background: #111111;
+      color: #ffffff;
+      font: 500 12px/1 var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+    }
+
+    .slide-chip-title {
+      overflow: hidden;
+      align-self: center;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.24;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .inspector-section {
+      padding: 12px 0;
+      border-top: 1px solid rgba(17, 17, 17, 0.12);
+    }
+
+    .inspector-section.edit-attention {
+      border-radius: 8px;
+      background: rgba(255, 61, 139, 0.08);
+      box-shadow: 0 0 0 2px rgba(255, 61, 139, 0.22);
+    }
+
+    .inspector-section:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .selection-name {
+      min-height: 28px;
+      font: 700 15px/1.35 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .field-label {
+      display: block;
+      margin: 10px 0 6px;
+      color: rgba(17, 17, 17, 0.58);
+      font: 600 11px/1 var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .field-help {
+      margin: -2px 0 8px;
+      color: rgba(17, 17, 17, 0.62);
+      font: 500 12px/1.38 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .motion-status {
+      min-height: 32px;
+      margin: 0 0 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 6px;
+      background: rgba(17, 17, 17, 0.04);
+      color: rgba(17, 17, 17, 0.72);
+      font: 600 12px/1.35 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .editor-field,
+    .editor-select,
+    .editor-textarea {
+      width: 100%;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111111;
+      font: 500 13px/1.3 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .editor-field,
+    .editor-select {
+      height: 34px;
+      padding: 0 9px;
+    }
+
+    .editor-field[type="color"] {
+      padding: 4px;
+    }
+
+    .editor-textarea {
+      min-height: 88px;
+      padding: 9px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .file-picker-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .file-input-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .file-name {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      height: 34px;
+      padding: 0 10px;
+      overflow: hidden;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 6px;
+      background: rgba(17, 17, 17, 0.04);
+      color: rgba(17, 17, 17, 0.58);
+      font: 500 12px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .drop-zone {
+      display: grid;
+      place-items: center;
+      min-height: 78px;
+      padding: 12px;
+      border: 1.5px dashed rgba(31, 43, 224, 0.5);
+      border-radius: 8px;
+      background: rgba(31, 43, 224, 0.06);
+      color: rgba(17, 17, 17, 0.68);
+      font-size: 13px;
+      line-height: 1.38;
+      text-align: center;
+    }
+
+    .drop-zone.dragging {
+      border-color: var(--ink, #111111);
+      background: rgba(31, 43, 224, 0.13);
+      color: var(--ink, #111111);
+    }
+
+    .inspector-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .reset-action-group {
+      position: relative;
+      min-width: 0;
+    }
+
+    .reset-action-group #resetBtn {
+      width: 100%;
+      padding-right: 36px;
+    }
+
+    .reset-help-button {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      z-index: 1;
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      padding: 0;
+      border: 1px solid rgba(17, 17, 17, 0.3);
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.045);
+      color: rgba(17, 17, 17, 0.56);
+      font: 700 11px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      transform: translateY(-50%);
+      cursor: help;
+    }
+
+    .reset-help-button:hover,
+    .reset-help-button:focus-visible {
+      border-color: rgba(17, 17, 17, 0.48);
+      background: rgba(17, 17, 17, 0.08);
+      color: rgba(17, 17, 17, 0.78);
+      outline: none;
+    }
+
+    .editor-confirm-message {
+      margin: 0;
+      color: rgba(17, 17, 17, 0.72);
+      font: 500 14px/1.65 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .editor-confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .editor-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      z-index: 10030;
+      min-width: 180px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: #111111;
+      color: #ffffff;
+      font: 600 13px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .editor-toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .editor-help-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10045;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(17, 17, 17, 0.36);
+      pointer-events: auto;
+    }
+
+    .editor-help-modal[hidden] {
+      display: none;
+    }
+
+    .editor-help-card {
+      width: min(720px, calc(100vw - 32px));
+      max-height: min(720px, calc(100vh - 48px));
+      overflow: auto;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 28px 80px rgba(17, 17, 17, 0.28);
+    }
+
+    .editor-help-header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+    }
+
+    .editor-help-title {
+      margin: 0;
+      color: #111111;
+      font: 760 22px/1.2 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      letter-spacing: 0;
+    }
+
+    .editor-help-close {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(17, 17, 17, 0.18);
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111111;
+      font: 700 20px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .editor-help-body {
+      display: grid;
+      gap: 16px;
+      padding: 18px 20px 20px;
+      color: rgba(17, 17, 17, 0.78);
+      font: 500 14px/1.55 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    }
+
+    .editor-help-section {
+      display: grid;
+      gap: 7px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(17, 17, 17, 0.10);
+    }
+
+    .editor-help-section:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .editor-help-section h3 {
+      margin: 0;
+      color: #111111;
+      font: 750 15px/1.25 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      letter-spacing: 0;
+    }
+
+    .editor-help-section p,
+    .editor-help-section ul {
+      margin: 0;
+    }
+
+    .editor-help-section ul {
+      padding-left: 1.2em;
+    }
+
+    .editor-help-section li + li {
+      margin-top: 4px;
+    }
+
+    .editor-layer {
+      position: absolute;
+      z-index: 20;
+    }
+
+    .text-layer {
+      min-width: 240px;
+      min-height: 64px;
+      padding: 14px 18px;
+      border: 1.5px solid var(--ink, #111111);
+      background: rgba(240, 235, 222, 0.92);
+      color: var(--ink, #111111);
+      font: 700 38px/1.16 var(--font-display-cjk);
+    }
+
+    .image-layer {
+      width: 520px;
+      height: 320px;
+      border: 1.5px solid var(--ink, #111111);
+      background: var(--paper, #f8f6ef);
+      overflow: hidden;
+    }
+
+    .image-layer img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .shape-layer {
+      width: 280px;
+      height: 180px;
+      border: 1.5px solid var(--ink, #111111);
+      background: rgba(31, 43, 224, 0.16);
+    }
+
+    .shape-layer[data-shape="roundRect"] {
+      border-radius: 28px;
+    }
+
+    .shape-layer[data-shape="circle"] {
+      border-radius: 999px;
+    }
+
+    .shape-layer[data-shape="triangle"] {
+      border: 0;
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    }
+
+    .shape-layer[data-shape="line"] {
+      height: 14px;
+      border: 0;
+    }
+
+    .shape-layer[data-shape="arrow"] {
+      border: 0;
+      clip-path: polygon(0 36%, 66% 36%, 66% 14%, 100% 50%, 66% 86%, 66% 64%, 0 64%);
+    }
+
+    .edit-moved {
+      animation: none !important;
+      transition: none !important;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+      transform-origin: top left;
+    }
+
+    .slide.visible .edit-moved.reveal,
+    .slide.visible .edit-moved.reveal-left,
+    .slide.visible .edit-moved.reveal-scale,
+    .slide.visible .edit-moved.editor-anim-rise,
+    .slide.visible .edit-moved.editor-anim-drop,
+    .slide.visible .edit-moved.editor-anim-left,
+    .slide.visible .edit-moved.editor-anim-right,
+    .slide.visible .edit-moved.editor-anim-scale,
+    .slide.visible .edit-moved.editor-anim-zoom,
+    .slide.visible .edit-moved.editor-anim-pop,
+    .slide.visible .edit-moved.editor-anim-rotate,
+    .slide.visible .edit-moved.editor-anim-blur,
+    .slide.visible .edit-moved.editor-anim-flip,
+    .slide.visible .edit-moved.editor-anim-fade {
+      opacity: 1;
+      filter: none !important;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .editor-anim-none {
+      opacity: 1 !important;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .editor-anim-fade,
+    .editor-anim-rise,
+    .editor-anim-drop,
+    .editor-anim-left,
+    .editor-anim-right,
+    .editor-anim-scale,
+    .editor-anim-zoom,
+    .editor-anim-pop,
+    .editor-anim-rotate,
+    .editor-anim-blur,
+    .editor-anim-flip {
+      opacity: 0;
+      transform-origin: center;
+      transition:
+        opacity var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+        transform var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+        filter var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+      transition-delay: var(--edit-delay, 0ms);
+    }
+
+    .edit-moved.editor-anim-fade,
+    .edit-moved.editor-anim-rise,
+    .edit-moved.editor-anim-drop,
+    .edit-moved.editor-anim-left,
+    .edit-moved.editor-anim-right,
+    .edit-moved.editor-anim-scale,
+    .edit-moved.editor-anim-zoom,
+    .edit-moved.editor-anim-pop,
+    .edit-moved.editor-anim-rotate,
+    .edit-moved.editor-anim-blur,
+    .edit-moved.editor-anim-flip {
+      animation: none !important;
+      transition:
+        opacity var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+        transform var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+        filter var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) !important;
+      transition-delay: var(--edit-delay, 0ms) !important;
+    }
+
+    .editor-anim-fade {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-rise {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) + 34px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-drop {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) - 42px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-left {
+      transform: translate(calc(var(--edit-x, 0px) - 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-right {
+      transform: translate(calc(var(--edit-x, 0px) + 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-scale {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.92), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.92)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-zoom {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.14), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.14)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-pop {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.72), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.72)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-rotate {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(-8deg) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.96), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.96)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-blur {
+      filter: blur(14px);
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.03), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.03)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-anim-flip {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(70deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .edit-moved.editor-anim-fade {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-rise {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) + 34px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-drop {
+      transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) - 42px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-left {
+      transform: translate(calc(var(--edit-x, 0px) - 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-right {
+      transform: translate(calc(var(--edit-x, 0px) + 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-scale {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.92), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.92)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-zoom {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.14), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.14)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-pop {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.72), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.72)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-rotate {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(-8deg) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.96), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.96)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-blur {
+      filter: blur(14px);
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.03), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.03)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .edit-moved.editor-anim-flip {
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(70deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0)) !important;
+    }
+
+    .slide.visible .editor-anim-fade,
+    .slide.visible .editor-anim-rise,
+    .slide.visible .editor-anim-drop,
+    .slide.visible .editor-anim-left,
+    .slide.visible .editor-anim-right,
+    .slide.visible .editor-anim-scale,
+    .slide.visible .editor-anim-zoom,
+    .slide.visible .editor-anim-pop,
+    .slide.visible .editor-anim-rotate,
+    .slide.visible .editor-anim-blur,
+    .slide.visible .editor-anim-flip {
+      opacity: 1;
+      filter: none;
+      transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+    }
+
+    .editor-motion-preview.editor-anim-fade {
+      animation: editorPreviewFade var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-rise {
+      animation: editorPreviewRise var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-left {
+      animation: editorPreviewLeft var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-scale {
+      animation: editorPreviewScale var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-drop {
+      animation: editorPreviewDrop var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-right {
+      animation: editorPreviewRight var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-zoom {
+      animation: editorPreviewZoom var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-pop {
+      animation: editorPreviewPop var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-rotate {
+      animation: editorPreviewRotate var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-blur {
+      animation: editorPreviewBlur var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    .editor-motion-preview.editor-anim-flip {
+      animation: editorPreviewFlip var(--edit-duration, 640ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) var(--edit-delay, 0ms) both !important;
+    }
+
+    @keyframes editorPreviewFade {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewRise {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) + 34px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewLeft {
+      from {
+        opacity: 0;
+        transform: translate(calc(var(--edit-x, 0px) - 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewScale {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.92), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.92)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewDrop {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), calc(var(--edit-y, 0px) - 42px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewRight {
+      from {
+        opacity: 0;
+        transform: translate(calc(var(--edit-x, 0px) + 46px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewZoom {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.14), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.14)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewPop {
+      0% {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.72), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.72)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      72% {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.04), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.04)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      100% {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewRotate {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(-8deg) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 0.96), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 0.96)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) rotate(0deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewBlur {
+      from {
+        opacity: 0;
+        filter: blur(14px);
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(calc(var(--edit-scale-x, var(--edit-scale, 1)) * 1.03), calc(var(--edit-scale-y, var(--edit-scale, 1)) * 1.03)) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    @keyframes editorPreviewFlip {
+      from {
+        opacity: 0;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(70deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+      to {
+        opacity: 1;
+        transform: translate(var(--edit-x, 0px), var(--edit-y, 0px)) perspective(760px) rotateX(0deg) scale(var(--edit-scale-x, var(--edit-scale, 1)), var(--edit-scale-y, var(--edit-scale, 1))) var(--edit-base-transform, matrix(1, 0, 0, 1, 0, 0));
+      }
+    }
+
+    .editor-frame {
+      position: absolute;
+      display: none;
+      z-index: 850;
+      border: 2px solid #ff3d8b;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 12px 30px rgba(17, 17, 17, 0.18);
+    }
+
+    .editor-frame.active {
+      display: block;
+    }
+
+    .editor-guide {
+      position: absolute;
+      display: none;
+      z-index: 840;
+      background: #ff3d8b;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
+    }
+
+    .editor-guide.active {
+      display: block;
+    }
+
+    .editor-guide.vertical {
+      top: 0;
+      width: 2px;
+      height: 1080px;
+      transform: translateX(-1px);
+    }
+
+    .editor-guide.horizontal {
+      left: 0;
+      width: 1920px;
+      height: 2px;
+      transform: translateY(-1px);
+    }
+
+    .frame-move {
+      position: absolute;
+      left: -2px;
+      top: -30px;
+      height: 26px;
+      padding: 0 9px;
+      display: flex;
+      align-items: center;
+      background: #ff3d8b;
+      color: #ffffff;
+      font: 700 13px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      white-space: nowrap;
+      cursor: move;
+      pointer-events: auto;
+    }
+
+    .frame-delete {
+      position: absolute;
+      top: -72px;
+      right: -2px;
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      padding: 0;
+      border: 0;
+      background: #b42318;
+      color: #ffffff;
+      font: 800 42px/1 var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .frame-delete:hover,
+    .frame-delete:focus-visible {
+      background: #8f1d14;
+      outline: 2px solid rgba(255, 255, 255, 0.95);
+      outline-offset: 2px;
+    }
+
+    .frame-resize {
+      position: absolute;
+      right: -8px;
+      bottom: -8px;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #ff3d8b;
+      background: #ffffff;
+      cursor: nwse-resize;
+      pointer-events: auto;
+    }
+
+    .edit-toggle.show,
+    .edit-toggle.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.editing [data-editable],
+    body.editing [data-editor-kind="text"] {
+      outline: 1.5px dashed rgba(31, 43, 224, 0.54);
+      outline-offset: 5px;
+      cursor: text;
+    }
+
+    body.editing [data-editable-media],
+    body.editing [data-editable-box],
+    body.editing [data-editor-kind="media"],
+    body.editing [data-editor-kind="box"],
+    body.editing .editor-layer {
+      outline: 1.5px dashed rgba(31, 43, 224, 0.54);
+      outline-offset: 5px;
+      cursor: pointer;
+    }
+
+    body.editing .editor-selected {
+      outline: none !important;
+    }
+
+    body.editing.dragging-file .slide.active {
+      box-shadow: inset 0 0 0 12px rgba(31, 43, 224, 0.14);
+    }
+
+    @media (max-width: 960px) {
+      .editor-toolbar {
+        top: 8px;
+        width: calc(100vw - 16px);
+        justify-content: flex-start;
+      }
+
+      .editor-slides {
+        top: 68px;
+        left: 8px;
+        right: 8px;
+        bottom: auto;
+        width: auto;
+        height: 74px;
+        padding: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      .slide-rail-list {
+        display: flex;
+        gap: 8px;
+      }
+
+      .slide-chip {
+        width: 148px;
+        min-width: 148px;
+      }
+
+      .editor-panel {
+        top: auto;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: auto;
+        max-height: 240px;
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+        gap: 12px;
+      }
+
+      .inspector-section {
+        min-width: 0;
+        padding: 0;
+        border-top: 0;
+      }
+
+      .editor-textarea {
+        min-height: 64px;
+      }
+    }

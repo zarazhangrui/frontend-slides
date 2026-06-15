@@ -408,19 +408,33 @@
           delete element.dataset.editorAuto;
           delete element.dataset.editorKind;
         });
-        this.stage.querySelectorAll(".slide *").forEach((element) => {
-          if (this.shouldIgnoreEditorCandidate(element)) return;
+        const candidates = Array.from(this.stage.querySelectorAll(".slide *")).filter((element) => !this.shouldIgnoreEditorCandidate(element));
+        candidates.forEach((element) => {
           const explicitKind = this.explicitEditorKind(element);
-          const kind = explicitKind || this.inferEditorKind(element);
-          if (!kind) return;
-          element.dataset.editorKind = kind;
-          if (!explicitKind) element.dataset.editorAuto = "true";
+          if (explicitKind) this.markEditorKind(element, explicitKind, false);
         });
+        candidates.forEach((element) => {
+          if (element.dataset.editorKind) return;
+          const kind = this.inferEditorKind(element, { includeBoxes: false });
+          if (kind) this.markEditorKind(element, kind, true);
+        });
+        candidates.slice().reverse().forEach((element) => {
+          if (element.dataset.editorKind) return;
+          const kind = this.inferEditorKind(element, { onlyBoxes: true });
+          if (kind) this.markEditorKind(element, kind, true);
+        });
+        this.pruneCompositeAutoContainers();
+      }
+
+      markEditorKind(element, kind, automatic) {
+        element.dataset.editorKind = kind;
+        if (automatic) element.dataset.editorAuto = "true";
       }
 
       shouldIgnoreEditorCandidate(element) {
         if (element.closest(".editor-shell, .editor-frame, .editor-guide")) return true;
         if (element.closest("[data-generated-chrome]")) return true;
+        if (element.closest("svg") && element.tagName.toLowerCase() !== "svg") return true;
         if (element.matches("script, style, template, meta, link, br, wbr, defs, clipPath, mask, pattern, linearGradient, radialGradient, stop, source, track")) return true;
         if (element.matches(".deck-progress, .deck-count, .deck-controls, .edit-hotzone, .edit-toggle")) return true;
         return false;
@@ -437,10 +451,12 @@
         return "";
       }
 
-      inferEditorKind(element) {
-        if (element.matches(this.mediaSelector()) || this.isBackgroundMediaCandidate(element) || this.isMediaWrapperCandidate(element)) return "media";
-        if (this.isTextCandidate(element)) return "text";
-        if (this.isVisualBoxCandidate(element)) return "box";
+      inferEditorKind(element, options = {}) {
+        const onlyBoxes = options.onlyBoxes === true;
+        const includeBoxes = options.includeBoxes !== false;
+        if (!onlyBoxes && (element.matches(this.mediaSelector()) || this.isBackgroundMediaCandidate(element) || this.isMediaWrapperCandidate(element))) return "media";
+        if (!onlyBoxes && this.isTextCandidate(element)) return "text";
+        if (includeBoxes && this.isVisualBoxCandidate(element)) return "box";
         return "";
       }
 
@@ -479,6 +495,7 @@
         if (rect.width > 1700 && rect.height > 850) return false;
         if (element.matches("main, article, nav, header, footer, form, ul, ol, table, tbody, thead, tr, section.slide")) return false;
         if (this.isBroadLayoutContainer(element)) return false;
+        if (this.hasCompositeEditableChildren(element)) return false;
         const style = getComputedStyle(element);
         const borderWidth = ["Top", "Right", "Bottom", "Left"].some((side) => Number.parseFloat(style[`border${side}Width`]) > 0);
         const hasBackground = style.backgroundImage !== "none" || !["rgba(0, 0, 0, 0)", "transparent"].includes(style.backgroundColor);
@@ -507,7 +524,61 @@
         if (rect.width > 1700 && rect.height > 850) return false;
         if (this.isBroadLayoutContainer(element)) return false;
         const media = Array.from(element.querySelectorAll(this.mediaSelector())).filter((node) => !this.shouldIgnoreEditorCandidate(node));
-        return media.length === 1;
+        if (media.length !== 1) return false;
+        if (this.hasDirectText(element)) return false;
+        return this.boundsMostlyMatch(element, media[0]);
+      }
+
+      boundsMostlyMatch(container, child) {
+        const outer = container.getBoundingClientRect();
+        const inner = child.getBoundingClientRect();
+        if (outer.width <= 0 || outer.height <= 0 || inner.width <= 0 || inner.height <= 0) return false;
+        const areaRatio = (inner.width * inner.height) / (outer.width * outer.height);
+        if (areaRatio < 0.55) return false;
+        const slackX = Math.max(24, outer.width * 0.2);
+        const slackY = Math.max(24, outer.height * 0.2);
+        return (
+          Math.abs(inner.left - outer.left) <= slackX &&
+          Math.abs(inner.top - outer.top) <= slackY &&
+          Math.abs(inner.right - outer.right) <= slackX &&
+          Math.abs(inner.bottom - outer.bottom) <= slackY
+        );
+      }
+
+      hasCompositeEditableChildren(element) {
+        const rect = element.getBoundingClientRect();
+        const children = Array.from(element.querySelectorAll("[data-editor-kind]")).filter((child) => {
+          if (child === element || child.closest(".slide") !== element.closest(".slide")) return false;
+          return this.isSubstantialDescendant(child, rect);
+        });
+        if (children.length > 1) return true;
+        return children.length === 1 && this.isLayoutOnlyContainer(element);
+      }
+
+      pruneCompositeAutoContainers() {
+        this.stage.querySelectorAll("[data-editor-auto='true'][data-editor-kind]").forEach((element) => {
+          if (!this.hasCompositeEditableChildren(element)) return;
+          delete element.dataset.editorAuto;
+          delete element.dataset.editorKind;
+        });
+      }
+
+      isSubstantialDescendant(child, parentRect) {
+        const rect = child.getBoundingClientRect();
+        if (rect.width < 18 || rect.height < 14) return false;
+        const parentArea = Math.max(1, parentRect.width * parentRect.height);
+        const childArea = rect.width * rect.height;
+        if (childArea / parentArea > 0.88) return false;
+        return true;
+      }
+
+      isLayoutOnlyContainer(element) {
+        const style = getComputedStyle(element);
+        const hasTransparentBackground = style.backgroundImage === "none" && ["rgba(0, 0, 0, 0)", "transparent"].includes(style.backgroundColor);
+        const hasPlainLine = style.boxShadow === "none" && style.clipPath === "none";
+        if (!hasTransparentBackground || !hasPlainLine) return false;
+        const borderWidth = ["Top", "Right", "Bottom", "Left"].reduce((total, side) => total + (Number.parseFloat(style[`border${side}Width`]) || 0), 0);
+        return ["block", "flex", "grid"].includes(style.display) && borderWidth <= 4;
       }
 
       isBroadLayoutContainer(element) {

@@ -256,9 +256,50 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 
 **Typography:** `Clash Display` + `Satoshi` (Fontshare)
 
-**Colors:** Deep navy (#0a0f1c), cyan accent (#00ffcc), magenta (#ff00aa)
+**Colors:**
+```css
+:root {
+    --bg-primary: #0a0f1c;
+    --accent-cyan: #00ffcc;
+    --accent-magenta: #ff00aa;
+    --text-primary: #e0e0e0;
+    --title-size: clamp(2rem, 5vw, 4.5rem);
+    --h2-size: clamp(1.2rem, 3vw, 2.2rem);
+    --body-size: clamp(0.8rem, 1.5vw, 1.1rem);
+    --slide-padding: clamp(1.5rem, 5vw, 4rem);
+}
+```
 
-**Signature:** Particle backgrounds, neon glow, grid patterns
+**Production CSS (used by Alaya.love Loom Pitch):**
+```css
+.slide { background: var(--bg-primary); }
+.title-slide {
+    background:
+        radial-gradient(ellipse at 30% 50%, rgba(0,255,204,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 30%, rgba(255,0,170,0.06) 0%, transparent 50%),
+        var(--bg-primary);
+}
+.title-slide h1 {
+    font-family: var(--display_font);
+    font-size: var(--title-size);
+    color: var(--accent-cyan);
+    text-shadow: 0 0 40px rgba(0,255,204,0.3);
+}
+.content-slide h2 {
+    font-family: var(--display_font);
+    font-size: var(--h2-size);
+    color: var(--accent-cyan);
+    margin-bottom: 1.5rem;
+}
+.content-slide .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(0,255,204,0.15);
+    padding: clamp(1rem, 3vw, 2rem);
+    border-radius: 4px;
+}
+```
+
+**Signature:** Dual radial gradients on title, cyan neon glow text-shadow, translucent cards with cyan border
 
 ---
 

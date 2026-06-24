@@ -1,6 +1,6 @@
 ---
 name: frontend-slides
-description: Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files. Use when the user wants to build a presentation, convert a PPT/PPTX to web, or create slides for a talk/pitch. Helps non-designers discover their aesthetic through visual exploration rather than abstract choices.
+description: Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files. Use when the user wants to build a presentation, convert a PPT/PPTX to web, or create slides for a talk/pitch. Supports fast mode (zero follow-up questions) and custom mode (visual style discovery). Every deck includes mandatory inline text/image editing.
 ---
 
 # Frontend Slides
@@ -14,6 +14,7 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 3. **Distinctive Design** — No generic "AI slop." Every presentation must feel custom-crafted.
 4. **Progressive Disclosure** — Read lightweight style indexes first. For bold templates, use small preview cards for style previews and load the full `design.md` only after the user picks that template.
 5. **Fixed 16:9 Stage (NON-NEGOTIABLE)** — Every deck uses a 1920×1080 slide canvas scaled as a whole to the viewport. Slides must stay 16:9 on every screen, including phones. Do not reflow slide content to fit the device.
+6. **Inline Editing (MANDATORY)** — Every generated deck includes the full `DeckEditor` from [html-template.md](html-template.md). Double-click text to edit; double-click images to replace; **保存** (localStorage) via hover toolbar / `E` / `Ctrl+S`; **下载** for HTML export. Only skip if the user explicitly requests a locked/export-only file.
 
 ## Design Aesthetics
 
@@ -66,11 +67,68 @@ Baseline limits still apply: no scrolling, no overflow, no overlapping panels, a
 
 ## Phase 0: Detect Mode
 
+### Step 0.0: Generation Mode (ASK FIRST — MANDATORY)
+
+**NON-NEGOTIABLE:** This is the **first** interaction after the skill activates. Ask before reading any other skill files, inferring workflow, generating previews, or starting Phase 1–3.
+
+**Always ask** — even when the user's prompt is detailed or uses deterministic language about:
+
+- Topic, title, audience, occasion, or purpose
+- Slide count, length, or structure
+- Visual style, mood, vibe, colors, fonts, or named presets/templates
+- Attached content, images, or a `.pptx` file
+- Phrases like "直接做", "马上生成", "按这个来做", "make it now", "just build it"
+
+Those details inform the deck **after** the user picks a generation mode. They are **not** a substitute for choosing Fast vs Custom.
+
+**Only skip this question** when the user **explicitly** names the generation workflow in the same message, e.g.:
+
+- Fast: "快速模式", "用快速模式", "fast mode", "use fast mode"
+- Custom: "自定义模式", "自定义", "custom mode", "帮我选风格", "我要挑风格"
+
+If unsure whether they meant generation mode (e.g. "快速出一版" about urgency, or "custom look" about aesthetics only), **ask anyway**.
+
+Use the native structured-question UI when available; otherwise ask in one short message.
+
+Ask (header: "Generation Mode"):
+How should this deck be generated?
+
+- **Fast mode (default)** — No further questions. Infer content, length, and layout from the user's prompt. Use the built-in **Swiss Modern Fast Preset** below. Skip Phase 1 Q&A, Phase 2 style previews, and all bold-template files. Go directly to Phase 3.
+- **Custom mode** — Full interactive flow: content discovery, 3 style previews, user picks aesthetic. Proceed to Step 0.1 and follow Phases 1–2 as written.
+
+If the user does not clearly pick after you ask, default to **Fast mode** and say so briefly — but **never** skip asking.
+
+**Fast mode file-loading budget (strict):**
+
+| Read | Skip |
+|------|------|
+| `viewport-base.css` | `STYLE_PRESETS.md` |
+| `deck-layout.css` | `bold-template-pack/**` |
+| `html-template.md` (full: `SlidePresentation` + `DeckEditor` + layout rules) | `animation-patterns.md` |
+| | `selection-index.json` |
+| | Any `preview.md` / `design.md` |
+
+Fast mode uses only simple CSS fade-in reveals — do not open `animation-patterns.md`.
+
+**Swiss Modern Fast Preset (embedded — do not read STYLE_PRESETS.md):**
+
+- **Style:** Swiss Modern — minimal, clean, Bauhaus-inspired
+- **Fonts:** Archivo 800 (display) + Nunito 400 (body) — Google Fonts
+- **Colors:** `--bg-primary: #ffffff; --text-primary: #000000; --accent: #ff3300; --slide-bg: #ffffff; --stage-bg: #f0f0f0`
+- **Layout:** Paste full `deck-layout.css`; generous whitespace, left-aligned type, thin red accent rules; every content slide uses `.slide-content` + `.concept-layout` (or `.content-grid`) — never raw stacked text in a corner
+- **Density:** Infer from prompt; default **low density / speaker-led** unless the brief clearly needs a reading deck
+- **Slide count:** Infer from prompt; default **8–12 slides** for a typical brief
+- **Animations:** Simple `.reveal` fade + translateY only — no particles, parallax, or canvas effects
+
+### Step 0.1: Task Type
+
 Determine what the user wants:
 
-- **Mode A: New Presentation** — Create from scratch. Go to Phase 1.
-- **Mode B: PPT Conversion** — Convert a .pptx file. Go to Phase 4.
-- **Mode C: Enhancement** — Improve an existing HTML presentation. Read it, understand it, enhance. **Follow Mode C modification rules below.**
+- **Mode A: New Presentation** — Create from scratch.
+  - **Fast mode** → Skip Phase 1 & 2, go to Phase 3 with Swiss Modern Fast Preset.
+  - **Custom mode** → Go to Phase 1.
+- **Mode B: PPT Conversion** — Convert a .pptx file. Go to Phase 4 (respects generation mode for style steps).
+- **Mode C: Enhancement** — Improve an existing HTML presentation. Read it, understand it, enhance. **Follow Mode C modification rules below.** If the deck lacks `DeckEditor`, add the full implementation from `html-template.md`.
 
 ### Mode C: Modification Rules
 
@@ -87,6 +145,8 @@ When enhancing existing presentations, fixed-stage fitting is the biggest risk:
 ---
 
 ## Phase 1: Content Discovery (New Presentations)
+
+**Custom mode only.** Skip this entire phase in Fast mode — infer everything from the user's original prompt.
 
 **Ask ALL questions together** so the user fills everything out at once. If the current environment provides a native structured-question UI, use it; otherwise ask in one concise message with clearly numbered choices:
 
@@ -105,7 +165,7 @@ How dense should the deck feel? Options:
 - "Low density / speaker-led" — Big ideas, fewer words, more visual breathing room
 - "High density / reading-first" — More self-contained detail for async reading
 
-**Do not ask about inline editing during Phase 1.** Users should not have to choose editing behavior before seeing a draft. Inline editing is a post-draft affordance: include it by default unless the user explicitly asks for a locked/export-only file.
+**Do not ask about inline editing.** `DeckEditor` is always included (see Core Principle 6). Only omit if the user explicitly asks for a locked/export-only file.
 
 Remember the user's density choice. It affects slide count, typography scale, amount of text per slide, layout density, and whether to favor cinematic presenter slides or self-contained reading slides.
 
@@ -121,13 +181,15 @@ If user provides an image folder:
 2. **Inspect each image** — Use the agent's available image-understanding capability. If image reading is unavailable, use filenames/metadata and ask the user to clarify only when needed
 3. **Evaluate** — For each: what it shows, USABLE or NOT USABLE (with reason), what concept it represents, dominant colors
 4. **Co-design the outline** — Curated images inform slide structure alongside text. This is NOT "plan slides then add images" — design around both from the start (e.g., 3 screenshots → 3 feature slides, 1 logo → title/closing slide)
-5. **Confirm the outline** using the same structured-question mechanism when available: "Does this slide outline and image selection look right?" Options: Looks good / Adjust images / Adjust outline
+5. **Confirm the outline** only in Custom mode when the outline is ambiguous. In Fast mode, infer the outline directly — do not ask for confirmation.
 
 **Logo in previews:** If a usable logo was identified, embed it (base64) into each style preview in Phase 2 — the user sees their brand styled three different ways.
 
 ---
 
 ## Phase 2: Style Discovery
+
+**Custom mode only.** Skip this entire phase in Fast mode — use Swiss Modern Fast Preset from Phase 0.
 
 **This is the "show, don't tell" phase.** Most people can't articulate design preferences in words.
 
@@ -201,7 +263,9 @@ If "Mix elements", ask for specifics.
 
 ## Phase 3: Generate Presentation
 
-Generate the full presentation using content from Phase 1 (text, or text + curated images) and style from Phase 2.
+Generate the full presentation using:
+- **Fast mode:** content inferred from the user's prompt + **Swiss Modern Fast Preset** (Phase 0)
+- **Custom mode:** content from Phase 1 + style from Phase 2
 
 If images were provided, the slide outline already incorporates them from Step 1.2. If not, CSS-generated visuals (gradients, shapes, patterns) provide visual interest — this is a fully supported first-class path.
 
@@ -233,14 +297,23 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 
 **Before generating, read these supporting files:**
 
-- [html-template.md](html-template.md) — HTML architecture and JS features
-- [viewport-base.css](viewport-base.css) — Mandatory CSS (include in full)
-- [animation-patterns.md](animation-patterns.md) — Animation reference for the chosen feeling
+| File | Fast mode | Custom mode |
+|------|-----------|-------------|
+| [viewport-base.css](viewport-base.css) | Required | Required |
+| [deck-layout.css](deck-layout.css) | Required | Required |
+| [html-template.md](html-template.md) — `SlidePresentation`, `DeckEditor`, layout rules | Required | Required |
+| [animation-patterns.md](animation-patterns.md) | Skip | Read for chosen feeling |
+| [STYLE_PRESETS.md](STYLE_PRESETS.md) | Skip (use embedded preset) | Phase 2 only |
+| `bold-template-pack/**` | Skip | Phase 2–3 as needed |
 
 **Key requirements:**
 
 - Single self-contained HTML file, all CSS/JS inline
-- Include the FULL contents of viewport-base.css in the `<style>` block
+- Include the FULL contents of viewport-base.css and deck-layout.css in the `<style>` block
+- Include the FULL `SlidePresentation` and `DeckEditor` blocks from html-template.md — **verify before delivery**
+- Every content slide uses `.slide-content`; two-column slides use `.concept-layout` (see html-template.md **Mandatory Layout System**)
+- Include `#deckCounter` and `#progressBar` outside `.deck-stage`; `SlidePresentation` must implement `setupStageScale` (never ship stub nav)
+- Mark all user-facing text with `data-editable`; wrap replaceable images in sized `.img-box` with `class="editable-image"` and `object-fit: fill`
 - Use fonts from Fontshare or Google Fonts — never system fonts
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
@@ -252,9 +325,9 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 When converting PowerPoint files:
 
 1. **Extract content** — Run `python scripts/extract-pptx.py <input.pptx> <output_dir>` (install python-pptx if needed: `pip install python-pptx`)
-2. **Confirm with user** — Present extracted slide titles, content summaries, and image counts
-3. **Style selection** — Proceed to Phase 2 for style discovery
-4. **Generate HTML** — Convert to chosen style, preserving all text, images (from assets/), slide order, and speaker notes (as HTML comments)
+2. **Confirm with user** — Custom mode only: present extracted slide titles, content summaries, and image counts. Fast mode: skip confirmation, proceed directly.
+3. **Style selection** — Fast mode: Swiss Modern Fast Preset. Custom mode: Phase 2 style discovery.
+4. **Generate HTML** — Convert to chosen style, preserving all text, images (from assets/), slide order, and speaker notes (as HTML comments). Include mandatory `DeckEditor`.
 
 ---
 
@@ -266,7 +339,7 @@ When converting PowerPoint files:
    - File location, style name, slide count
    - Navigation: Arrow keys, Space, swipe/tap if enabled
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
-   - Inline text editing is available: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
+   - **Editing (always included):** Double-click any text to edit; double-click any image to replace it; hover top-left for **保存** / **下载**, or press `E` / `Ctrl+S` / `Cmd+S` to save
    - Offer the natural post-draft actions: ask for revisions, edit text directly in the browser, or export/share
 
 ---
@@ -368,13 +441,14 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 
 | File                                               | Purpose                                                              | When to Read              |
 | -------------------------------------------------- | -------------------------------------------------------------------- | ------------------------- |
-| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 12 curated visual presets with colors, fonts, and signature elements | Phase 2 (style selection) |
-| [bold-template-pack/selection-index.json](bold-template-pack/selection-index.json) | Compact bold template metadata for candidate selection | Phase 2 (style selection) |
-| [bold-template-pack/templates/*/preview.md](bold-template-pack/templates/) | Lightweight style cards for shortlisted bold title previews | Phase 2 after shortlisting |
-| [bold-template-pack/templates/*/design.md](bold-template-pack/templates/) | Detailed design-system docs for the selected bold template only | Phase 3 after user selection |
-| [viewport-base.css](viewport-base.css)             | Mandatory fixed-stage CSS — copy into every presentation             | Phase 3 (generation)      |
-| [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
-| [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
+| [viewport-base.css](viewport-base.css)             | Mandatory fixed-stage CSS — copy into every presentation             | Phase 3 (always)          |
+| [deck-layout.css](deck-layout.css)                 | Mandatory slide layout grids, cards, title/concept shells            | Phase 3 (always)          |
+| [html-template.md](html-template.md)               | HTML structure, SlidePresentation, DeckEditor, layout rules          | Phase 3 (always)          |
+| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 12 curated visual presets with colors, fonts, and signature elements | Custom mode Phase 2 only  |
+| [bold-template-pack/selection-index.json](bold-template-pack/selection-index.json) | Compact bold template metadata for candidate selection | Custom mode Phase 2 only  |
+| [bold-template-pack/templates/*/preview.md](bold-template-pack/templates/) | Lightweight style cards for shortlisted bold title previews | Custom mode Phase 2 only  |
+| [bold-template-pack/templates/*/design.md](bold-template-pack/templates/) | Detailed design-system docs for the selected bold template only | Custom mode Phase 3 only  |
+| [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Custom mode Phase 3 only  |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

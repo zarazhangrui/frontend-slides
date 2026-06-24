@@ -20,6 +20,8 @@ body {
     inset: 0;
     overflow: hidden;
     background: var(--stage-bg, #000);
+    overscroll-behavior: none;
+    touch-action: pan-y;
 }
 
 /* 3. Fixed 16:9 design canvas.
@@ -33,6 +35,7 @@ body {
     overflow: hidden;
     transform-origin: 0 0;
     background: var(--slide-bg, #fff);
+    touch-action: pan-y;
 }
 
 /* 4. Slides stack inside the fixed stage.

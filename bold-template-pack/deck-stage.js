@@ -30,7 +30,7 @@
  *     e.detail.total         // total slide count
  *     e.detail.slide         // the new active slide element
  *     e.detail.previousSlide // the prior slide element, or null on init
- *     e.detail.reason        // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+ *     e.detail.reason        // 'init' | 'keyboard' | 'wheel' | 'click' | 'tap' | 'swipe' | 'api'
  *   });
  *
  * Persistence: none at the deck level. The host app keeps the current slide
@@ -53,6 +53,12 @@
   const DESIGN_W_DEFAULT = 1920;
   const DESIGN_H_DEFAULT = 1080;
   const OVERLAY_HIDE_MS = 1800;
+  const SWIPE_THRESHOLD_PX = 48;
+  const SWIPE_RESTRAINT_PX = 80;
+  const SWIPE_MAX_TIME_MS = 1200;
+  const WHEEL_THRESHOLD_PX = 30;
+  const WHEEL_COOLDOWN_MS = 450;
+  const WHEEL_RESET_MS = 180;
   const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
 
   const pad2 = (n) => String(n).padStart(2, '0');
@@ -66,6 +72,8 @@
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
       overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: pan-y;
     }
 
     .stage {
@@ -276,11 +284,25 @@
       this._notes = [];
       this._hideTimer = null;
       this._mouseIdleTimer = null;
+      this._wheelAccum = 0;
+      this._lastWheelTime = 0;
+      this._wheelResetTimer = null;
+      this._touchTracking = false;
+      this._touchStartX = 0;
+      this._touchStartY = 0;
+      this._touchLastX = 0;
+      this._touchLastY = 0;
+      this._touchStartTime = 0;
 
       this._onKey = this._onKey.bind(this);
       this._onResize = this._onResize.bind(this);
       this._onSlotChange = this._onSlotChange.bind(this);
       this._onMouseMove = this._onMouseMove.bind(this);
+      this._onWheel = this._onWheel.bind(this);
+      this._onTouchStart = this._onTouchStart.bind(this);
+      this._onTouchMove = this._onTouchMove.bind(this);
+      this._onTouchEnd = this._onTouchEnd.bind(this);
+      this._onTouchCancel = this._onTouchCancel.bind(this);
       this._onTapBack = this._onTapBack.bind(this);
       this._onTapForward = this._onTapForward.bind(this);
     }
@@ -299,6 +321,11 @@
       window.addEventListener('keydown', this._onKey);
       window.addEventListener('resize', this._onResize);
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      window.addEventListener('wheel', this._onWheel, { passive: false });
+      window.addEventListener('touchstart', this._onTouchStart, { passive: true });
+      window.addEventListener('touchmove', this._onTouchMove, { passive: false });
+      window.addEventListener('touchend', this._onTouchEnd, { passive: false });
+      window.addEventListener('touchcancel', this._onTouchCancel, { passive: true });
       // Initial collection + layout happens via slotchange, which fires on mount.
     }
 
@@ -306,8 +333,14 @@
       window.removeEventListener('keydown', this._onKey);
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('mousemove', this._onMouseMove);
+      window.removeEventListener('wheel', this._onWheel);
+      window.removeEventListener('touchstart', this._onTouchStart);
+      window.removeEventListener('touchmove', this._onTouchMove);
+      window.removeEventListener('touchend', this._onTouchEnd);
+      window.removeEventListener('touchcancel', this._onTouchCancel);
       if (this._hideTimer) clearTimeout(this._hideTimer);
       if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
+      if (this._wheelResetTimer) clearTimeout(this._wheelResetTimer);
     }
 
     attributeChangedCallback() {
@@ -502,7 +535,7 @@
           total: this._slides.length,
           slide: this._slides[curr] || null,
           previousSlide: prev >= 0 ? (this._slides[prev] || null) : null,
-          reason: reason, // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+          reason: reason, // 'init' | 'keyboard' | 'wheel' | 'click' | 'tap' | 'swipe' | 'api'
         };
         this.dispatchEvent(new CustomEvent('slidechange', {
           detail,
@@ -544,6 +577,109 @@
     _onMouseMove() {
       // Keep overlay visible while mouse moves; hide after idle.
       this._flashOverlay();
+    }
+
+    _isInteractiveNavTarget(e) {
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [e.target];
+      return path.some((node) => {
+        if (!(node instanceof Element)) return false;
+        return Boolean(node.closest(
+          'a, button, input, textarea, select, summary, [contenteditable], [data-wheel-ignore]'
+        ));
+      });
+    }
+
+    _onWheel(e) {
+      if (e.ctrlKey || e.metaKey || this._isInteractiveNavTarget(e)) return;
+
+      const dx = e.deltaX || 0;
+      const dy = e.deltaY || 0;
+      const primaryDelta = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+      if (Math.abs(primaryDelta) < 1) return;
+
+      e.preventDefault();
+
+      const now = Date.now();
+      if (now - this._lastWheelTime < WHEEL_COOLDOWN_MS) return;
+
+      this._wheelAccum += primaryDelta;
+      if (this._wheelResetTimer) clearTimeout(this._wheelResetTimer);
+      this._wheelResetTimer = setTimeout(() => {
+        this._wheelAccum = 0;
+      }, WHEEL_RESET_MS);
+
+      if (Math.abs(this._wheelAccum) < WHEEL_THRESHOLD_PX) return;
+
+      const direction = this._wheelAccum > 0 ? 1 : -1;
+      this._wheelAccum = 0;
+      this._lastWheelTime = now;
+      this._go(this._index + direction, 'wheel');
+    }
+
+    _isInteractiveTouchTarget(e) {
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [e.target];
+      return path.some((node) => {
+        if (!(node instanceof Element)) return false;
+        return Boolean(node.closest(
+          'a, button, input, textarea, select, summary, [contenteditable], [data-swipe-ignore]'
+        ));
+      });
+    }
+
+    _onTouchStart(e) {
+      if (e.touches.length !== 1 || this._isInteractiveTouchTarget(e)) {
+        this._touchTracking = false;
+        return;
+      }
+
+      const touch = e.touches[0];
+      this._touchTracking = true;
+      this._touchStartX = touch.clientX;
+      this._touchStartY = touch.clientY;
+      this._touchLastX = touch.clientX;
+      this._touchLastY = touch.clientY;
+      this._touchStartTime = Date.now();
+    }
+
+    _onTouchMove(e) {
+      if (!this._touchTracking || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      this._touchLastX = touch.clientX;
+      this._touchLastY = touch.clientY;
+
+      const dx = touch.clientX - this._touchStartX;
+      const dy = touch.clientY - this._touchStartY;
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+        e.preventDefault();
+      }
+    }
+
+    _onTouchEnd(e) {
+      if (!this._touchTracking) return;
+
+      const touch = e.changedTouches && e.changedTouches[0];
+      const endX = touch ? touch.clientX : this._touchLastX;
+      const endY = touch ? touch.clientY : this._touchLastY;
+      const dx = endX - this._touchStartX;
+      const dy = endY - this._touchStartY;
+      const elapsed = Date.now() - this._touchStartTime;
+      this._touchTracking = false;
+
+      const isHorizontalSwipe =
+        Math.abs(dx) >= SWIPE_THRESHOLD_PX &&
+        Math.abs(dy) <= SWIPE_RESTRAINT_PX &&
+        Math.abs(dx) > Math.abs(dy) * 1.2 &&
+        elapsed <= SWIPE_MAX_TIME_MS;
+
+      if (!isHorizontalSwipe) return;
+
+      e.preventDefault();
+      this._go(this._index + (dx < 0 ? 1 : -1), 'swipe');
+    }
+
+    _onTouchCancel() {
+      this._touchTracking = false;
     }
 
     _onTapBack(e) {

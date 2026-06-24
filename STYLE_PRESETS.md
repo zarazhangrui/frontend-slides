@@ -315,6 +315,16 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 
 ---
 
+## PDF Export Font Safety
+
+**Fontshare fonts have broken PostScript metadata.** The font files shipped by Fontshare's CDN contain the string `"false"` as the PostScript name, family name, and full name — baked into the font binary itself. When Chromium embeds these in a PDF, macOS Preview cannot cache or identify the fonts, causing text blur on every page flip and sluggish navigation.
+
+**Safe for PDF:** All Google Fonts presets (Bold Signal, Electric Studio, Creative Voltage, Dark Botanical, Notebook Tabs, Pastel Geometry, Split Pastel, Vintage Editorial, Swiss Modern, Paper & Ink).
+
+**Requires patching for PDF:** Neon Cyber (Clash Display + Satoshi from Fontshare). The vector PDF export script (`scripts/export-pdf.js`) handles this automatically by downloading the TTF files and patching the name tables with Python fonttools.
+
+---
+
 ## DO NOT USE (Generic AI Patterns)
 
 **Fonts:** Inter, Roboto, Arial, system fonts as display

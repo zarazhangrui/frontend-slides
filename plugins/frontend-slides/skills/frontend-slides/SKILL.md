@@ -1,6 +1,6 @@
 ---
 name: frontend-slides
-description: Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files. Use when the user wants to build a presentation, convert a PPT/PPTX to web, or create slides for a talk/pitch. Helps non-designers discover their aesthetic through visual exploration rather than abstract choices.
+description: Create stunning, animation-rich HTML presentations, web slides, pitch decks, talks, teaching decks, and browser-based slideshows from scratch or by converting PowerPoint PPT/PPTX files. Use when the user wants to build, design, improve, export, deploy, or convert slides, decks, presentations, HTML slides, or a web slideshow. Helps non-designers discover their aesthetic through visual previews rather than abstract choices.
 ---
 
 # Frontend Slides
@@ -14,6 +14,18 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 3. **Distinctive Design** — No generic "AI slop." Every presentation must feel custom-crafted.
 4. **Progressive Disclosure** — Read lightweight style indexes first. For bold templates, use small preview cards for style previews and load the full `design.md` only after the user picks that template.
 5. **Fixed 16:9 Stage (NON-NEGOTIABLE)** — Every deck uses a 1920×1080 slide canvas scaled as a whole to the viewport. Slides must stay 16:9 on every screen, including phones. Do not reflow slide content to fit the device.
+
+## Cursor Workflow Notes
+
+When running in Cursor, treat this as a first-class Cursor skill:
+
+- Invoke as `/frontend-slides`.
+- Use Cursor's structured question UI when available for Phase 1 and style selection, so the user can answer all choices cleanly in one pass.
+- Use the workspace as the source of truth. Inspect existing HTML, image folders, `.pptx` files, and generated preview folders before modifying a deck.
+- Use Cursor's browser or screenshot tools when available to visually verify previews and final slides. Fixed-stage fitting issues are visual; do not rely only on DOM height checks.
+- Keep generated decks and temporary previews in the user's workspace, and tell the user exact file paths in the final response.
+- Resolve support files relative to the active skill directory. In a Cursor plugin install, read files beside `plugins/frontend-slides/skills/frontend-slides/SKILL.md`; in a personal skill install, read files beside `~/.cursor/skills/frontend-slides/SKILL.md`; in the repo root, read the root copies.
+- If the user wants to share this skill itself with other Cursor users, point them to `https://cursor.directory/plugins/new` after they have tested it locally.
 
 ## Design Aesthetics
 
@@ -50,6 +62,25 @@ These invariants apply to EVERY slide in EVERY presentation:
 - Never negate CSS functions directly (`-clamp()`, `-min()`, `-max()` are silently ignored) — use `calc(-1 * clamp(...))` instead
 
 **When generating, read `viewport-base.css` and include its full contents in every presentation.**
+
+### Cursor Visual Verification Loop
+
+When Cursor browser or screenshot tools are available, verify every preview set and final deck visually:
+
+1. Open each preview or final deck in the browser.
+2. Check a desktop viewport, preferably 1280×720 or larger.
+3. Check one constrained/mobile viewport to confirm the fixed 16:9 stage scales instead of reflowing.
+4. Inspect for clipped text, overlapping panels, broken images, missing fonts, unexpected scrollbars, hidden controls, and content outside the stage.
+5. Check keyboard navigation, touch/click controls, visible focus states, and `prefers-reduced-motion` behavior when the deck is interactive.
+6. Mention the exact files and viewports checked in the final response.
+
+Accessibility checks:
+
+- Text is readable at presentation distance and at the checked viewport sizes.
+- Body text, labels, controls, and key graphics have sufficient contrast.
+- Interactive controls are keyboard reachable and have visible focus states.
+- Motion has a reduced-motion path.
+- Critical meaning is not conveyed only through color, hover, or animation.
 
 ### Content Density Modes
 
@@ -267,6 +298,7 @@ When converting PowerPoint files:
    - Navigation: Arrow keys, Space, swipe/tap if enabled
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - Inline text editing is available: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
+   - Visual verification performed: files opened, viewports checked, and any known limitations
    - Offer the natural post-draft actions: ask for revisions, edit text directly in the browser, or export/share
 
 ---
@@ -366,6 +398,15 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 
 ## Supporting Files
 
+Read support files from the active skill package:
+
+- Cursor plugin install: `plugins/frontend-slides/skills/frontend-slides/`
+- Cursor personal skill install: `~/.cursor/skills/frontend-slides/`
+- Claude Code skill install: `~/.claude/skills/frontend-slides/`
+- Repository checkout: the repo root files are the canonical source for manual browsing
+
+Keep the root `SKILL.md` and `plugins/frontend-slides/skills/frontend-slides/SKILL.md` synchronized when editing this repo.
+
 | File                                               | Purpose                                                              | When to Read              |
 | -------------------------------------------------- | -------------------------------------------------------------------- | ------------------------- |
 | [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 12 curated visual presets with colors, fonts, and signature elements | Phase 2 (style selection) |
@@ -378,3 +419,14 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |
+
+## Fixture Prompts
+
+Use these to regression-test the skill after meaningful changes:
+
+1. **New pitch deck:** "Create a 10-slide seed pitch deck for an AI customer-support startup. I only have rough notes and want something bold but credible."
+2. **PPT conversion:** "Convert `quarterly-review.pptx` into a web slideshow, preserve images and speaker notes, then export a PDF."
+3. **Existing deck enhancement:** "Improve this existing HTML deck. Add three slides with screenshots, keep the current visual system, and make sure nothing overflows."
+4. **High-density reading deck:** "Turn this product spec into a reading-first internal presentation with detailed comparison slides and tables."
+
+For each fixture, verify that intake is structured, support files are loaded progressively, output remains fixed-stage 16:9, screenshots pass visual checks, and the final response includes file path, slide count, selected style, validation performed, and next actions.

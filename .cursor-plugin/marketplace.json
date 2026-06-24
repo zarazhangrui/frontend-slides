@@ -1,0 +1,18 @@
+{
+  "name": "frontend-slides",
+  "owner": {
+    "name": "zarazhangrui",
+    "url": "https://github.com/zarazhangrui"
+  },
+  "metadata": {
+    "description": "Create beautiful HTML presentations using Cursor's agent workflow.",
+    "version": "2.1.0"
+  },
+  "plugins": [
+    {
+      "name": "frontend-slides",
+      "source": "./plugins/frontend-slides",
+      "description": "Zero-dependency HTML presentation generator with visual style discovery, PPT conversion, and anti-AI-slop design guidance."
+    }
+  ]
+}

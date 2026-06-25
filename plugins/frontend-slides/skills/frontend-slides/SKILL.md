@@ -74,13 +74,14 @@ Determine what the user wants:
 
 ### Mode C: Modification Rules
 
-When enhancing existing presentations, fixed-stage fitting is the biggest risk:
+When enhancing existing presentations, first preserve the required viewport baseline, then manage fixed-stage fitting:
 
-1. **Before adding content:** Count existing elements, check against density limits
-2. **Adding images:** Fit them inside the 1920×1080 slide canvas. If slide already has max content, split into two slides
-3. **Adding text:** Max 4-6 bullets per slide. Exceeds limits? Split into continuation slides
-4. **After ANY modification, verify:** the slide stage remains 16:9, no text overflows its card, no panels overlap, and screenshots look correct at 1280×720 plus one phone viewport
-5. **Proactively reorganize:** If modifications will cause overflow, automatically split content and inform the user. Don't wait to be asked
+1. **Before any modification:** Read `viewport-base.css`, then inspect the existing HTML `<style>` blocks for the fixed-stage baseline signature: `.deck-viewport`, `.deck-stage`, `.slide`, and `.slide.active` / `.slide.visible`, including the canonical 1920px × 1080px stage rules and visibility / opacity / pointer-events slide-state rules. If the signature is missing or incomplete, insert the FULL contents of `viewport-base.css` at the start of the deck's primary `<style>` block before changing content, so deck-specific CSS can still override variables and presentation styling. If there is no `<style>` block, create one in `<head>` with the full contents.
+2. **Before adding content:** Count existing elements, check against density limits
+3. **Adding images:** Fit them inside the 1920×1080 slide canvas. If slide already has max content, split into two slides
+4. **Adding text:** Max 4-6 bullets per slide. Exceeds limits? Split into continuation slides
+5. **After ANY modification, verify:** the `viewport-base.css` signature and contents remain present in a `<style>` block, the slide stage remains 16:9, no text overflows its card, no panels overlap, and screenshots look correct at 1280×720 plus one phone viewport
+6. **Proactively reorganize:** If modifications will cause overflow, automatically split content and inform the user. Don't wait to be asked
 
 **When adding images to existing slides:** Move image to a new slide or reduce other content first. Never add images without checking if existing content already fills the 1920×1080 slide stage.
 
@@ -372,7 +373,7 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [bold-template-pack/selection-index.json](bold-template-pack/selection-index.json) | Compact bold template metadata for candidate selection | Phase 2 (style selection) |
 | [bold-template-pack/templates/*/preview.md](bold-template-pack/templates/) | Lightweight style cards for shortlisted bold title previews | Phase 2 after shortlisting |
 | [bold-template-pack/templates/*/design.md](bold-template-pack/templates/) | Detailed design-system docs for the selected bold template only | Phase 3 after user selection |
-| [viewport-base.css](viewport-base.css)             | Mandatory fixed-stage CSS — copy into every presentation             | Phase 3 (generation)      |
+| [viewport-base.css](viewport-base.css)             | Mandatory fixed-stage CSS — copy into every presentation             | Phase 3 and Mode C preflight |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |

@@ -525,7 +525,7 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a workflow
 | `bold-template-pack/selection-index.json` | Compact bold template metadata for candidate selection | Phase 2 (style selection) |
 | `bold-template-pack/templates/*/preview.md` | Tiny style cards for shortlisted bold previews | Phase 2 after shortlisting |
 | `bold-template-pack/templates/*/design.md` | Full design system for the selected bold template | Phase 3 after user selection |
-| `viewport-base.css`       | Mandatory fixed-stage CSS      | Phase 3 (generation)      |
+| `viewport-base.css`       | Mandatory fixed-stage CSS      | Phase 3 and Mode C preflight |
 | `html-template.md`        | HTML structure and JS features | Phase 3 (generation)      |
 | `animation-patterns.md`   | CSS/JS animation reference     | Phase 3 (generation)      |
 | `scripts/extract-pptx.py` | PPT content extraction         | Phase 4 (conversion)      |

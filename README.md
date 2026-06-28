@@ -573,9 +573,10 @@ Convert your slides to a PDF for email, Slack, Notion, or printing:
 ```bash
 bash scripts/export-pdf.sh ./my-deck/index.html
 bash scripts/export-pdf.sh ./presentation.html ./output.pdf
+bash scripts/export-pdf.sh ./presentation.html --compact   # 1280×720, smaller file
 ```
 
-Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080 and combine into a PDF. Installs automatically if needed. Animations are not preserved (it's a static snapshot).
+Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080 and combine into a PDF. Installs automatically if needed. Animations are not preserved (it's a static snapshot). Pass `--compact` to render at 1280×720 for a noticeably smaller file.
 
 ## Requirements
 

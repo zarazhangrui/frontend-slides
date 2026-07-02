@@ -62,6 +62,24 @@ Ask the user whether this is primarily a reading deck or a speaking deck, then d
 
 Baseline limits still apply: no scrolling, no overflow, no overlapping panels, and no text below comfortable reading size. If content exceeds the selected density mode, split it into more slides instead of shrinking until it becomes cramped.
 
+### Session Checkpoint
+
+Use `.frontend-slides/session.json` as a lightweight checkpoint for human decisions and generated artifacts. This file is for agent resume only; never render its contents on slides or mention it as presentation content.
+
+At the start of a task, if `.frontend-slides/session.json` already exists, read it before asking questions. Use it to recover prior choices, then ask only for missing or changed information.
+
+Create or update the checkpoint after each human-in-the-loop decision:
+
+- Phase 0: `mode`
+- Phase 1: `purpose`, `length`, `content_readiness`, and `density`
+- Step 1.2: `image_assets` summary, including usable image count and selected outline status
+- Step 2.1: `selected_style`, or `mix_notes` when the user combines options
+- Phase 4: `ppt_source`, `extracted_slides_json`, `slide_count`, and `asset_count`
+- Phase 5: `output_html`, `style_name`, and `slide_count`
+- Phase 6: `share_export_choice`, plus `deploy_url` or `pdf_path` when produced
+
+Keep the checkpoint compact and factual. Prefer stable file paths, counts, and user-approved choices over long prose. If a value is unknown, omit it instead of writing placeholders.
+
 ---
 
 ## Phase 0: Detect Mode
@@ -71,6 +89,8 @@ Determine what the user wants:
 - **Mode A: New Presentation** — Create from scratch. Go to Phase 1.
 - **Mode B: PPT Conversion** — Convert a .pptx file. Go to Phase 4.
 - **Mode C: Enhancement** — Improve an existing HTML presentation. Read it, understand it, enhance. **Follow Mode C modification rules below.**
+
+After detecting the mode, update `.frontend-slides/session.json` with the selected `mode`.
 
 ### Mode C: Modification Rules
 
@@ -111,6 +131,8 @@ Remember the user's density choice. It affects slide count, typography scale, am
 
 If user has content, ask them to share it.
 
+After the user answers, update `.frontend-slides/session.json` with the confirmed purpose, length, content readiness, and density.
+
 ### Step 1.2: Image Evaluation (if images provided)
 
 If user selected "No images" → skip to Phase 2.
@@ -124,6 +146,8 @@ If user provides an image folder:
 5. **Confirm the outline** using the same structured-question mechanism when available: "Does this slide outline and image selection look right?" Options: Looks good / Adjust images / Adjust outline
 
 **Logo in previews:** If a usable logo was identified, embed it (base64) into each style preview in Phase 2 — the user sees their brand styled three different ways.
+
+After image evaluation and outline confirmation, update `.frontend-slides/session.json` with a compact image/assets summary and the confirmed outline status.
 
 ---
 
@@ -197,6 +221,8 @@ Which style preview do you prefer? Options: Style A: [Name] / Style B: [Name] / 
 
 If "Mix elements", ask for specifics.
 
+After the user picks or mixes styles, update `.frontend-slides/session.json` with the selected style name or mix notes.
+
 ---
 
 ## Phase 3: Generate Presentation
@@ -256,6 +282,8 @@ When converting PowerPoint files:
 3. **Style selection** — Proceed to Phase 2 for style discovery
 4. **Generate HTML** — Convert to chosen style, preserving all text, images (from assets/), slide order, and speaker notes (as HTML comments)
 
+After the user confirms the extracted PPT content, update `.frontend-slides/session.json` with the PPT source, extracted JSON path, slide count, and asset count.
+
 ---
 
 ## Phase 5: Delivery
@@ -268,6 +296,8 @@ When converting PowerPoint files:
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - Inline text editing is available: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
    - Offer the natural post-draft actions: ask for revisions, edit text directly in the browser, or export/share
+
+After delivery, update `.frontend-slides/session.json` with the output HTML path, style name, and slide count.
 
 ---
 
@@ -283,6 +313,8 @@ Options:
 - **No thanks**
 
 If the user declines, stop here. If they choose one or both, proceed below.
+
+After the user chooses a sharing/export option, update `.frontend-slides/session.json` with that choice. Add the deployed URL or exported PDF path after the operation succeeds.
 
 ### 6A: Deploy to a Live URL (Vercel)
 

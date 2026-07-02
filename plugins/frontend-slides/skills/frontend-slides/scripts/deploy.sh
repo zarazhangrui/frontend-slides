@@ -11,8 +11,9 @@
 # What this does:
 #   1. Checks if Vercel CLI is installed (installs if not)
 #   2. Checks if user is logged in (guides through login if not)
-#   3. Deploys the slide deck to a public URL
-#   4. Prints the live URL
+#   3. Inlines local image refs for standalone HTML inputs
+#   4. Deploys the slide deck to a public URL
+#   5. Prints the live URL
 #
 # The deployed URL is permanent and works on any device (mobile, tablet, desktop).
 # No server to maintain — Vercel hosts it for free.
@@ -31,6 +32,163 @@ ok()    { echo -e "${GREEN}✓${NC} $*"; }
 warn()  { echo -e "${YELLOW}⚠${NC} $*"; }
 err()   { echo -e "${RED}✗${NC} $*" >&2; }
 
+inline_local_images() {
+    local html_file="$1"
+    local base_dir="$2"
+
+    node - "$html_file" "$base_dir" <<'NODE'
+const fs = require('fs');
+const path = require('path');
+const { fileURLToPath } = require('url');
+
+const htmlFile = process.argv[2];
+const baseDir = process.argv[3];
+let html = fs.readFileSync(htmlFile, 'utf8');
+let replacements = 0;
+
+const mimeByExt = {
+  '.apng': 'image/apng',
+  '.avif': 'image/avif',
+  '.bmp': 'image/bmp',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.tif': 'image/tiff',
+  '.tiff': 'image/tiff',
+  '.webp': 'image/webp',
+};
+
+const cache = new Map();
+
+function stripSuffixes(ref) {
+  return ref.replace(/[?#].*$/, '');
+}
+
+function isRemoteReference(ref) {
+  return /^(?:https?:)?\/\//i.test(ref)
+    || /^(?:data:|mailto:|tel:|javascript:|#)/i.test(ref);
+}
+
+function resolveLocalFile(ref) {
+  if (!ref) return null;
+
+  const trimmed = ref.trim();
+  if (!trimmed) return null;
+
+  if (/^file:\/\//i.test(trimmed)) {
+    try {
+      return fileURLToPath(trimmed);
+    } catch {
+      return null;
+    }
+  }
+
+  if (isRemoteReference(trimmed) || trimmed.startsWith('/')) {
+    return null;
+  }
+
+  return path.resolve(baseDir, stripSuffixes(trimmed));
+}
+
+function getDataUrl(ref) {
+  if (cache.has(ref)) {
+    return cache.get(ref);
+  }
+
+  const resolved = resolveLocalFile(ref);
+  if (!resolved) {
+    cache.set(ref, null);
+    return null;
+  }
+
+  let stats;
+  try {
+    stats = fs.statSync(resolved);
+  } catch {
+    cache.set(ref, null);
+    return null;
+  }
+
+  if (!stats.isFile()) {
+    cache.set(ref, null);
+    return null;
+  }
+
+  const ext = path.extname(stripSuffixes(ref)).toLowerCase();
+  const mime = mimeByExt[ext];
+  if (!mime) {
+    cache.set(ref, null);
+    return null;
+  }
+
+  const dataUrl = `data:${mime};base64,${fs.readFileSync(resolved).toString('base64')}`;
+  cache.set(ref, dataUrl);
+  return dataUrl;
+}
+
+function replaceAttribute(attrName) {
+  const regex = new RegExp(`(${attrName}\\s*=\\s*)(["'])([^"']+?)\\2`, 'gi');
+  html = html.replace(regex, (match, prefix, quote, value) => {
+    const dataUrl = getDataUrl(value);
+    if (!dataUrl) {
+      return match;
+    }
+    replacements += 1;
+    return `${prefix}${quote}${dataUrl}${quote}`;
+  });
+}
+
+function replaceSrcset() {
+  html = html.replace(/(srcset\s*=\s*)(["'])([^"']+?)\2/gi, (match, prefix, quote, value) => {
+    let changed = false;
+    const rewritten = value
+      .split(',')
+      .map((candidate) => {
+        const trimmed = candidate.trim();
+        if (!trimmed) {
+          return candidate;
+        }
+
+        const [url, ...descriptorParts] = trimmed.split(/\s+/);
+        const dataUrl = getDataUrl(url);
+        if (!dataUrl) {
+          return candidate;
+        }
+
+        replacements += 1;
+        changed = true;
+        const descriptor = descriptorParts.length ? ` ${descriptorParts.join(' ')}` : '';
+        return `${dataUrl}${descriptor}`;
+      })
+      .join(', ');
+
+    return changed ? `${prefix}${quote}${rewritten}${quote}` : match;
+  });
+}
+
+function replaceCssUrls() {
+  html = html.replace(/(url\(\s*)(['"]?)([^"')]+?)\2(\s*\))/gi, (match, prefix, quote, value, suffix) => {
+    const dataUrl = getDataUrl(value);
+    if (!dataUrl) {
+      return match;
+    }
+    replacements += 1;
+    return `${prefix}${quote}${dataUrl}${quote}${suffix}`;
+  });
+}
+
+['src', 'poster', 'href'].forEach(replaceAttribute);
+replaceSrcset();
+replaceCssUrls();
+
+fs.writeFileSync(htmlFile, html);
+process.stdout.write(String(replacements));
+NODE
+}
+
 # ─── Input validation ─────────────────────────────────────
 
 if [[ $# -lt 1 ]]; then
@@ -44,23 +202,42 @@ fi
 
 INPUT="$1"
 
+echo ""
+echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"
+echo -e "${BOLD}║       Deploy Slides to Vercel         ║${NC}"
+echo -e "${BOLD}╚══════════════════════════════════════╝${NC}"
+echo ""
+
+if ! command -v node &>/dev/null || ! command -v npx &>/dev/null; then
+    err "Node.js and npm are required but not installed."
+    err ""
+    err "Install Node.js:"
+    err "  macOS:   brew install node"
+    err "  or visit https://nodejs.org and download the installer"
+    exit 1
+fi
+
 # If input is a single HTML file, create a temp directory with it as index.html
 if [[ -f "$INPUT" && "$INPUT" == *.html ]]; then
     DEPLOY_DIR=$(mktemp -d)
     cp "$INPUT" "$DEPLOY_DIR/index.html"
-    PARENT_DIR=$(dirname "$INPUT")
+    PARENT_DIR=$(cd "$(dirname "$INPUT")" && pwd)
 
-    # Parse the HTML for local file references (src="...", url('...'), href="...")
-    # and copy any referenced local files into the deploy directory
-    grep -oE '(src|href|url\()["'"'"']?[^"'"'"'>)]+' "$INPUT" 2>/dev/null | \
-        sed "s/^src=//; s/^href=//; s/^url(//; s/[\"']//g" | \
+    INLINE_COUNT=$(inline_local_images "$DEPLOY_DIR/index.html" "$PARENT_DIR")
+    if [[ "$INLINE_COUNT" =~ ^[0-9]+$ && "$INLINE_COUNT" -gt 0 ]]; then
+        info "Inlined $INLINE_COUNT local image reference(s) into data URLs."
+    fi
+
+    # Parse the rewritten HTML for remaining local file references and copy them.
+    grep -oE '(src|href|poster|url\()["'"'"']?[^"'"'"'>)]+' "$DEPLOY_DIR/index.html" 2>/dev/null | \
+        sed "s/^src=//; s/^href=//; s/^poster=//; s/^url(//; s/[\"']//g" | \
         grep -v '^http' | grep -v '^data:' | grep -v '^#' | grep -v '^/' | \
-        sort -u | while read -r ref; do
-            # Resolve the reference relative to the HTML file's directory
-            SOURCE_FILE="$PARENT_DIR/$ref"
-            if [[ -e "$SOURCE_FILE" ]]; then
+        sort -u | while IFS= read -r ref; do
+            SOURCE_REF=$(printf '%s' "$ref" | sed 's/[?#].*$//')
+            SOURCE_FILE="$PARENT_DIR/$SOURCE_REF"
+            if [[ -n "$SOURCE_REF" && -e "$SOURCE_FILE" ]]; then
                 # Preserve directory structure for nested paths (e.g., assets/img.png)
-                TARGET_DIR="$DEPLOY_DIR/$(dirname "$ref")"
+                TARGET_DIR="$DEPLOY_DIR/$(dirname "$SOURCE_REF")"
                 mkdir -p "$TARGET_DIR"
                 cp -r "$SOURCE_FILE" "$TARGET_DIR/"
             fi
@@ -88,21 +265,6 @@ else
 fi
 
 # ─── Step 1: Check for Vercel CLI ─────────────────────────
-
-echo ""
-echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║       Deploy Slides to Vercel         ║${NC}"
-echo -e "${BOLD}╚══════════════════════════════════════╝${NC}"
-echo ""
-
-if ! command -v npx &>/dev/null; then
-    err "Node.js is required but not installed."
-    err ""
-    err "Install Node.js:"
-    err "  macOS:   brew install node"
-    err "  or visit https://nodejs.org and download the installer"
-    exit 1
-fi
 
 info "Checking Vercel CLI..."
 

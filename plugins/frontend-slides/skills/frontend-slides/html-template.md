@@ -295,7 +295,7 @@ Save processed images with `_processed` suffix. Never overwrite originals.
 
 ### Image Placement
 
-**Use direct file paths** (not base64) — presentations are viewed locally:
+**Use direct file paths during authoring** — presentations are edited locally, and `scripts/deploy.sh ./presentation.html` will inline local image refs into `data:` URLs when you share a standalone HTML file:
 
 ```html
 <img src="assets/logo_round.png" alt="Logo" class="slide-image logo">
@@ -340,7 +340,7 @@ Save processed images with `_processed` suffix. Never overwrite originals.
 Single presentations:
 ```
 presentation.html    # Self-contained, all CSS/JS inline
-assets/              # Images only, if any
+assets/              # Optional authoring-time images, if any
 ```
 
 Multiple presentations in one project:

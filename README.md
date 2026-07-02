@@ -564,6 +564,8 @@ bash scripts/deploy.sh ./my-deck/
 bash scripts/deploy.sh ./presentation.html
 ```
 
+When you deploy a standalone `.html` file, the script rewrites local image references to `data:` URLs first, so the shared output is self-contained. Remote `http(s)` images stay unchanged.
+
 Uses [Vercel](https://vercel.com) (free tier). The skill walks you through signup and login if it's your first time.
 
 ### Export to PDF

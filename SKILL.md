@@ -14,6 +14,7 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 3. **Distinctive Design** — No generic "AI slop." Every presentation must feel custom-crafted.
 4. **Progressive Disclosure** — Read lightweight style indexes first. For bold templates, use small preview cards for style previews and load the full `design.md` only after the user picks that template.
 5. **Fixed 16:9 Stage (NON-NEGOTIABLE)** — Every deck uses a 1920×1080 slide canvas scaled as a whole to the viewport. Slides must stay 16:9 on every screen, including phones. Do not reflow slide content to fit the device.
+6. **Local Presenter Runtime** — Every delivered deck includes the local presenter runtime: keyboard shortcuts, minimal bottom controls, slide-count jump, fullscreen behavior, and an `E` slide menu for visibility, titles, deletion, and user text slides. It must work locally and on Vercel with `localStorage` only.
 
 ## Design Aesthetics
 
@@ -105,7 +106,7 @@ How dense should the deck feel? Options:
 - "Low density / speaker-led" — Big ideas, fewer words, more visual breathing room
 - "High density / reading-first" — More self-contained detail for async reading
 
-**Do not ask about inline editing during Phase 1.** Users should not have to choose editing behavior before seeing a draft. Inline editing is a post-draft affordance: include it by default unless the user explicitly asks for a locked/export-only file.
+**Do not ask about presenter controls or inline editing during Phase 1.** Users should not have to choose editing behavior before seeing a draft. The local presenter runtime is a default post-draft affordance: include it by default unless the user explicitly asks for a locked/export-only file.
 
 Remember the user's density choice. It affects slide count, typography scale, amount of text per slide, layout density, and whether to favor cinematic presenter slides or self-contained reading slides.
 
@@ -234,6 +235,7 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 **Before generating, read these supporting files:**
 
 - [html-template.md](html-template.md) — HTML architecture and JS features
+- [presenter-runtime.md](presenter-runtime.md) — Mandatory keyboard/menu/localStorage runtime for delivered decks
 - [viewport-base.css](viewport-base.css) — Mandatory CSS (include in full)
 - [animation-patterns.md](animation-patterns.md) — Animation reference for the chosen feeling
 
@@ -241,6 +243,7 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 
 - Single self-contained HTML file, all CSS/JS inline
 - Include the FULL contents of viewport-base.css in the `<style>` block
+- Include the local presenter runtime from presenter-runtime.md: bottom controls, keyboard shortcuts, slide-count jump, `E` slide menu, `+ Slide`, title editing, visibility selection, delete, fullscreen hiding, and localStorage persistence
 - Use fonts from Fontshare or Google Fonts — never system fonts
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
@@ -264,10 +267,11 @@ When converting PowerPoint files:
 2. **Open** — Use `open [filename].html` to launch in browser
 3. **Summarize** — Tell the user:
    - File location, style name, slide count
-   - Navigation: Arrow keys, Space, swipe/tap if enabled
+   - Navigation: Arrow keys, Space, slide-count jump, `E` for the slide menu, `F` fullscreen, `M` mute when media exists
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
-   - Inline text editing is available: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
-   - Offer the natural post-draft actions: ask for revisions, edit text directly in the browser, or export/share
+   - Slide menu: use `E` to rename slides, choose visible slides, delete slides, add text slides, and click `Save` to persist changes in this browser
+   - Explain that menu changes are stored in browser localStorage only; Vercel/static hosting will not sync them across devices
+   - Offer the natural post-draft actions: ask for revisions, edit in the browser menu, or export/share
 
 ---
 
@@ -374,6 +378,7 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [bold-template-pack/templates/*/design.md](bold-template-pack/templates/) | Detailed design-system docs for the selected bold template only | Phase 3 after user selection |
 | [viewport-base.css](viewport-base.css)             | Mandatory fixed-stage CSS — copy into every presentation             | Phase 3 (generation)      |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
+| [presenter-runtime.md](presenter-runtime.md)       | Mandatory local controls, shortcuts, slide menu, and localStorage behavior | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |

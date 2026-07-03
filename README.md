@@ -27,6 +27,7 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 - **PPT Conversion** — Convert existing PowerPoint files to web, preserving all images and content.
 - **Anti-AI-Slop** — Curated distinctive styles that avoid generic AI aesthetics (bye-bye, purple gradients on white).
 - **Bold Template Pack** — Optional design-forward templates from `beautiful-html-templates`, loaded progressively so safe presets still work as the default fallback.
+- **Local Presenter Runtime** — Every delivered deck includes keyboard shortcuts, fullscreen behavior, a slide-count jump, and an `E` slide menu for visibility, titles, deletion, and user-added text slides.
 - **Production Quality** — Accessible, fixed 16:9, well-commented code you can customize.
 
 ## Installation
@@ -50,7 +51,7 @@ Install directly into your Codex skills directory:
 mkdir -p ~/.codex/skills/frontend-slides/scripts
 
 # Copy the user-facing skill files
-cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.codex/skills/frontend-slides/
+cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md presenter-runtime.md animation-patterns.md ~/.codex/skills/frontend-slides/
 cp -R bold-template-pack ~/.codex/skills/frontend-slides/
 cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh ~/.codex/skills/frontend-slides/scripts/
 ```
@@ -76,6 +77,7 @@ If the agent can read GitHub repos or browse files, it should start from `SKILL.
 - `STYLE_PRESETS.md`
 - `viewport-base.css`
 - `html-template.md`
+- `presenter-runtime.md`
 - `animation-patterns.md`
 - `bold-template-pack/`
 - `scripts/`
@@ -513,6 +515,7 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a workflow
 | `bold-template-pack/templates/*/design.md` | Full design system for the selected bold template | Phase 3 after user selection |
 | `viewport-base.css`       | Mandatory fixed-stage CSS      | Phase 3 (generation)      |
 | `html-template.md`        | HTML structure and JS features | Phase 3 (generation)      |
+| `presenter-runtime.md`    | Local controls, shortcuts, slide menu, and localStorage behavior | Phase 3 (generation)      |
 | `animation-patterns.md`   | CSS/JS animation reference     | Phase 3 (generation)      |
 | `scripts/extract-pptx.py` | PPT content extraction         | Phase 4 (conversion)      |
 | `scripts/deploy.sh`       | Deploy to Vercel               | Phase 6 (sharing)         |

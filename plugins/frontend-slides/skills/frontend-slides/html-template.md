@@ -80,12 +80,12 @@ Reference architecture for generating slide presentations. Every presentation fo
 <body>
     <div class="deck-viewport">
         <main class="deck-stage" id="deckStage">
-            <section class="slide title-slide active">
+            <section class="slide title-slide active" data-slide-id="slide-001" data-slide-index="0" data-title="Presentation Title" data-original-skipped="false">
                 <h1 class="reveal">Presentation Title</h1>
                 <p class="reveal">Subtitle or author</p>
             </section>
 
-            <section class="slide">
+            <section class="slide" data-slide-id="slide-002" data-slide-index="1" data-title="Slide Title" data-original-skipped="false">
                 <div class="slide-content">
                     <h2 class="reveal">Slide Title</h2>
                     <p class="reveal">Content...</p>
@@ -94,6 +94,36 @@ Reference architecture for generating slide presentations. Every presentation fo
 
             <!-- More slides... -->
         </main>
+    </div>
+
+    <nav class="deck-controls" aria-label="Presentation controls">
+        <button class="control-button" id="prevButton" type="button" aria-label="Previous slide">‹</button>
+        <span class="slide-count" id="slideCount">
+            <button class="slide-count-current" id="slideJumpButton" type="button" title="Jump to slide">1</button>
+            <span class="slide-count-separator">/</span>
+            <span id="slideTotal">2</span>
+        </span>
+        <button class="control-button" id="nextButton" type="button" aria-label="Next slide">›</button>
+        <button class="control-button" id="pagesButton" type="button" title="Edit slides">E</button>
+    </nav>
+
+    <div class="slide-menu-overlay" id="slideMenuOverlay" role="dialog" aria-modal="true" aria-label="Slide menu" hidden>
+        <section class="slide-menu-panel">
+            <header class="slide-menu-header">
+                <div class="slide-menu-actions" aria-label="Slide menu actions">
+                    <button class="control-button" id="selectAllPages" type="button">All</button>
+                    <button class="control-button" id="showSelectedPages" type="button">Selection</button>
+                    <button class="control-button" id="savePageSelection" type="button">Save</button>
+                    <button class="control-button" id="addTextSlide" type="button">+ Slide</button>
+                </div>
+                <button class="control-button" id="slideMenuClose" type="button" aria-label="Close slide menu">×</button>
+            </header>
+            <section class="text-slide-editor" id="textSlideEditor" hidden aria-label="Text slide editor">
+                <!-- Text, color, X, Y, and size controls for user-added text slides -->
+            </section>
+            <p class="slide-menu-summary" id="slideMenuSummary"></p>
+            <div class="slide-menu-list" id="slideMenuList"></div>
+        </section>
     </div>
 
     <script>
@@ -105,9 +135,11 @@ Reference architecture for generating slide presentations. Every presentation fo
                 this.slides = document.querySelectorAll('.slide');
                 this.currentSlide = 0;
                 this.stage = document.getElementById('deckStage');
+                this.storagePrefix = `frontend-slides:${document.title || location.pathname}`;
                 this.setupStageScale();
                 this.setupKeyboardNav();
                 this.setupTouchNav();
+                this.setupPresenterRuntime();
                 this.showSlide(0);
             }
 
@@ -123,7 +155,8 @@ Reference architecture for generating slide presentations. Every presentation fo
             }
 
             setupKeyboardNav() {
-                // Arrow keys, Space, Page Up/Down
+                // Arrow keys, Space, Page Up/Down, Home/End, E menu, F fullscreen, M mute when media exists.
+                // Do not trigger shortcuts while focus is inside an input, textarea, select, or contenteditable element.
             }
 
             setupTouchNav() {
@@ -136,6 +169,13 @@ Reference architecture for generating slide presentations. Every presentation fo
                     slide.classList.toggle('active', i === this.currentSlide);
                     slide.classList.toggle('visible', i === this.currentSlide);
                 });
+            }
+
+            setupPresenterRuntime() {
+                // Implement presenter-runtime.md here:
+                // bottom controls, editable slide-count jump, E slide menu, All/Selection/Save,
+                // + Slide user text slides, title edits, deletion, localStorage persistence,
+                // fullscreen chrome hiding, and optional media mute/playback handling.
             }
         }
 
@@ -150,17 +190,27 @@ Reference architecture for generating slide presentations. Every presentation fo
 Every presentation must include:
 
 1. **SlidePresentation Class** — Main controller with:
-   - Keyboard navigation (arrows, space, page up/down)
+   - Keyboard navigation (arrows, space, page up/down, home/end)
+   - `E` slide menu, `F` fullscreen, `?` help, and `M` mute when media exists
    - Touch/swipe support
    - Mouse wheel navigation
-   - Optional progress indicator or page count, kept outside the slide stage
+   - Minimal bottom controls and editable/clickable page count, kept outside the slide stage
 
 2. **Stage Scaling** — For fixed 16:9 presentation behavior:
    - Keep all slides at 1920×1080 inside `.deck-stage`
    - Scale the whole stage with one transform
    - Letterbox/pillarbox as needed; never reflow slide content per device
 
-3. **Optional Enhancements** (match to chosen style):
+3. **Local Presenter Runtime** (mandatory):
+   - Read and implement `presenter-runtime.md` in the delivered HTML
+   - Add stable slide metadata (`data-slide-id`, `data-title`, `data-original-skipped`)
+   - Add bottom controls: previous, slide count jump, next, and `E`
+   - Add the `E` slide menu with All, Selection, Save, `+ Slide`, row preview, visibility checkboxes, title editing, delete, media tags, and user text slide editor
+   - Persist menu changes to `localStorage` only when Save is clicked
+   - Hide controls, progress chrome, and cursor over the slide area in fullscreen
+   - Do not include private domains, project-specific deploy URLs, or any unauthenticated browser-to-server save API
+
+4. **Optional Enhancements** (match to chosen style):
    - Custom cursor with trail
    - Particle system background (canvas)
    - Parallax effects
@@ -168,92 +218,87 @@ Every presentation must include:
    - Magnetic buttons
    - Counter animations
 
-4. **Inline Editing** (included by default after draft generation):
-   - Edit toggle button (hidden by default, revealed via hover hotzone or `E` key)
-   - Auto-save to localStorage
-   - Export/save file functionality
-   - See "Inline Editing Implementation" section below
+5. **Menu-Based Editing** (included by default after draft generation):
+   - Slide title editing inside the `E` menu
+   - Visibility selection and deletion inside the `E` menu
+   - User-added text slides with editable content, color, X/Y position, and size
+   - Save button writes local browser state to `localStorage`
+   - See "Presenter Runtime Implementation" below
 
-## Inline Editing Implementation
+## Presenter Runtime Implementation
 
-Inline editing is a lightweight post-draft affordance. Do not ask the user whether they want it during the pre-generation Q&A. Include it by default unless the user explicitly asks for a locked/export-only presentation or no editing controls.
+The presenter runtime is a lightweight post-draft affordance. Do not ask the user whether they want it during the pre-generation Q&A. Include it by default unless the user explicitly asks for a locked/export-only presentation or no editing controls.
 
-**Do NOT use CSS `~` sibling selector for hover-based show/hide.** The CSS-only approach (`edit-hotzone:hover ~ .edit-toggle`) fails because `pointer-events: none` on the toggle button breaks the hover chain: user hovers hotzone -> button becomes visible -> mouse moves toward button -> leaves hotzone -> button disappears before click.
+The `E` key belongs to the slide menu, not a free-floating edit toggle. Keep all editing controls in the menu so the slide stage remains clean and presentation-ready.
 
-**Required approach: JS-based hover with 400ms delay timeout.**
+**Required deck chrome:**
 
 HTML:
 ```html
-<div class="edit-hotzone"></div>
-<button class="edit-toggle" id="editToggle" title="Edit mode (E)">✏️</button>
+<nav class="deck-controls" aria-label="Presentation controls">
+  <button id="prevButton" type="button">‹</button>
+  <span class="slide-count">
+    <button id="slideJumpButton" type="button">1</button>
+    <span>/</span>
+    <span id="slideTotal">12</span>
+  </span>
+  <button id="nextButton" type="button">›</button>
+  <button id="pagesButton" type="button">E</button>
+</nav>
 ```
 
-CSS (visibility controlled by JS classes only):
+**Required menu shell:**
+
+HTML:
+```html
+<div class="slide-menu-overlay" id="slideMenuOverlay" role="dialog" aria-modal="true" hidden>
+  <section class="slide-menu-panel">
+    <header class="slide-menu-header">
+      <button id="selectAllPages" type="button">All</button>
+      <button id="showSelectedPages" type="button">Selection</button>
+      <button id="savePageSelection" type="button">Save</button>
+      <button id="addTextSlide" type="button">+ Slide</button>
+      <button id="slideMenuClose" type="button">×</button>
+    </header>
+    <section class="text-slide-editor" id="textSlideEditor" hidden></section>
+    <p class="slide-menu-summary" id="slideMenuSummary"></p>
+    <div class="slide-menu-list" id="slideMenuList"></div>
+  </section>
+</div>
+```
+
+Localize visible button labels to the deck language. For Dutch decks, use `Alles aan`, `Selectie`, `Opslaan`, and `+ Slide`.
+
+CSS:
 ```css
-/* Do NOT use CSS ~ sibling selector for this!
-   pointer-events: none breaks the hover chain.
-   Must use JS with delay timeout. */
-.edit-hotzone {
-    position: fixed; top: 0; left: 0;
-    width: 80px; height: 80px;
-    z-index: 10000;
-    cursor: pointer;
-}
-.edit-toggle {
+body.is-fullscreen .deck-controls,
+body.is-fullscreen .progress-rail,
+body.is-fullscreen .media-hud {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.3s ease;
-    z-index: 10001;
 }
-.edit-toggle.show,
-.edit-toggle.active {
-    opacity: 1;
-    pointer-events: auto;
+
+body.is-fullscreen .deck-viewport,
+body.is-fullscreen .deck-stage,
+body.is-fullscreen .slide {
+    cursor: none;
 }
 ```
 
-JS (three interaction methods):
+JS:
 ```javascript
-// 1. Click handler on the toggle button
-document.getElementById('editToggle').addEventListener('click', () => {
-    editor.toggleEditMode();
-});
-
-// 2. Hotzone hover with 400ms grace period
-const hotzone = document.querySelector('.edit-hotzone');
-const editToggle = document.getElementById('editToggle');
-let hideTimeout = null;
-
-hotzone.addEventListener('mouseenter', () => {
-    clearTimeout(hideTimeout);
-    editToggle.classList.add('show');
-});
-hotzone.addEventListener('mouseleave', () => {
-    hideTimeout = setTimeout(() => {
-        if (!editor.isActive) editToggle.classList.remove('show');
-    }, 400);
-});
-editToggle.addEventListener('mouseenter', () => {
-    clearTimeout(hideTimeout);
-});
-editToggle.addEventListener('mouseleave', () => {
-    hideTimeout = setTimeout(() => {
-        if (!editor.isActive) editToggle.classList.remove('show');
-    }, 400);
-});
-
-// 3. Hotzone direct click
-hotzone.addEventListener('click', () => {
-    editor.toggleEditMode();
-});
-
-// 4. Keyboard shortcut (E key, skip when editing text)
 document.addEventListener('keydown', (e) => {
-    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
-        editor.toggleEditMode();
+    const target = e.target;
+    const isFormField = target.closest?.('input, textarea, select, [contenteditable="true"]');
+    if (isFormField) return;
+    if (e.key === 'e' || e.key === 'E') {
+        presentation.toggleSlideMenu();
     }
 });
 ```
+
+See `presenter-runtime.md` for the complete behavior contract. Treat that file as mandatory for generated decks.
 
 ## Image Pipeline (Skip If No Images)
 

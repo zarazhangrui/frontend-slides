@@ -91,7 +91,7 @@ fi
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║       Deploy Slides to Vercel         ║${NC}"
+echo -e "${BOLD}║       Deploy Slides to Vercel        ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════╝${NC}"
 echo ""
 

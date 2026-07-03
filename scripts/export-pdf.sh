@@ -89,7 +89,7 @@ OUTPUT_PDF="$OUTPUT_DIR/$(basename "$OUTPUT_PDF")"
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║       Export Slides to PDF            ║${NC}"
+echo -e "${BOLD}║         Export Slides to PDF          ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════╝${NC}"
 echo ""
 

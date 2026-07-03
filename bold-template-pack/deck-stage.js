@@ -159,7 +159,6 @@
       border: 0;
       margin: 0;
       padding: 0;
-      color: inherit;
       font: inherit;
       cursor: default;
       display: inline-flex;
@@ -175,7 +174,7 @@
     .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
     .btn:active { background: rgba(255,255,255,0.18); }
     .btn:focus { outline: none; }
-    .btn:focus-visible { outline: none; }
+    .btn:focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
     .btn::-moz-focus-inner { border: 0; }
     .btn svg { width: 14px; height: 14px; display: block; }
     .btn.reset {

@@ -1,0 +1,37 @@
+{
+  "name": "frontend-slides",
+  "version": "2.1.0",
+  "description": "Zero-dependency HTML presentation generator with safe presets, bold template-library styles, PPT conversion, and anti-AI-slop design philosophy.",
+  "skills": "./skills/",
+  "author": {
+    "name": "zarazhangrui",
+    "url": "https://github.com/zarazhangrui"
+  },
+  "homepage": "https://github.com/zarazhangrui/frontend-slides",
+  "repository": "https://github.com/zarazhangrui/frontend-slides",
+  "license": "MIT",
+  "keywords": [
+    "presentations",
+    "slides",
+    "html",
+    "design",
+    "powerpoint",
+    "animations",
+    "templates"
+  ],
+  "interface": {
+    "displayName": "Frontend Slides",
+    "shortDescription": "Create animation-rich HTML presentations",
+    "longDescription": "Create zero-dependency, animation-rich HTML presentations from scratch or by converting PowerPoint files. The skill guides content discovery, visual style previews, fixed 16:9 HTML slide generation, deployment, and PDF export.",
+    "developerName": "zarazhangrui",
+    "category": "Creativity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/zarazhangrui/frontend-slides",
+    "defaultPrompt": [
+      "Create a pitch deck from my notes",
+      "Convert this PowerPoint into a web slideshow",
+      "Improve this HTML presentation"
+    ],
+    "brandColor": "#111111"
+  }
+}

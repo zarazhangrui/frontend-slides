@@ -500,7 +500,7 @@ Apply on any element rendering Chinese content (typically scope via `:lang(zh)` 
 - **Text-transform**: no uppercase on CJK. Vellum doesn't use uppercase on Latin either (italic serif is sentence case throughout), so this is just confirming no parent rule attempts it.
 - **Full-width punctuation**: use `，。：；！？` (full-width) not `,.:;!?` (half-width). For Chinese quotes, replace `"…"` with `「…」` or `『…』` (full-width corner brackets) — these are the conventional Chinese quote glyphs and match the teal quote-mark treatment of the system.
 - **No period on display headlines**: Chinese headlines drop the terminal `。` — the headline's visual closure is enough.
-- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Claude` not `使用Claude`; `2024 年` not `2024年`. This is editorial convention in good Chinese typography and matches Vellum's careful gallery-wall register.
+- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Codex` not `使用Codex`; `2024 年` not `2024年`. This is editorial convention in good Chinese typography and matches Vellum's careful gallery-wall register.
 - **One font per sentence**: don't mix LXGW WenKai and Noto Serif SC inside a single line. Use one or the other for the entire run; switching mid-sentence creates a metric jolt that's especially visible in this sparse, centered layout.
 
 ### Aesthetic Notes for This System

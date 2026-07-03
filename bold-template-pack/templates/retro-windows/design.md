@@ -537,7 +537,7 @@ font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, 'Noto Sans SC
 - Text-transform: no uppercase on CJK
 - Full-width punctuation
 - No period on display headlines
-- Pangu spacing (盘古之白): `使用 Claude` not `使用Claude`
+- Pangu spacing (盘古之白): `使用 Codex` not `使用Codex`
 - One font per sentence
 
 ### Aesthetic Notes for This System

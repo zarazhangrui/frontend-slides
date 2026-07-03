@@ -1,5 +1,5 @@
 .DS_Store
-.claude-design/
+.codex-design/
 node_modules/
 .vercel/
 *.log

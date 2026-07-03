@@ -453,7 +453,7 @@ Apply on any element rendering Chinese content (typically scope via `:lang(zh)` 
 - **Text-transform**: no uppercase on CJK. Studio's `text-transform: uppercase` on display tokens is a no-op on Han characters, but ensure no parent rule attempts unexpected behavior. The "uppercase" identity of the system drops away in Chinese.
 - **Full-width punctuation**: use `，。：；！？` (full-width) not `,.:;!?` (half-width). The full-width forms include their own surrounding whitespace and align to the CJK em-box.
 - **No period on display headlines**: Chinese headlines drop the terminal `。` — Studio headlines never carry periods in Latin and the rule extends to CJK.
-- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Claude` not `使用Claude`; `2024 年` not `2024年`. Studio's mono metadata frequently sits beside Chinese labels — pangu spacing is essential there.
+- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Codex` not `使用Codex`; `2024 年` not `2024年`. Studio's mono metadata frequently sits beside Chinese labels — pangu spacing is essential there.
 - **One font per sentence**: don't mix NSC and Noto Sans SC inside a single line. The serif/sans switch should happen at element boundaries.
 
 ### Aesthetic Notes for This System

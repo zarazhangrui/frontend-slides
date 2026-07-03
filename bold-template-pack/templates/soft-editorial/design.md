@@ -586,7 +586,7 @@ Apply on any element rendering Chinese content (typically scope via `:lang(zh)` 
 - **Text-transform**: no uppercase on CJK. Chinese has no case, and CSS `text-transform: uppercase` is a no-op on Han characters anyway, but make sure no parent rule attempts it.
 - **Full-width punctuation**: use `，。：；！？` (full-width) not `,.:;!?` (half-width). The full-width forms include their own surrounding whitespace and align to the CJK em-box.
 - **No period on display headlines**: Chinese headlines drop the terminal `。` — the headline's visual closure is enough. (Latin headlines in this system already drop periods; the rule extends to CJK.)
-- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Claude` not `使用Claude`; `2024 年` not `2024年`. This is editorial convention in good Chinese typography and matches Soft Editorial's literary care.
+- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Codex` not `使用Codex`; `2024 年` not `2024年`. This is editorial convention in good Chinese typography and matches Soft Editorial's literary care.
 - **One font per sentence**: don't mix LXGW WenKai and Noto Serif SC inside a single line. Use one or the other for the entire run; switching mid-sentence creates a metric jolt.
 
 ### Aesthetic Notes for This System

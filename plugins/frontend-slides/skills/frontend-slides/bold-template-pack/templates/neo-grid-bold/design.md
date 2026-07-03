@@ -505,7 +505,7 @@ The template uses the deck-stage component for rendering. Print export depends o
 
 ### Mixed-Content Strategy
 
-Strategy A — single `font-family` stack with Latin-first fallback. Update each token's `fontFamily` from `"Space Grotesk, Helvetica Neue, Helvetica, Arial, sans-serif"` to `"Space Grotesk, Noto Sans SC, Helvetica Neue, Helvetica, Arial, sans-serif"`. Latin glyphs render in Space Grotesk 700; CJK characters fall through to Noto Sans SC 900 automatically. Mixed strings like `THE CLAUDE 模型` render correctly inline.
+Strategy A — single `font-family` stack with Latin-first fallback. Update each token's `fontFamily` from `"Space Grotesk, Helvetica Neue, Helvetica, Arial, sans-serif"` to `"Space Grotesk, Noto Sans SC, Helvetica Neue, Helvetica, Arial, sans-serif"`. Latin glyphs render in Space Grotesk 700; CJK characters fall through to Noto Sans SC 900 automatically. Mixed strings like `THE CODEX 模型` render correctly inline.
 
 ### Loading
 
@@ -522,7 +522,7 @@ Strategy A — single `font-family` stack with Latin-first fallback. Update each
 - Text-transform: no uppercase on CJK
 - Full-width punctuation （，。：；！？「」（））
 - No period on display headlines (Chinese typography convention)
-- Pangu spacing 盘古之白 (space between CJK and Latin: `使用 Claude` not `使用Claude`)
+- Pangu spacing 盘古之白 (space between CJK and Latin: `使用 Codex` not `使用Codex`)
 - One font per sentence
 
 ### Aesthetic Notes for This System

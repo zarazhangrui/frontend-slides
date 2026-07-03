@@ -635,7 +635,7 @@ Apply on any element rendering Chinese content (typically scope via `:lang(zh)` 
 - **Text-transform**: no uppercase on CJK. Stencil & Tablet uppercases nearly everything in Latin; on Chinese this is a no-op but ensure no parent rule attempts it (some browsers may render unpredictably).
 - **Full-width punctuation**: use `，。：；！？` (full-width) not `,.:;!?` (half-width). The full-width forms include their own surrounding whitespace and align to the CJK em-box.
 - **No period on display headlines**: Chinese headlines drop the terminal `。` — the headline's visual closure is enough.
-- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Claude` not `使用Claude`; `2024 年` not `2024年`. Especially important in this system since Stardos numerals frequently sit beside Chinese labels.
+- **Pangu spacing (盘古之白)**: insert a thin space between CJK and adjacent Latin/numerals. Write `使用 Codex` not `使用Codex`; `2024 年` not `2024年`. Especially important in this system since Stardos numerals frequently sit beside Chinese labels.
 - **One font per sentence**: don't mix NSC and Noto Sans SC inside a single line. The serif/sans switch should happen at element boundaries, not mid-phrase.
 
 ### Aesthetic Notes for This System

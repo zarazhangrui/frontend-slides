@@ -1,6 +1,6 @@
 # Frontend Slides
 
-A coding-agent skill for creating stunning HTML presentations — from scratch or by converting PowerPoint files. It is packaged as a Claude Code plugin, and the core `SKILL.md` can also be read by other coding agents with filesystem and shell access.
+A Codex skill/plugin for creating stunning HTML presentations — from scratch or by converting PowerPoint files. The core `SKILL.md` can also be read by other coding agents with filesystem and shell access.
 
 ## 📺 Watch the Walkthrough & Tutorial
 
@@ -31,49 +31,41 @@ https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
 
 ## Installation
 
-### Via Claude Code Custom Marketplace Source
+### Codex Plugin Installation
 
-Install directly from this public GitHub repo. Run these as two separate Claude Code messages; do not paste both lines into the prompt at once.
+This repo also includes Codex plugin metadata. In the Codex app, install it from the plugin interface when using this repo as a plugin source. In Codex CLI, open the plugin interface with:
 
-```text
-/plugin marketplace add https://github.com/zarazhangrui/frontend-slides
+```bash
+/plugins
 ```
 
-After that finishes, run:
+Search for `frontend-slides`, select it, and follow the prompts.
 
-```text
-/plugin install frontend-slides@frontend-slides
-```
+### Codex Skill Installation
 
-Use the HTTPS URL. The shorter `zarazhangrui/frontend-slides` form may make Claude Code try SSH, which can fail if GitHub is not already in your `known_hosts` file.
-
-Then use it by typing `/frontend-slides:frontend-slides` in Claude Code. Claude Code namespaces plugin-installed skills as `/plugin-name:skill-name`.
-
-### Claude Code Manual Installation
-
-Copy the skill files to your Claude Code skills directory:
+Install directly into your Codex skills directory:
 
 ```bash
 # Create the skill directory
-mkdir -p ~/.claude/skills/frontend-slides/scripts
+mkdir -p ~/.codex/skills/frontend-slides/scripts
 
 # Copy the user-facing skill files
-cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.claude/skills/frontend-slides/
-cp -R bold-template-pack ~/.claude/skills/frontend-slides/
-cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh ~/.claude/skills/frontend-slides/scripts/
+cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.codex/skills/frontend-slides/
+cp -R bold-template-pack ~/.codex/skills/frontend-slides/
+cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh ~/.codex/skills/frontend-slides/scripts/
 ```
 
 Or clone directly:
 
 ```bash
-git clone https://github.com/zarazhangrui/frontend-slides.git ~/.claude/skills/frontend-slides
+git clone https://github.com/zarazhangrui/frontend-slides.git ~/.codex/skills/frontend-slides
 ```
 
-Then use it by typing `/frontend-slides` in Claude Code. Standalone skills are not namespaced.
+Then use it by asking Codex to use the Frontend Slides skill, or by naming `$frontend-slides` when your Codex environment supports explicit skill triggers.
 
 ### Other Coding Agents
 
-Agents such as Codex, Kimi Code, OpenCode, Gemini CLI, or other local coding assistants can use the same core skill. The simplest path is to send the agent this GitHub repo link and ask it to use the Frontend Slides skill:
+Agents such as Kimi Code, OpenCode, Gemini CLI, or other local coding assistants can use the same core skill. The simplest path is to send the agent this GitHub repo link and ask it to use the Frontend Slides skill:
 
 ```text
 https://github.com/zarazhangrui/frontend-slides
@@ -90,21 +82,17 @@ If the agent can read GitHub repos or browse files, it should start from `SKILL.
 
 Some agents can also install the skill for you if they have filesystem access and a known local skills directory. If not, they can still follow `SKILL.md` directly for the current session.
 
-The Claude Code plugin gives Claude Code a custom marketplace-source install flow and `/frontend-slides:frontend-slides` command. Other agents usually do not use that command surface.
+The Codex plugin metadata gives Codex a native plugin install surface. Other agents usually read `SKILL.md` directly or use their own local skills directory.
 
 ## Usage
 
 ### Create a New Presentation
 
 ```text
-/frontend-slides:frontend-slides
-
-> "I want to create a pitch deck for my AI startup"
+Use the Frontend Slides skill to create a pitch deck for my AI startup.
 ```
 
-If installed manually as a standalone Claude Code skill, use `/frontend-slides` instead.
-
-In non-Claude agents, ask the agent to use the Frontend Slides skill and point it at this repo or `SKILL.md`.
+If your Codex environment supports explicit skill triggers, you can also mention `$frontend-slides`.
 
 The skill will:
 
@@ -117,9 +105,7 @@ The skill will:
 ### Convert a PowerPoint
 
 ```text
-/frontend-slides:frontend-slides
-
-> "Convert my presentation.pptx to a web slideshow"
+Use the Frontend Slides skill to convert my presentation.pptx to a web slideshow.
 ```
 
 The skill will:
@@ -580,7 +566,7 @@ Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080
 ## Requirements
 
 - A local coding agent with filesystem access and the ability to run shell commands
-- Claude Code is required only for the custom marketplace-source install and `/frontend-slides:frontend-slides` command
+- Codex is required only for the native plugin install flow and explicit `$frontend-slides` skill trigger
 - For PPT conversion: Python with `python-pptx` library
 - For URL deployment: Node.js + Vercel account (free)
 - For PDF export: Node.js (Playwright installs automatically)

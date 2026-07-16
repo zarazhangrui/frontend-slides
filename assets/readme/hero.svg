@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="390" viewBox="0 0 1200 390" role="img" aria-labelledby="title desc">
+  <title id="title">Frontend Slides — animation-rich HTML presentations</title>
+  <desc id="desc">A bold editorial hero showing three distinct slide directions being selected and turned into one HTML presentation.</desc>
+  <defs>
+    <clipPath id="frame"><rect width="1200" height="390" rx="28"/></clipPath>
+    <clipPath id="navy-slide"><rect x="792" y="18" width="350" height="197"/></clipPath>
+    <clipPath id="grid-slide"><rect x="742" y="92" width="350" height="197"/></clipPath>
+    <clipPath id="creative-slide"><rect x="714" y="178" width="360" height="203"/></clipPath>
+    <pattern id="micro-grid" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M14 0H0V14" fill="none" stroke="#252525" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="390" fill="#F2EEE2"/>
+    <rect width="16" height="390" fill="#111111"/>
+    <path d="M50 41H643" stroke="#111111" stroke-width="2"/>
+    <circle cx="658" cy="41" r="5" fill="#F1541D"/>
+
+    <g id="title-block" transform="translate(50 0)">
+      <text x="0" y="72" fill="#111111" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" font-weight="700" letter-spacing="3">SHOW, DON'T TELL · CODING-AGENT SKILL</text>
+      <text x="0" y="154" fill="#111111" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="76" font-weight="900" letter-spacing="-4">FRONTEND</text>
+      <rect x="0" y="174" width="365" height="79" fill="#F1541D"/>
+      <text x="14" y="240" fill="#F2EEE2" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="76" font-weight="900" letter-spacing="-3">SLIDES</text>
+      <text x="0" y="289" fill="#292929" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="600">Animation-rich HTML presentations, built with your coding agent.</text>
+      <text x="0" y="344" fill="#111111" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" font-weight="700" letter-spacing="1.8">BRIEF / PPTX  →  3 VISUAL PREVIEWS  →  ONE HTML FILE</text>
+      <path d="M0 360H595" stroke="#111111" stroke-width="1"/>
+    </g>
+
+    <text x="795" y="31" fill="#111111" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700" letter-spacing="2">PICK WHAT YOU LIKE / 01—03</text>
+
+    <g id="preview-vellum" transform="rotate(5 967 116)" clip-path="url(#navy-slide)">
+      <rect x="792" y="18" width="350" height="197" fill="#2A3870" stroke="#111111" stroke-width="4"/>
+      <text x="817" y="47" fill="#3A7878" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="8" letter-spacing="2">ESSAY 01 · 2026</text>
+      <text x="817" y="114" fill="#E8D85C" font-family="Georgia, serif" font-size="42" font-style="italic">On Restraint</text>
+      <path d="M817 136H1010" stroke="#E8D85C" stroke-width="2"/>
+      <text x="817" y="165" fill="#3A7878" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.5">QUIET / EDITORIAL</text>
+      <circle cx="1114" cy="190" r="5" fill="#E8D85C"/>
+    </g>
+
+    <g id="preview-grid" transform="rotate(1.5 917 191)" clip-path="url(#grid-slide)">
+      <rect x="742" y="92" width="350" height="197" fill="#E8FF2F" stroke="#111111" stroke-width="4"/>
+      <rect x="742" y="92" width="106" height="197" fill="#121212"/>
+      <rect x="860" y="104" width="220" height="52" fill="#121212"/>
+      <rect x="860" y="166" width="220" height="111" fill="url(#micro-grid)"/>
+      <text x="875" y="192" fill="#111111" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="25" font-weight="900">THE FUTURE OF</text>
+      <text x="875" y="222" fill="#111111" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="25" font-weight="900">DATA-DRIVEN</text>
+      <text x="875" y="252" fill="#111111" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="25" font-weight="900">FINANCE</text>
+      <g fill="#E8FF2F">
+        <rect x="764" y="116" width="10" height="10"/><rect x="784" y="116" width="10" height="10"/><rect x="804" y="116" width="10" height="10"/>
+        <rect x="774" y="126" width="10" height="10"/><rect x="794" y="126" width="10" height="10"/>
+        <rect x="764" y="136" width="10" height="10"/><rect x="784" y="136" width="10" height="10"/><rect x="804" y="136" width="10" height="10"/>
+      </g>
+    </g>
+
+    <g id="preview-creative" transform="rotate(-3 894 279)" clip-path="url(#creative-slide)">
+      <rect x="714" y="178" width="360" height="203" fill="#F2EEE2" stroke="#111111" stroke-width="4"/>
+      <rect x="904" y="178" width="170" height="203" fill="#238E4F"/>
+      <text x="735" y="206" fill="#111111" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" font-weight="700" letter-spacing="2">VOL. 01 / EDITION 2026</text>
+      <text x="735" y="258" fill="#111111" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="36" font-weight="900">CREATIVE</text>
+      <text x="735" y="299" fill="#F1541D" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="36" font-weight="900">MODE</text>
+      <rect x="945" y="222" width="87" height="103" fill="#EB62A4" stroke="#111111" stroke-width="3"/>
+      <path d="M960 247L1015 239V290L960 300Z" fill="#F7CCDD" stroke="#111111" stroke-width="2"/>
+      <rect x="955" y="331" width="87" height="14" fill="#F1541D" stroke="#111111" stroke-width="2"/>
+    </g>
+
+    <g id="selection-handles" fill="#F2EEE2" stroke="#111111" stroke-width="2">
+      <rect x="695" y="164" width="10" height="10"/><rect x="1078" y="164" width="10" height="10"/>
+      <rect x="695" y="372" width="10" height="10"/><rect x="1078" y="372" width="10" height="10"/>
+    </g>
+    <rect x="1084" y="330" width="84" height="31" fill="#111111"/>
+    <text x="1095" y="350" fill="#F2EEE2" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" letter-spacing="1.5">SELECTED</text>
+  </g>
+</svg>

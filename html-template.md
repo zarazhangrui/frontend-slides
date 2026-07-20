@@ -108,6 +108,7 @@ Reference architecture for generating slide presentations. Every presentation fo
                 this.setupStageScale();
                 this.setupKeyboardNav();
                 this.setupTouchNav();
+                this.setupPrintExport();
                 this.showSlide(0);
             }
 
@@ -128,6 +129,35 @@ Reference architecture for generating slide presentations. Every presentation fo
 
             setupTouchNav() {
                 // Touch/swipe support for mobile
+            }
+
+            /* Browser-native PDF export: Cmd/Ctrl+P → Save as PDF.
+               beforeprint marks every slide .visible so class-gated
+               entrance animations resolve to their finished state
+               (print CSS in viewport-base.css disables transitions, so
+               the end state applies instantly). afterprint restores the
+               exact pre-print state — on-screen behavior is unchanged. */
+            setupPrintExport() {
+                this._printSnapshot = null;
+
+                window.addEventListener('beforeprint', () => {
+                    this._printSnapshot = Array.from(this.slides).map(s => ({
+                        active: s.classList.contains('active'),
+                        visible: s.classList.contains('visible')
+                    }));
+                    this.slides.forEach(slide => {
+                        slide.classList.add('visible', 'active');
+                    });
+                });
+
+                window.addEventListener('afterprint', () => {
+                    if (!this._printSnapshot) return;
+                    this.slides.forEach((slide, i) => {
+                        slide.classList.toggle('active', this._printSnapshot[i].active);
+                        slide.classList.toggle('visible', this._printSnapshot[i].visible);
+                    });
+                    this._printSnapshot = null;
+                });
             }
 
             showSlide(index) {
@@ -160,7 +190,14 @@ Every presentation must include:
    - Scale the whole stage with one transform
    - Letterbox/pillarbox as needed; never reflow slide content per device
 
-3. **Optional Enhancements** (match to chosen style):
+3. **Print / PDF Export** (required):
+   - `beforeprint`/`afterprint` handlers (see `setupPrintExport` above)
+   - Combined with the `@media print` rules in viewport-base.css, this makes
+     Cmd/Ctrl+P → Save as PDF produce one page per slide with all entrance
+     animations completed — no scripts or dependencies needed
+   - Output is vector: text stays selectable and searchable
+
+4. **Optional Enhancements** (match to chosen style):
    - Custom cursor with trail
    - Particle system background (canvas)
    - Parallax effects
@@ -168,7 +205,7 @@ Every presentation must include:
    - Magnetic buttons
    - Counter animations
 
-4. **Inline Editing** (included by default after draft generation):
+5. **Inline Editing** (included by default after draft generation):
    - Edit toggle button (hidden by default, revealed via hover hotzone or `E` key)
    - Auto-save to localStorage
    - Export/save file functionality

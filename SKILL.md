@@ -323,9 +323,21 @@ This deploys the presentation to Vercel — a free hosting platform. The link wo
 
 ### 6B: Export to PDF
 
-This captures each slide as a screenshot and combines them into a PDF. Perfect for email attachments, embedding in documents, or printing.
+**Preferred: browser-native export (no scripts, no dependencies).** Every generated presentation supports the browser's built-in Print → Save as PDF. The print stylesheet (in viewport-base.css) plus the `beforeprint` handler lay out one slide per page at the authored 1920×1080 size, with every entrance animation fast-forwarded to its finished state — so all text and diagrams appear fully revealed, exactly as they look after animations complete on screen.
 
-**Note:** Animations and interactivity are not preserved — the PDF is a static snapshot. This is normal and expected; mention it to the user so they're not surprised.
+Tell the user:
+
+1. Open the presentation in Chrome or Edge (best results)
+2. Press **Cmd+P** (macOS) or **Ctrl+P** (Windows/Linux)
+3. Set **Destination: Save as PDF**
+4. Ensure **Background graphics** is checked (under "More settings")
+5. Save
+
+Benefits over the script export: zero setup, vector output (text stays selectable and searchable), and much smaller files. The on-screen presentation is unaffected — print styles only apply while printing.
+
+**Note:** Animations and interactivity are not preserved in the PDF — every element is captured in its final, fully-revealed state. This is normal and expected; mention it to the user so they're not surprised.
+
+**Alternative: scripted export (for automation or non-Chromium browsers).** This captures each slide as a screenshot and combines them into a PDF.
 
 1. **Run the export script:**
 

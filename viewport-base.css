@@ -76,14 +76,36 @@ svg {
     z-index: 1000;
 }
 
-/* 7. Print one fixed-size slide per page */
+/* 7. Print one fixed-size slide per page.
+   Browser-native PDF export: File > Print > Save as PDF (Cmd/Ctrl+P).
+   No scripts or dependencies needed, and the output is vector —
+   text stays selectable and searchable, unlike screenshot-based export.
+   Everything below is scoped to @media print, so on-screen look and
+   feel is completely untouched. */
+
+/* Page sheet matches the slide design size exactly, so each slide
+   fills one PDF page with no margins or letterboxing. */
+@page {
+    size: 1920px 1080px;
+    margin: 0;
+}
+
 @media print {
     html,
     body {
         width: 1920px;
         height: auto;
+        margin: 0 !important;
+        padding: 0 !important;
         overflow: visible;
         background: #fff;
+    }
+
+    /* Preserve slide backgrounds, gradients, and theme colors —
+       browsers strip them by default when printing. */
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .deck-viewport {
@@ -106,10 +128,18 @@ svg {
         visibility: visible !important;
         opacity: 1 !important;
         pointer-events: auto !important;
+        /* border-box + hard caps guarantee each slide box is exactly one
+           page tall — a slide even 1px taller than the sheet makes the
+           browser emit a blank page after every slide. */
+        box-sizing: border-box !important;
         width: 1920px;
         height: 1080px;
+        max-height: 1080px;
+        margin: 0 !important;
         break-after: page;
         page-break-after: always;
+        break-inside: avoid;
+        overflow: hidden;
     }
 
     .slide:last-child {
@@ -117,7 +147,42 @@ svg {
         page-break-after: auto;
     }
 
-    .deck-controls {
+    /* Fast-forward every entrance animation to its finished state.
+       On screen, .reveal elements start hidden (opacity: 0, offset
+       transform) until their slide becomes .visible — in print, slides
+       the presenter never visited would otherwise render with missing
+       text and diagrams. Covers the standard variants from
+       animation-patterns.md (.reveal, .reveal-scale, .reveal-left,
+       .reveal-blur) and custom [class*="reveal"] names. */
+    .reveal,
+    [class*="reveal-"],
+    [class^="reveal"],
+    .slide [data-anim] {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        visibility: visible !important;
+        clip-path: none !important;
+    }
+
+    /* Freeze motion so nothing is captured mid-transition. */
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation-play-state: paused !important;
+        animation-delay: 0s !important;
+        animation-duration: 0s !important;
+    }
+
+    /* Hide presentation chrome and editing UI. */
+    .deck-controls,
+    .edit-hotzone,
+    .edit-toggle,
+    .edit-toolbar,
+    .progress-bar,
+    .slide-counter,
+    .print-hidden {
         display: none !important;
     }
 }

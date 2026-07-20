@@ -158,6 +158,12 @@ Reference architecture for generating slide presentations. Every presentation fo
                     });
                     this._printSnapshot = null;
                 });
+
+                // Optional floating PDF button (include by default, style to
+                // match the deck theme). Hidden while printing via the
+                // .print-hidden rule in viewport-base.css.
+                const pdfBtn = document.getElementById('pdfBtn');
+                if (pdfBtn) pdfBtn.addEventListener('click', () => window.print());
             }
 
             showSlide(index) {
@@ -196,6 +202,14 @@ Every presentation must include:
      Cmd/Ctrl+P → Save as PDF produce one page per slide with all entrance
      animations completed — no scripts or dependencies needed
    - Output is vector: text stays selectable and searchable
+   - Include a small floating PDF button by default so viewers can export
+     without knowing the shortcut. Give it the `print-hidden` class (hidden
+     while printing) and style it to match the deck theme:
+
+     ```html
+     <button id="pdfBtn" class="print-hidden" title="Save as PDF"
+             style="position:fixed; top:12px; right:12px; z-index:9999;">📥 PDF</button>
+     ```
 
 4. **Optional Enhancements** (match to chosen style):
    - Custom cursor with trail

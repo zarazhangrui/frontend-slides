@@ -323,7 +323,7 @@ This deploys the presentation to Vercel — a free hosting platform. The link wo
 
 ### 6B: Export to PDF
 
-**Preferred: browser-native export (no scripts, no dependencies).** Every generated presentation supports the browser's built-in Print → Save as PDF. The print stylesheet (in viewport-base.css) plus the `beforeprint` handler lay out one slide per page at the authored 1920×1080 size, with every entrance animation fast-forwarded to its finished state — so all text and diagrams appear fully revealed, exactly as they look after animations complete on screen.
+**Preferred: browser-native export (no scripts, no dependencies).** Every generated presentation supports the browser's built-in Print → Save as PDF. The print stylesheet (in viewport-base.css) plus the `beforeprint` handler lay out one slide per page at the authored 1920×1080 size, with every entrance animation fast-forwarded to its finished state — so all text and diagrams appear fully revealed, exactly as they look after animations complete on screen. Generated decks also include a small floating "PDF" button that triggers the same print dialog, so viewers don't need to know the shortcut.
 
 Tell the user:
 

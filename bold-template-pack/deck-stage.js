@@ -248,6 +248,10 @@
         inset: auto !important;
         width: var(--deck-design-w) !important;
         height: var(--deck-design-h) !important;
+        /* Hard caps: a slide even 1px taller than the page sheet makes
+           the browser emit a blank page after every slide. */
+        max-height: var(--deck-design-h) !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -299,6 +303,24 @@
       window.addEventListener('keydown', this._onKey);
       window.addEventListener('resize', this._onResize);
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      // Print: mark every slide active during printing so styles gated on
+      // [data-deck-active] resolve to their presented state, then restore.
+      // The injected print stylesheet disables transitions, so end states
+      // apply instantly and on-screen behavior is unaffected.
+      this._onBeforePrint = () => {
+        this._printActiveIndex = this._index;
+        this._slides.forEach((s) => s.setAttribute('data-deck-active', ''));
+      };
+      this._onAfterPrint = () => {
+        if (this._printActiveIndex == null) return;
+        this._slides.forEach((s, i) => {
+          if (i === this._printActiveIndex) s.setAttribute('data-deck-active', '');
+          else s.removeAttribute('data-deck-active');
+        });
+        this._printActiveIndex = null;
+      };
+      window.addEventListener('beforeprint', this._onBeforePrint);
+      window.addEventListener('afterprint', this._onAfterPrint);
       // Initial collection + layout happens via slotchange, which fires on mount.
     }
 
@@ -306,6 +328,8 @@
       window.removeEventListener('keydown', this._onKey);
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('mousemove', this._onMouseMove);
+      window.removeEventListener('beforeprint', this._onBeforePrint);
+      window.removeEventListener('afterprint', this._onAfterPrint);
       if (this._hideTimer) clearTimeout(this._hideTimer);
       if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
     }
@@ -389,7 +413,12 @@
     /** @page must live in the document stylesheet — it's a no-op inside
      *  shadow DOM. Inject/update a single <head> style tag so the print
      *  sheet matches the design size and Save-as-PDF yields one slide per
-     *  page with no margins. */
+     *  page with no margins. Slide descendants also live in light DOM
+     *  (::slotted() can't reach them), so this tag additionally
+     *  fast-forwards entrance animations (.reveal variants, [data-anim])
+     *  to their finished state — without it, slides the presenter never
+     *  visited would print with missing text and diagrams. Scoped to
+     *  @media print, so on-screen rendering is untouched. */
     _syncPrintPageRule() {
       const id = 'deck-stage-print-page';
       let tag = document.getElementById(id);
@@ -401,7 +430,9 @@
       tag.textContent =
         '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
         '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
-        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } ' +
+        '.reveal, [class*="reveal-"], [class^="reveal"], [data-anim] { opacity: 1 !important; transform: none !important; filter: none !important; visibility: visible !important; clip-path: none !important; } ' +
+        '*, *::before, *::after { transition: none !important; animation-play-state: paused !important; animation-delay: 0s !important; animation-duration: 0s !important; } }';
     }
 
     _onSlotChange() {

@@ -568,7 +568,9 @@ Uses [Vercel](https://vercel.com) (free tier). The skill walks you through signu
 
 ### Export to PDF
 
-Convert your slides to a PDF for email, Slack, Notion, or printing:
+**No scripts needed:** open the presentation in Chrome or Edge, press Cmd/Ctrl+P, choose **Save as PDF**, and enable **Background graphics**. The built-in print stylesheet lays out one slide per page at 1920×1080 with all entrance animations fast-forwarded to their finished state — so nothing is missing from slides you haven't visited. Output is vector: text stays selectable, searchable, and file sizes are small. On-screen look and feel is untouched (print styles only apply while printing).
+
+For automation or non-Chromium browsers, the script export is still available:
 
 ```bash
 bash scripts/export-pdf.sh ./my-deck/index.html
@@ -583,7 +585,7 @@ Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080
 - Claude Code is required only for the custom marketplace-source install and `/frontend-slides:frontend-slides` command
 - For PPT conversion: Python with `python-pptx` library
 - For URL deployment: Node.js + Vercel account (free)
-- For PDF export: Node.js (Playwright installs automatically)
+- For PDF export: none (browser print). The optional script export needs Node.js (Playwright installs automatically)
 
 ## Credits
 

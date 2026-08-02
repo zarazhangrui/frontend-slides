@@ -236,6 +236,7 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 - [html-template.md](html-template.md) — HTML architecture and JS features
 - [viewport-base.css](viewport-base.css) — Mandatory CSS (include in full)
 - [animation-patterns.md](animation-patterns.md) — Animation reference for the chosen feeling
+- [presenter-mode.md](presenter-mode.md) — Presenter view spec (include the inline JS+CSS module in every deck unless the user opts out)
 
 **Key requirements:**
 
@@ -254,7 +255,7 @@ When converting PowerPoint files:
 1. **Extract content** — Run `python scripts/extract-pptx.py <input.pptx> <output_dir>` (install python-pptx if needed: `pip install python-pptx`)
 2. **Confirm with user** — Present extracted slide titles, content summaries, and image counts
 3. **Style selection** — Proceed to Phase 2 for style discovery
-4. **Generate HTML** — Convert to chosen style, preserving all text, images (from assets/), slide order, and speaker notes (as HTML comments)
+4. **Generate HTML** — Convert to chosen style, preserving all text, images (from assets/), slide order, and speaker notes. Place each slide's notes inside `<aside class="speaker-notes" hidden>...</aside>` (NOT as HTML comments) so presenter mode can read them. See [presenter-mode.md](presenter-mode.md)
 
 ---
 
@@ -265,6 +266,7 @@ When converting PowerPoint files:
 3. **Summarize** — Tell the user:
    - File location, style name, slide count
    - Navigation: Arrow keys, Space, swipe/tap if enabled
+   - **Presenter mode:** Press `P` to open the speaker view in a separate window — shows speaker notes, next-slide preview, and a timer. Drag it to your laptop screen and keep the audience window on the projector. Both windows stay in sync — navigating from either side moves the other
    - How to customize: `:root` CSS variables for colors, font link for typography, `.reveal` class for animations
    - Inline text editing is available: Hover top-left corner or press E to enter edit mode, click any text to edit, Ctrl+S to save
    - Offer the natural post-draft actions: ask for revisions, edit text directly in the browser, or export/share
@@ -375,6 +377,7 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [viewport-base.css](viewport-base.css)             | Mandatory fixed-stage CSS — copy into every presentation             | Phase 3 (generation)      |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
+| [presenter-mode.md](presenter-mode.md)             | Phase 1 spec for the `P`-key speaker view (notes, timer, sync)       | Phase 3 (generation)      |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

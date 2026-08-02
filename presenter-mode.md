@@ -73,7 +73,7 @@ The same HTML file behaves differently based on the `?role=` query parameter:
 
 | type               | payload         | trigger                                                   |
 | ------------------ | --------------- | --------------------------------------------------------- |
-| `goto`             | `{ slide: N }`  | any window's current slide changes (via IntersectionObserver hook) |
+| `goto`             | `{ slide: N }`  | any window's current slide changes (via the controller's `onChange` hook) |
 | `presenter-opened` | `{}`            | presenter window finishes init — audience replies with its current `goto` so presenter catches up |
 | `presenter-closed` | `{}`            | sent on `beforeunload` of presenter                       |
 
@@ -89,7 +89,7 @@ The same HTML file behaves differently based on the `?role=` query parameter:
    - Renders slide 0 in its shell
 5. Original window receives `presenter-opened`, toggles `role-normal` → `role-audience` CSS class (hides cursor/hints), and replies with its current slide via `goto`
 6. Presenter receives the reply and catches up if the user had already navigated past slide 0
-7. Sync begins — **any window can drive navigation**. Navigating in the presenter window moves the audience; navigating in the audience window (keyboard, nav dots, swipe, scroll) moves the presenter's current+next previews and notes
+7. Sync begins — **any window can drive navigation**. Navigating in the presenter window moves the audience; navigating in the audience window (keyboard, tap zones, swipe) moves the presenter's current+next previews and notes
 8. When the user closes the presenter window, `beforeunload` emits `presenter-closed` → audience window toggles back to `role-normal`
 
 ## Presenter View Layout
@@ -190,7 +190,9 @@ Inline these into every generated presentation:
 2. **CSS** — append a `/* === PRESENTER MODE === */` block to the inline `<style>`.
 3. **JS** — append a `/* === PRESENTER MODE === */` IIFE to the inline `<script>`.
 
-**Key pattern for bidirectional sync:** expose an `onChange(idx)` hook on the `SlidePresentation` controller, fired by the IntersectionObserver whenever the current slide actually changes (regardless of whether the change came from keyboard, touch, nav-dot click, scroll snap, or a programmatic `goTo()` in response to a remote `goto` message). The sync layer wires `onChange` to `broadcast('goto', { slide: idx })` and, separately, listens for remote `goto` messages to call `sp.goTo(slide)` with the echo guard.
+**Key pattern for bidirectional sync:** expose an `onChange(idx)` hook on the `SlidePresentation` controller, fired inside `showSlide()` whenever the active slide actually changes (regardless of whether the change came from keyboard, touch, a tap zone, or a programmatic `goTo()` in response to a remote `goto` message). The sync layer wires `onChange` to `broadcast('goto', { slide: idx })` and, separately, listens for remote `goto` messages to call `sp.goTo(slide, { silent: true })` — silent so the applied remote change is not re-broadcast.
+
+On the fixed 16:9 stage all slides are stacked absolutely and toggled with `.active`; there is no scrolling, so the current index is the controller's own state, not something observed from the DOM.
 
 Skeleton (~260 LoC when fully written; abbreviated here):
 
@@ -200,18 +202,16 @@ class SlidePresentation {
     this.slides = [...document.querySelectorAll('.slide')];
     this.currentSlide = 0;
     this.onChange = null; // sync layer sets this
-    // ...observer, keyboard, touch, dots
+    // ...stage scaling, keyboard, touch
   }
-  _setCurrent(idx) {
-    if (idx === this.currentSlide) return;
-    this.currentSlide = idx;
-    this.updateActiveDot();
-    if (typeof this.onChange === 'function') this.onChange(idx);
+  showSlide(index, opts = {}) {
+    const i = Math.max(0, Math.min(index, this.slides.length - 1));
+    if (i === this.currentSlide && !opts.force) return;
+    this.currentSlide = i;
+    this.slides.forEach((s, n) => s.classList.toggle('active', n === i));
+    if (!opts.silent && typeof this.onChange === 'function') this.onChange(i);
   }
-  goTo(i) {
-    const c = Math.max(0, Math.min(this.slides.length - 1, i));
-    this.slides[c].scrollIntoView({ behavior: 'smooth' });
-  }
+  goTo(i, opts) { this.showSlide(i, opts); }
 }
 
 (function presenterSync() {
@@ -231,7 +231,7 @@ class SlidePresentation {
     channel.addEventListener('message', (e) => {
       const d = e.data || {};
       if (d.type === 'goto' && typeof d.slide === 'number') {
-        if (d.slide !== sp.currentSlide) sp.goTo(d.slide);   // echo guard
+        if (d.slide !== sp.currentSlide) sp.goTo(d.slide, { silent: true }); // echo guard
       } else if (d.type === 'presenter-opened') {
         document.body.classList.replace('role-normal', 'role-audience');
         broadcast('goto', { slide: sp.currentSlide });       // catch-up

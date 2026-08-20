@@ -2,7 +2,7 @@
   "schema_version": 1,
   "pack_name": "Beautiful HTML Templates - Bold Design Pack",
   "source_repo": "zarazhangrui/beautiful-html-templates",
-  "template_count": 34,
+  "template_count": 35,
   "usage": {
     "selection": "Read this compact index first to shortlist bold templates from metadata.",
     "previews": "For title-slide previews, read only the preview_md files for the shortlisted bold candidates.",
@@ -408,6 +408,33 @@
       "avoid_for": "Decks that need neon energy or rapid-fire pop — the forest-green canvas and Playfair serif commit to a slow, classical voice.",
       "preview_md": "bold-template-pack/templates/grove/preview.md",
       "design_md": "bold-template-pack/templates/grove/design.md"
+    },
+    {
+      "slug": "kite",
+      "name": "Kite",
+      "tagline": "Clinical corporate system in deep blue — one weight of neo-grotesque type, hierarchy carried by gray value, a 13px blue spine down the left edge, and a reserved footnote band.",
+      "mood": [
+        "clinical",
+        "corporate",
+        "institutional",
+        "calm",
+        "evidence-led",
+        "scientific"
+      ],
+      "tone": [
+        "precise",
+        "restrained",
+        "authoritative",
+        "plain-spoken",
+        "regulated"
+      ],
+      "formality": "high",
+      "density": "high",
+      "scheme": "light, with dark-blue variants",
+      "best_for": "Biotech and pharmaceutical communication, clinical and scientific data presentations, medical affairs and congress decks, corporate and investor updates in regulated industries, R&D pipeline reviews, and any deck that must carry dense evidence while reading as institutionally credible.",
+      "avoid_for": "Consumer brand work, creative or editorial storytelling, playful internal culture decks, and anything that needs warmth or personality — the single-blue discipline, near-uniform type weight, and footnote chrome will read as clinical and cold.",
+      "preview_md": "bold-template-pack/templates/kite/preview.md",
+      "design_md": "bold-template-pack/templates/kite/design.md"
     },
     {
       "slug": "long-table",

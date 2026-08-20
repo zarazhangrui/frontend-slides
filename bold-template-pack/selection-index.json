@@ -412,7 +412,7 @@
     {
       "slug": "kite",
       "name": "Kite",
-      "tagline": "Clinical corporate system in deep blue — light neo-grotesque type, a 13px blue spine down the left edge, and a reserved footnote band.",
+      "tagline": "Clinical corporate system in deep blue — one weight of neo-grotesque type, hierarchy carried by gray value, a 13px blue spine down the left edge, and a reserved footnote band.",
       "mood": [
         "clinical",
         "corporate",
@@ -432,7 +432,7 @@
       "density": "high",
       "scheme": "light, with dark-blue variants",
       "best_for": "Biotech and pharmaceutical communication, clinical and scientific data presentations, medical affairs and congress decks, corporate and investor updates in regulated industries, R&D pipeline reviews, and any deck that must carry dense evidence while reading as institutionally credible.",
-      "avoid_for": "Consumer brand work, creative or editorial storytelling, playful internal culture decks, and anything that needs warmth or personality — the single-blue discipline, weight-300 display type, and footnote chrome will read as clinical and cold.",
+      "avoid_for": "Consumer brand work, creative or editorial storytelling, playful internal culture decks, and anything that needs warmth or personality — the single-blue discipline, near-uniform type weight, and footnote chrome will read as clinical and cold.",
       "preview_md": "bold-template-pack/templates/kite/preview.md",
       "design_md": "bold-template-pack/templates/kite/design.md"
     },

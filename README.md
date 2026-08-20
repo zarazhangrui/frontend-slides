@@ -154,9 +154,10 @@ The skill will:
 
 ### Bold Template Pack
 
-The skill also includes 34 optional bold design systems from
+The skill also includes 35 optional bold design systems — 34 from
 `beautiful-html-templates`, such as **Neo-Grid Bold**, **Editorial Tri-Tone**,
-**Creative Mode**, **Broadside**, **Signal**, and **Vellum**.
+**Creative Mode**, **Broadside**, **Signal**, and **Vellum**, plus **Kite**, a
+clinical-corporate system for regulated healthcare and life-sciences decks.
 
 During style discovery, the preview set is:
 
@@ -172,7 +173,7 @@ the agent expands that preview's own CSS and layout system into the full deck.
 
 ## Bold Template Gallery
 
-Frontend Slides can now draw from the 34 bold design systems in [`beautiful-html-templates`](https://github.com/zarazhangrui/beautiful-html-templates). Three screenshots per template show how each visual system handles different slide layouts. Click any template name to inspect the source template library.
+Frontend Slides can now draw from the 34 bold design systems in [`beautiful-html-templates`](https://github.com/zarazhangrui/beautiful-html-templates). Three screenshots per template show how each visual system handles different slide layouts. Click any template name to inspect the source template library. (**Kite** is defined directly in this repo under `bold-template-pack/templates/kite/` and has no upstream screenshots.)
 
 ### [Soft Editorial](https://github.com/zarazhangrui/beautiful-html-templates/tree/main/templates/soft-editorial/)
 

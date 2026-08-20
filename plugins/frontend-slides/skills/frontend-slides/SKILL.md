@@ -107,6 +107,16 @@ How dense should the deck feel? Options:
 
 **Do not ask about inline editing during Phase 1.** Users should not have to choose editing behavior before seeing a draft. Inline editing is a post-draft affordance: include it by default unless the user explicitly asks for a locked/export-only file.
 
+**Slide count calibration:** the user's length answer is a ceiling, not a target — match the deck size to actual content volume:
+
+| Content volume | Recommended deck size |
+| -------------- | --------------------- |
+| Thin source (tagline + a handful of one-line features + a few stats) | 5-10 slides |
+| Product page with detailed sections, demos, FAQ | 10-15 slides |
+| Rich documentation, multi-chapter talk, dense report | 15-25 slides |
+
+Generating N nearly-empty slides to hit the requested count is a defect: a dense 8-slide deck beats a sparse 20-slide deck every time. The Phase 3.5 audit enforces this — a deck-wide average fill below 50% means the content does not justify the slide count and slides must be merged.
+
 Remember the user's density choice. It affects slide count, typography scale, amount of text per slide, layout density, and whether to favor cinematic presenter slides or self-contained reading slides.
 
 If user has content, ask them to share it.
@@ -245,6 +255,48 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
 
+**Layout quality rules (mandatory):**
+
+These encode real defects observed in generated decks. The Phase 3.5 audit catches them mechanically, but avoid creating them in the first place:
+
+- **No floating navigation controls over the slide stage.** Fixed-position Prev/Next/counter bars collide with the slide chrome at the bottom edge. Slide chrome already carries pagination; keyboard, swipe, and click-zone navigation are sufficient. If controls are kept anyway, they must sit entirely in the letterbox area outside the scaled stage.
+- **Watch CSS rule order.** A more specific layout rule placed after a shared rule silently overrides it (e.g., a per-slide-type `justify-content: center` overriding the shared rule). Keep exactly one canonical layout rule per slide type.
+- **Stage centering:** with `transform-origin: 0 0`, never combine `translate(-50%, -50%)` with `scale()` — the percentages resolve against the element's unscaled size and the stage lands off-center. Position the scaled stage with computed left/top offsets, exactly as in [html-template.md](html-template.md).
+- **Every chrome slide needs a dominant element.** A chrome slide without a large headline reads as empty regardless of the fill ratio. If a slide only holds small elements (e.g., stat cards), add the section headline above them.
+
+**Vertical rhythm rules (universal proportion system):**
+
+These apply to every slide type, regardless of content volume, text length, or typeface. The goal: every slide of the deck breathes with the same spacing logic, so the deck reads as one designed object.
+
+- **One gap value per deck.** Pick a single title-to-content gap (72px at the 1920×1080 stage is a proven default) and apply it to every slide — chrome and chromeless alike. Never let one slide use 24px while another uses 48px; inconsistent gaps are the #1 reason a deck feels "off" even when each slide alone looks acceptable.
+- **Compact centered block, never stretched.** Group title + content as ONE block, vertically centered, with the fixed gap between elements. The margins above and below the block must be roughly symmetric. NEVER distribute title to the top edge and content to the bottom edge (`justify-content: space-between` on the title/content container): that punches a mid-slide hole whose size varies with content, so every slide ends up with a differently-sized void.
+- **Fill by grouping or scaling, never by distributing.** If a slide feels empty: increase type sizes, merge content from adjacent slides, or add a section headline. Never stretch elements apart to occupy height — gaps are for separating related things, not for filling space.
+- **Same rhythm across slide types.** Cover, statement, feature grids, stat cards, quote, end slide: all use the same vertical gap logic. A deck where feature slides breathe one way and quote slides another reads as assembled, not designed.
+- **The audit enforces this mechanically:** `scripts/audit-deck.py` measures the title-to-content gap on every slide and flags decks whose gaps are inconsistent (see Phase 3.5).
+
+---
+
+## Phase 3.5: Automated Layout Audit (MANDATORY)
+
+Never deliver a presentation without running the audit:
+
+```bash
+python scripts/audit-deck.py <path-to-presentation.html>
+```
+
+The script loads the deck in headless Chromium and checks every slide for:
+
+- Content overflow (text clipped by slide bounds)
+- Text-on-text overlap between sibling elements
+- Fixed-position chrome colliding with the slide stage
+- 16:9 stage ratio and viewport centering
+- Vertical fill ratio per slide and deck-wide (empty-space detection)
+- Vertical rhythm: gap consistency between major blocks across the whole deck (one deck-wide gap value)
+
+**Delivery gate:** the audit must exit 0 with zero critical issues. Fix the deck and re-run until it passes. Do not eyeball screenshots as a substitute — run the script.
+
+**Warnings:** every warning (e.g., a slide below 40% fill) must be either fixed — bigger type, more content per slide, or merge slides — or explicitly justified as a breathing slide (cover, statement, quote, chapter divider, end). A deck-wide average fill below 50% means the content does not justify the slide count: go back to Phase 3 and merge slides.
+
 ---
 
 ## Phase 4: PPT Conversion
@@ -321,46 +373,42 @@ This deploys the presentation to Vercel — a free hosting platform. The link wo
 - **Filenames with spaces work but can cause issues.** The script handles spaces in filenames, but Vercel URLs encode spaces as `%20`. If possible, avoid spaces in image filenames. If the user's images have spaces, the script handles it — but if images still break, renaming files to use hyphens instead of spaces is the fix.
 - **Redeploying updates the same URL.** Running the deploy script again on the same presentation overwrites the previous deployment. The URL stays the same — no need to share a new link.
 
-### 6B: Export to PDF
+### 6B: Export to PDF and PowerPoint
 
-This captures each slide as a screenshot and combines them into a PDF. Perfect for email attachments, embedding in documents, or printing.
+Capture every slide as a 1920×1080 screenshot and assemble a PDF (one page per slide) and/or a PowerPoint (one slide per screenshot). Perfect for email, printing, sharing, or giving a slide deck to someone who uses PowerPoint.
 
-**Note:** Animations and interactivity are not preserved — the PDF is a static snapshot. This is normal and expected; mention it to the user so they're not surprised.
+**Note:** Animations and interactivity are not preserved — exports are static snapshots. PowerPoint slides are images, so text is not natively editable there. Both are normal and expected; mention it so the user isn't surprised.
 
-1. **Run the export script:**
+The recommended, cross-platform script (Python) handles **both formats** and works identically on macOS, Linux, and Windows:
 
-   ```bash
-   bash scripts/export-pdf.sh <path-to-html> [output.pdf]
-   ```
+```bash
+python scripts/export-deck.py <path-to-html>                 # PDF + PPTX beside the HTML
+python scripts/export-deck.py <path-to-html> --pdf           # PDF only
+python scripts/export-deck.py <path-to-html> --pptx          # PPTX only
+python scripts/export-deck.py <path-to-html> --compact       # 1280x720, smaller files
+python scripts/export-deck.py <path-to-html> --out <dir>     # explicit output directory
+```
 
-   If no output path is given, the PDF is saved next to the HTML file.
+**Requirements** (Python): `pip install playwright pillow python-pptx pymupdf`, then `python -m playwright install chromium`. If Playwright's Chromium fails to download, it may be a network/firewall issue.
 
-2. **What happens behind the scenes** (explain briefly to the user):
-   - A headless browser opens the presentation at 1920×1080 (standard widescreen)
-   - It screenshots each slide one by one
-   - All screenshots are combined into a single PDF
-   - The script needs Playwright (a browser automation tool) — it will install automatically if missing
+A legacy bash/Node export (`scripts/export-pdf.sh`) is also shipped for PDF-only environments that prefer it, but the Python script is preferred.
 
-3. **If Playwright installation fails:**
-   - The most common issue is Chromium not downloading. Run: `npx playwright install chromium`
-   - If that fails too, it may be a network/firewall issue. Ask the user to try on a different network.
+**Automatic integrity check:** `export-deck.py` verifies after capture that every slide is a distinct image. If two captures are identical (a real bug where a PDF end up showing the first slide on every page), the export refuses to assemble and fails.
 
-4. **Deliver the PDF** — The script auto-opens it. Tell the user:
-   - The file location and size
-   - That it works everywhere — email, Slack, Notion, Google Docs, print
-   - Animations are replaced by their final visual state (still looks great, just static)
+**Verify the result:** after exporting, confirm the PDF/PPTX is not broken:
 
-**⚠ PDF export gotchas:**
+```bash
+python scripts/verify-export.py <file.pdf|file.pptx> [expected_count]
+```
 
-- **First run is slow.** The script installs Playwright and downloads a Chromium browser (~150MB) into a temp directory. This happens once per run. Warn the user it may take 30-60 seconds the first time — subsequent exports within the same session are faster.
-- **Slides must use `class="slide"`.** The export script finds slides by querying `.slide` elements. If the presentation uses a different class name, the script will report "0 slides found" and fail. All presentations generated by this skill use `.slide`, so this only matters for externally-created HTML.
-- **Local images must be loadable via HTTP.** The script starts a local server and loads the HTML through it (so Google Fonts and relative image paths work). If images use absolute filesystem paths (e.g., `src="/Users/name/photo.png"`) instead of relative paths (e.g., `src="photo.png"`), they won't load. Generated presentations always use relative paths, but converted or user-provided decks might not — check and fix if needed.
-- **Local images appear in the PDF** as long as they are in the same directory as (or relative to) the HTML file. The export script serves the HTML's parent directory over HTTP, so relative paths like `src="photo.png"` resolve correctly — including filenames with spaces. If images still don't appear, check: (1) the image files actually exist at the referenced path, (2) the paths are relative, not absolute filesystem paths like `/Users/name/photo.png`.
-- **Large presentations produce large PDFs.** Each slide is captured as a full 1920×1080 PNG screenshot. An 18-slide deck can produce a ~20MB PDF. If the PDF exceeds 10MB, ask the user: _"The PDF is [size]. Would you like me to compress it? It'll look slightly less sharp but the file will be much smaller."_ If yes, re-run the export with the `--compact` flag:
-  ```bash
-  bash scripts/export-pdf.sh <path-to-html> [output.pdf] --compact
-  ```
-  This renders at 1280×720 instead of 1920×1080, typically cutting file size by 50-70% with minimal visual difference.
+This reports the page/slide count and confirms the pages are genuinely distinct (PyMuPDF for PDF, python-pptx for PPTX). Always run it before delivery.
+
+**⚠ Export gotchas:**
+
+- **Slides must use `class="slide"`.** The export finds slides via `.slide` elements. All decks generated by this skill use it; externally-created HTML may not.
+- **Local images must be loadable via HTTP.** The script serves the HTML's parent directory over HTTP (so Google Fonts and relative assets work) — it should never use absolute `file://` paths.
+- **Large presentations produce large files.** Use `--compact` (1280×720) to cut size by roughly 50-70% with minimal visual difference.
+- **Output file may be locked.** If the target PDF/PPTX already exists and is open in a viewer, saving fails with "Permission denied". Close the file first, or pick another output with `--out`.
 
 ---
 
@@ -376,5 +424,8 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
+| [scripts/audit-deck.py](scripts/audit-deck.py)     | Automated layout audit (overflow, overlap, chrome collision, fill)   | Phase 3.5 (mandatory)    |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
-| [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |
+| [scripts/export-deck.py](scripts/export-deck.py)   | Export slides to PDF and PPTX (Python, cross-platform)               | Phase 6 (sharing)         |
+| [scripts/verify-export.py](scripts/verify-export.py) | Verify exported PDF/PPTX (page count + distinct pages)              | Phase 6 (sharing)         |
+| [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Legacy bash/Node export slides to PDF                                | Phase 6 (sharing)         |

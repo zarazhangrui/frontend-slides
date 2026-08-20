@@ -60,7 +60,7 @@ mkdir -p ~/.claude/skills/frontend-slides/scripts
 # Copy the user-facing skill files
 cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.claude/skills/frontend-slides/
 cp -R bold-template-pack ~/.claude/skills/frontend-slides/
-cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh ~/.claude/skills/frontend-slides/scripts/
+cp scripts/extract-pptx.py scripts/audit-deck.py scripts/export-deck.py scripts/deploy.sh scripts/export-pdf.sh ~/.claude/skills/frontend-slides/scripts/
 ```
 
 Or clone directly:
@@ -112,7 +112,8 @@ The skill will:
 2. Generate 3 visual style previews for you to compare, inferring the vibe from your brief unless you already named one
 3. Let you pick the visual direction
 4. Create the full presentation in your chosen style
-5. Open it in your browser
+5. Run an automated layout audit (`scripts/audit-deck.py`) to catch overflow, overlapping elements, floating-chrome collisions, and sparse slides before delivery
+6. Open it in your browser
 
 ### Convert a PowerPoint
 
@@ -528,9 +529,11 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a workflow
 | `viewport-base.css`       | Mandatory fixed-stage CSS      | Phase 3 (generation)      |
 | `html-template.md`        | HTML structure and JS features | Phase 3 (generation)      |
 | `animation-patterns.md`   | CSS/JS animation reference     | Phase 3 (generation)      |
+| `scripts/audit-deck.py`   | Automated layout audit (overflow, overlap, chrome collision, fill, vertical rhythm) | Phase 3.5 (mandatory audit) |
 | `scripts/extract-pptx.py` | PPT content extraction         | Phase 4 (conversion)      |
 | `scripts/deploy.sh`       | Deploy to Vercel               | Phase 6 (sharing)         |
-| `scripts/export-pdf.sh`   | Export slides to PDF           | Phase 6 (sharing)         |
+| `scripts/export-deck.py`  | Export slides to PDF and PPTX (Python, cross-platform) | Phase 6 (sharing)      |
+| `scripts/export-pdf.sh`   | Legacy bash/Node export slides to PDF     | Phase 6 (sharing)      |
 
 Maintenance-only source metadata and regeneration helpers live outside the
 user-facing skill package. Normal users do not need them.
@@ -566,16 +569,19 @@ bash scripts/deploy.sh ./presentation.html
 
 Uses [Vercel](https://vercel.com) (free tier). The skill walks you through signup and login if it's your first time.
 
-### Export to PDF
+### Export to PDF and PowerPoint
 
-Convert your slides to a PDF for email, Slack, Notion, or printing:
+Convert your slides to a PDF (for email, Slack, Notion, printing) and/or a PowerPoint deck:
 
 ```bash
-bash scripts/export-pdf.sh ./my-deck/index.html
-bash scripts/export-pdf.sh ./presentation.html ./output.pdf
+python scripts/export-deck.py ./my-deck/index.html             # PDF + PPTX
+python scripts/export-deck.py ./my-deck/index.html --pdf       # PDF only
+python scripts/export-deck.py ./my-deck/index.html --pptx      # PPTX only
+pip install playwright pillow python-pptx
+python -m playwright install chromium
 ```
 
-Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080 and combine into a PDF. Installs automatically if needed. Animations are not preserved (it's a static snapshot).
+Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080 and [python-pptx](https://python-pptx.readthedocs.io/) to build the deck. Cross-platform (macOS, Linux, Windows). Note that exported slides are static images — animations are lost, and PowerPoint text is not natively editable. A legacy bash/Node PDF-only script (`scripts/export-pdf.sh`) is also available.
 
 ## Requirements
 

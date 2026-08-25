@@ -60,7 +60,7 @@ mkdir -p ~/.claude/skills/frontend-slides/scripts
 # Copy the user-facing skill files
 cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.claude/skills/frontend-slides/
 cp -R bold-template-pack ~/.claude/skills/frontend-slides/
-cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh ~/.claude/skills/frontend-slides/scripts/
+cp scripts/extract-pptx.py scripts/deploy.sh scripts/export-pdf.sh scripts/inline-assets.py ~/.claude/skills/frontend-slides/scripts/
 ```
 
 Or clone directly:
@@ -530,6 +530,7 @@ This skill uses **progressive disclosure** — the main `SKILL.md` is a workflow
 | `animation-patterns.md`   | CSS/JS animation reference     | Phase 3 (generation)      |
 | `scripts/extract-pptx.py` | PPT content extraction         | Phase 4 (conversion)      |
 | `scripts/deploy.sh`       | Deploy to Vercel               | Phase 6 (sharing)         |
+| `scripts/inline-assets.py` | Embed local assets as base64  | Phase 6 (sharing)         |
 | `scripts/export-pdf.sh`   | Export slides to PDF           | Phase 6 (sharing)         |
 
 Maintenance-only source metadata and regeneration helpers live outside the
@@ -552,7 +553,7 @@ This skill was born from the belief that:
 
 ## Sharing Your Presentations
 
-After creating a presentation, the skill offers two ways to share it:
+After creating a presentation, the skill offers three ways to share it:
 
 ### Deploy to a Live URL
 
@@ -565,6 +566,19 @@ bash scripts/deploy.sh ./presentation.html
 ```
 
 Uses [Vercel](https://vercel.com) (free tier). The skill walks you through signup and login if it's your first time.
+
+### Bundle into One Self-Contained File
+
+If your deck references local images, the HTML file alone is not portable — send it to a colleague and every image is broken, because the image files stayed on your machine. This rewrites each local image, video, audio, and font reference into an embedded base64 data URL:
+
+```bash
+python3 scripts/inline-assets.py ./my-deck/index.html
+python3 scripts/inline-assets.py ./presentation.html ./presentation-shareable.html
+```
+
+Writes `<name>-standalone.html` next to the original by default, so your working deck is untouched. Remote `http(s)` URLs are left alone. Python 3, standard library only — nothing to install.
+
+Base64 adds about 33% to each embedded asset, so compress large images first. Assets over 10MB are skipped and reported (raise the ceiling with `--max-bytes`).
 
 ### Export to PDF
 
@@ -582,6 +596,7 @@ Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080
 - A local coding agent with filesystem access and the ability to run shell commands
 - Claude Code is required only for the custom marketplace-source install and `/frontend-slides:frontend-slides` command
 - For PPT conversion: Python with `python-pptx` library
+- For self-contained HTML bundling: Python 3 (standard library only)
 - For URL deployment: Node.js + Vercel account (free)
 - For PDF export: Node.js (Playwright installs automatically)
 

@@ -1,6 +1,6 @@
 {
   "name": "frontend-slides",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Zero-dependency HTML presentation generator with safe presets, bold template-library styles, PPT conversion, and anti-AI-slop design philosophy.",
   "skills": "./skills/",
   "author": {

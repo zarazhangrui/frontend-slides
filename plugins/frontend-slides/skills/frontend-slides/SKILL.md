@@ -35,6 +35,22 @@ Avoid generic AI-generated aesthetics:
 
 Interpret creatively and make unexpected choices that feel genuinely designed for the context. Vary between light and dark themes, different fonts, different aesthetics. You still tend to converge on common choices (Space Grotesk, for example) across generations. Avoid this: it is critical that you think outside the box!
 
+## Canonical Visual Language (Subject-Derived Design)
+
+Distinctive is not enough: the deck must also speak the visual language of its subject. Every field has a canon — the diagrams, instruments, notation, materials, and color conventions its practitioners use daily. A design system derived from that canon reads as authored for the material; a generic "tech" or "creative" skin reads as decoration.
+
+**Step 2.0a — Canonical visual inventory (REQUIRED before generating previews).** Write down, one line each:
+
+1. **Artifacts** — 3-5 visual objects native to the subject (EEG → 10-20 electrode montage, signal traces, topographic maps; SLR/meta-analysis → PRISMA flow, forest plot, 2×2 agreement matrix; mathematics → theorem-proof structure, blackboard notation; ML → architecture diagrams, loss curves, attention maps; history → archival documents, timelines, maps).
+2. **Semantic colors** — the quantities or roles in the material that deserve one consistent hue across the whole deck (the two raters, the treatment arm, the error signal, the emotion channel).
+3. **Typography tradition** — what the field's own publications use (scientific serif, engineering mono, humanist editorial).
+
+Use the inventory across the whole preview mix: build the wildcard/custom option's visual thesis from the artifacts, and give the safe preset and bold template their accent-color assignments from item 2 even though their base systems are pre-made. When the user picks a preset or template, graft the inventory onto it — the chosen style keeps its fonts, palette, and grammar; the subject supplies the recurring motif and what the accents mean.
+
+**Correctness rule:** domain motifs must be accurate — real electrode positions, real thresholds and scales, real notation. The audience are practitioners; a wrong canonical detail is worse than neutral decoration.
+
+**Stay current:** avoid last-generation AI-product styling (purple-gradient SaaS, glassmorphism cards, dashboard clichés). Aim at the level of a current issue of a leading journal, design studio, or conference identity — editorial confidence, committed palettes, type-led composition.
+
 ## Fixed Stage Rules
 
 These invariants apply to EVERY slide in EVERY presentation:
@@ -133,7 +149,9 @@ If user provides an image folder:
 
 ### Step 2.0: Generate 3 Style Previews Directly
 
-Based on purpose, audience, mood, and content density, generate 3 distinct single-slide HTML previews showing typography, colors, animation, and overall aesthetic.
+First complete **Step 2.0a — Canonical visual inventory** (see the Canonical Visual Language section above).
+
+Based on purpose, audience, mood, content density, and the inventory, generate 3 distinct single-slide HTML previews showing typography, colors, animation, and overall aesthetic.
 
 Do not ask the user whether they want options or a preset picker. The default discovery experience is always visual comparison.
 
@@ -242,6 +260,9 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 - Single self-contained HTML file, all CSS/JS inline
 - Include the FULL contents of viewport-base.css in the `<style>` block
 - Use fonts from Fontshare or Google Fonts — never system fonts
+- Body text ≥ 28px at the 1920×1080 design size; contrast ≥ 4.5:1 for body text and ≥ 3:1 for large display type
+- Results/data slides use the chart form canonical to the method (forest plot for meta-analysis, confusion/agreement matrix for rater studies, path diagram for SEM, topographic map for EEG), with marks driven by the actual numbers — never decorative pseudo-data on a results slide. If the environment provides a dedicated data-visualization skill, use it to design those figures
+- Carry the canonical visual inventory through every slide type: section dividers, figure frames, and closing slides reuse the same domain motif and semantic colors established in Phase 2
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
 

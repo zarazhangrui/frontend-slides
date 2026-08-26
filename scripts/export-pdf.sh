@@ -82,10 +82,12 @@ else
     OUTPUT_PDF="$(dirname "$INPUT_HTML")/$(basename "$INPUT_HTML" .html).pdf"
 fi
 
-# Resolve output to absolute path
+# Resolve output to absolute path. This must be absolute: the script cd's
+# into a temp dir before running node, so a relative output path would be
+# written inside the temp dir and deleted with it (silent data loss).
 OUTPUT_DIR=$(dirname "$OUTPUT_PDF")
 mkdir -p "$OUTPUT_DIR"
-OUTPUT_PDF="$OUTPUT_DIR/$(basename "$OUTPUT_PDF")"
+OUTPUT_PDF="$(cd "$OUTPUT_DIR" && pwd)/$(basename "$OUTPUT_PDF")"
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"

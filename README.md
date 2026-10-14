@@ -514,6 +514,15 @@ Frontend Slides can now draw from the 34 bold design systems in [`beautiful-html
 
 > Warm cream and rust-red supper-club aesthetic with bold uppercase grotesk headlines, italic Fraunces, and pill-shaped outlined buttons.
 
+## Before/after example
+
+The same plain weekly ops dashboard, before and after `frontend-slides`: the content rebuilt as an 8-slide, reading-first deck in the Swiss Modern preset on the fixed 1920×1080 stage, with keyboard, swipe, and wheel navigation and inline editing. Both links open live pages.
+
+- Before: https://skill-fixture-before.theroost.dev
+- After: https://frontend-slides-after.theroost.dev
+
+Illustrative, community-contributed example; not an official demo or benchmark.
+
 ## Architecture
 
 This skill uses **progressive disclosure** — the main `SKILL.md` is a workflow map, with supporting files loaded on-demand only when needed:

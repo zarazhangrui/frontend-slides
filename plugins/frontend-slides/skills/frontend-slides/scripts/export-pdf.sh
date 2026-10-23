@@ -31,6 +31,17 @@ ok()    { echo -e "${GREEN}✓${NC} $*"; }
 warn()  { echo -e "${YELLOW}⚠${NC} $*"; }
 err()   { echo -e "${RED}✗${NC} $*" >&2; }
 
+# Make an output PDF path absolute and create its parent directory.
+# Must run before the script changes directory (see #106).
+resolve_output_pdf() {
+    local output_pdf="$1"
+    local output_dir
+    output_dir=$(dirname "$output_pdf")
+    mkdir -p "$output_dir"
+    output_dir=$(cd "$output_dir" && pwd)
+    printf '%s/%s\n' "$output_dir" "$(basename "$output_pdf")"
+}
+
 # ─── Parse flags ──────────────────────────────────────────
 
 # Default resolution: 1920x1080 (full HD, ~1-2MB per slide)
@@ -82,10 +93,14 @@ else
     OUTPUT_PDF="$(dirname "$INPUT_HTML")/$(basename "$INPUT_HTML" .html).pdf"
 fi
 
-# Resolve output to absolute path
-OUTPUT_DIR=$(dirname "$OUTPUT_PDF")
-mkdir -p "$OUTPUT_DIR"
-OUTPUT_PDF="$OUTPUT_DIR/$(basename "$OUTPUT_PDF")"
+# dirname of a relative path is still relative ("." for "./out.pdf").
+# The export later cd's into a temp dir and deletes it, so a relative
+# OUTPUT_PDF is written inside that temp dir and removed with it (#106).
+OUTPUT_PDF=$(resolve_output_pdf "$OUTPUT_PDF")
+if [[ -n "${EXPORT_PDF_RESOLVE_ONLY:-}" ]]; then
+    printf '%s\n' "$OUTPUT_PDF"
+    exit 0
+fi
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"

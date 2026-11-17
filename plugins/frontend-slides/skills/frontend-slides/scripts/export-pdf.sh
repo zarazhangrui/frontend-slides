@@ -303,7 +303,12 @@ for (let i = 0; i < slideCount; i++) {
             const y = Math.max(rect.top, intersectionRect.top);
             const width = Math.min(rect.right, intersectionRect.right) - x;
             const height = Math.min(rect.bottom, intersectionRect.bottom) - y;
-            return width > 0 && height > 0 ? [{ href: urls.get(target), x, y, width, height }] : [];
+            if (width <= 0 || height <= 0) return [];
+
+            // Skip boxes whose center cannot be clicked in the deck, such as
+            // citations covered by another element.
+            const hit = document.elementFromPoint(x + width / 2, y + height / 2);
+            return hit?.closest('a') === target ? [{ href: urls.get(target), x, y, width, height }] : [];
           })
         ));
       });

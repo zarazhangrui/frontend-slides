@@ -221,7 +221,7 @@ if (slideCount === 0) {
 
 // Screenshot each slide
 mkdirSync(SCREENSHOT_DIR, { recursive: true });
-const screenshotPaths = [];
+const screenshots = [];
 
 for (let i = 0; i < slideCount; i++) {
   // Navigate to slide by simulating the presentation's navigation
@@ -279,7 +279,38 @@ for (let i = 0; i < slideCount; i++) {
 
   const screenshotPath = join(SCREENSHOT_DIR, `slide-${String(i + 1).padStart(3, '0')}.png`);
   await page.screenshot({ path: screenshotPath, fullPage: false });
-  screenshotPaths.push(screenshotPath);
+  const links = await page.evaluate((index) => {
+    const slide = document.querySelectorAll('.slide')[index];
+    const urls = new Map();
+    for (const anchor of slide.querySelectorAll('a[href]')) {
+      const href = anchor.getAttribute('href').trim();
+      if (!/^https?:\/\//i.test(href) ||
+          !anchor.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+
+      const url = URL.parse(href);
+      if (url) urls.set(anchor, url.href);
+    }
+    if (!urls.size) return [];
+
+    // Intersect with the viewport and any clipping ancestors. Keep individual
+    // line boxes so a wrapped link does not cover the gaps between its lines.
+    return new Promise(resolve => {
+      const observer = new IntersectionObserver(entries => {
+        observer.disconnect();
+        resolve(entries.flatMap(({ target, intersectionRect }) =>
+          [...target.getClientRects()].flatMap(rect => {
+            const x = Math.max(rect.left, intersectionRect.left);
+            const y = Math.max(rect.top, intersectionRect.top);
+            const width = Math.min(rect.right, intersectionRect.right) - x;
+            const height = Math.min(rect.bottom, intersectionRect.bottom) - y;
+            return width > 0 && height > 0 ? [{ href: urls.get(target), x, y, width, height }] : [];
+          })
+        ));
+      });
+      for (const anchor of urls.keys()) observer.observe(anchor);
+    });
+  }, i);
+  screenshots.push({ path: screenshotPath, links });
   console.log(`  Captured slide ${i + 1}/${slideCount}`);
 }
 
@@ -295,8 +326,8 @@ const browser2 = await chromium.launch();
 const pdfPage = await browser2.newPage();
 
 // Build an HTML page with all screenshots, one per page
-const imagesHtml = screenshotPaths.map((p) => {
-  const imgData = readFileSync(p).toString('base64');
+const imagesHtml = screenshots.map(({ path }) => {
+  const imgData = readFileSync(path).toString('base64');
   return `<div class="page"><img src="data:image/png;base64,${imgData}" /></div>`;
 }).join('\n');
 
@@ -307,11 +338,13 @@ const pdfHtml = `<!DOCTYPE html>
   * { margin: 0; padding: 0; }
   @page { size: ${VP_WIDTH}px ${VP_HEIGHT}px; margin: 0; }
   .page {
+    position: relative;
     width: ${VP_WIDTH}px;
     height: ${VP_HEIGHT}px;
     page-break-after: always;
     overflow: hidden;
   }
+  .page a { position: absolute; }
   .page:last-child { page-break-after: auto; }
   img {
     width: ${VP_WIDTH}px;
@@ -325,6 +358,19 @@ const pdfHtml = `<!DOCTYPE html>
 </html>`;
 
 await pdfPage.setContent(pdfHtml, { waitUntil: 'load' });
+await pdfPage.evaluate(linkPages => {
+  const pages = document.querySelectorAll('.page');
+  linkPages.forEach((links, index) => {
+    for (const { href, x, y, width, height } of links) {
+      const anchor = document.createElement('a');
+      anchor.href = href;
+      Object.assign(anchor.style, {
+        left: `${x}px`, top: `${y}px`, width: `${width}px`, height: `${height}px`,
+      });
+      pages[index].append(anchor);
+    }
+  });
+}, screenshots.map(({ links }) => links));
 await pdfPage.pdf({
   path: OUTPUT_PDF,
   width: `${VP_WIDTH}px`,
@@ -336,7 +382,7 @@ await pdfPage.pdf({
 await browser2.close();
 
 // Clean up screenshots
-screenshotPaths.forEach(p => unlinkSync(p));
+screenshots.forEach(({ path }) => unlinkSync(path));
 
 console.log(`  ✓ PDF saved to: ${OUTPUT_PDF}`);
 EXPORT_SCRIPT

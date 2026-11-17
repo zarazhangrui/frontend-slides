@@ -242,6 +242,7 @@ If the user selected a self-generated custom wildcard, treat that preview's CSS 
 - Single self-contained HTML file, all CSS/JS inline
 - Include the FULL contents of viewport-base.css in the `<style>` block
 - Use fonts from Fontshare or Google Fonts — never system fonts
+- For factual slides with web sources, link each citation directly to its source with a visible HTML anchor and an absolute HTTP(S) URL.
 - Add detailed comments explaining each section
 - Every section needs a clear `/* === SECTION NAME === */` comment block
 
@@ -323,9 +324,9 @@ This deploys the presentation to Vercel — a free hosting platform. The link wo
 
 ### 6B: Export to PDF
 
-This captures each slide as a screenshot and combines them into a PDF. Perfect for email attachments, embedding in documents, or printing.
+This captures each slide as a screenshot and combines them into a PDF. Visible links to absolute HTTP(S) URLs on the slides stay clickable.
 
-**Note:** Animations and interactivity are not preserved — the PDF is a static snapshot. This is normal and expected; mention it to the user so they're not surprised.
+**Note:** The PDF shows a still image of each slide. Mention this if the deck relies on animations, video, or interactive controls.
 
 1. **Run the export script:**
 

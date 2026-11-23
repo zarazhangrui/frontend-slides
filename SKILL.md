@@ -15,6 +15,10 @@ Create zero-dependency, animation-rich HTML presentations that run entirely in t
 4. **Progressive Disclosure** — Read lightweight style indexes first. For bold templates, use small preview cards for style previews and load the full `design.md` only after the user picks that template.
 5. **Fixed 16:9 Stage (NON-NEGOTIABLE)** — Every deck uses a 1920×1080 slide canvas scaled as a whole to the viewport. Slides must stay 16:9 on every screen, including phones. Do not reflow slide content to fit the device.
 
+## On-demand reference library
+
+Consult [references/README.md](references/README.md) for a short index. For animated data visuals, charts and interactive explainers read [references/infographics-and-interactions.md](references/infographics-and-interactions.md). Before delivering or modifying a deck, use [references/verification-checklist.md](references/verification-checklist.md). These references supplement (not override) the core rules below. Load them only when relevant.
+
 ## Design Aesthetics
 
 You tend to converge toward generic, "on distribution" outputs. In frontend design, this creates what users call the "AI slop" aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.
